@@ -46,7 +46,7 @@ Or download the DMG from the [releases](https://github.com/denisvinciguerra/pane
 
 On first launch the popover opens by itself and looks for TVs on the network (SSDP, then the Mac's subnet on port 8080). Otherwise, type the TV's address (for example `192.168.1.20`; port 8080 by default) or paste a dashboard link: its `k=` parameter carries the token.
 
-![Welcome and search](docs/screenshots/welcome-dark.png)
+<p align="center"><img src="docs/screenshots/welcome-dark.png" width="328" alt="Welcome screen: searching the network for a TV, or typing its address"></p>
 
 macOS asks for local network access the first time Pane searches. If it was denied, Pane says so and points to System Settings › Privacy & Security › Local Network.
 
