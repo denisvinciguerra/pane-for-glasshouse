@@ -1,0 +1,621 @@
+{
+  "ok": true,
+  "time": 1793310659057,
+  "tvwebVersion": "0.132.0",
+  "device": {
+    "id": "lg_tv",
+    "name": "LG OLED65G45LW.DEUQLJP",
+    "model": "OLED65G45LW.DEUQLJP"
+  },
+  "system": {
+    "webos": "10.3.0",
+    "firmware": "33.31.24"
+  },
+  "hardware": {
+    "webos": "10.3.0",
+    "soc_arch": "O24",
+    "ram": "2.5GB",
+    "refresh_rate": "144 Hz",
+    "eye_sensor": "20yOTP_eyeSensor"
+  },
+  "panel_silicon": {
+    "cell": "18/20/1/04",
+    "tcon_firmware": "C.0A.00.40.0",
+    "tcon_module": "41012A18011B4C"
+  },
+  "remote": {
+    "battery": 39,
+    "model": "LGE MR24",
+    "mac": "00:11:22:33:44:55",
+    "firmware": "23.63(H).04.1.0.192.7.1.0.62.1",
+    "paired": true,
+    "connected": false,
+    "bluetooth": true,
+    "signal": "good"
+  },
+  "temp": 37,
+  "tempMillidegrees": 37000,
+  "temps": [
+    47,
+    47,
+    47,
+    47,
+    47,
+    47,
+    47,
+    47,
+    47,
+    47,
+    47,
+    47,
+    47,
+    47,
+    47,
+    47,
+    47,
+    47,
+    47,
+    47,
+    46,
+    47,
+    47,
+    47,
+    47,
+    47,
+    46,
+    47,
+    46,
+    46,
+    46,
+    47,
+    46,
+    47,
+    47,
+    46,
+    46,
+    46,
+    46,
+    46,
+    46,
+    46,
+    46,
+    46,
+    46,
+    46,
+    46,
+    46,
+    46,
+    46,
+    46,
+    46,
+    46,
+    46,
+    46,
+    47,
+    46,
+    46,
+    46,
+    46,
+    46,
+    46,
+    46,
+    46,
+    50,
+    50,
+    50,
+    50,
+    49,
+    50,
+    50,
+    52,
+    53,
+    53,
+    52,
+    52,
+    53,
+    52,
+    53,
+    52,
+    53,
+    53,
+    52,
+    52,
+    52,
+    53,
+    53,
+    53,
+    52,
+    53,
+    53,
+    53,
+    52,
+    53,
+    53,
+    53,
+    53,
+    53,
+    53,
+    53,
+    53,
+    53,
+    53,
+    53,
+    53,
+    53,
+    37,
+    37,
+    37,
+    37,
+    37,
+    37,
+    37,
+    37,
+    37,
+    37,
+    37,
+    37,
+    37,
+    37
+  ],
+  "load": 18,
+  "loadPeak": 44,
+  "mhz": 1200,
+  "cpuHz": 1200000000,
+  "cpuTimes": {
+    "0": {
+      "user": 940914,
+      "nice": 2277,
+      "system": 673387,
+      "idle": 3439667,
+      "iowait": 1027,
+      "irq": 0,
+      "softirq": 14007,
+      "steal": 0
+    },
+    "1": {
+      "user": 840624,
+      "nice": 1222,
+      "system": 603081,
+      "idle": 3640624,
+      "iowait": 747,
+      "irq": 0,
+      "softirq": 134,
+      "steal": 0
+    }
+  },
+  "cores": [
+    44,
+    29
+  ],
+  "coresTotal": 4,
+  "mem": {
+    "total": 1954696,
+    "avail": 555756
+  },
+  "swap": {
+    "total": 614396,
+    "free": 111064,
+    "backing": "flash"
+  },
+  "uptime": 53517,
+  "bootTime": "2026-10-29T06:59:00.939Z",
+  "btime": 1793257141,
+  "loadavg": [
+    "16.29",
+    "15.74",
+    "15.76"
+  ],
+  "wifi": {
+    "link": 0,
+    "level": -49
+  },
+  "net": {
+    "rx": 14654,
+    "tx": 6834
+  },
+  "netTotal": {
+    "rx": 1730679598,
+    "tx": 189401933,
+    "iface": "wlan0"
+  },
+  "mac": "00:11:22:33:44:55",
+  "address": "192.0.2.10",
+  "address6": null,
+  "hostname": null,
+  "emmc": {
+    "life": "0-10%",
+    "wear": "0-10%",
+    "health": ">90% (Healthy)",
+    "eol": "Normal",
+    "life_est_a": 1,
+    "life_est_b": 1
+  },
+  "signal": null,
+  "signal_timing": null,
+  "hdmi_diag": null,
+  "source_frame_rate": null,
+  "signal_format": null,
+  "hdmi_links": [],
+  "hdmi_sources": [
+    {
+      "input": 1,
+      "receiver": 0,
+      "powered": false
+    },
+    {
+      "input": 2,
+      "receiver": 1,
+      "powered": false
+    },
+    {
+      "input": 3,
+      "receiver": 2,
+      "powered": false
+    },
+    {
+      "input": 4,
+      "receiver": 3,
+      "powered": false
+    }
+  ],
+  "picture_engine": {
+    "colorimetry": "BT.601",
+    "hdr_mode": "sdr"
+  },
+  "colorimetry": "BT.601",
+  "inputs": {
+    "hdmi1": "HDMI 1",
+    "hdmi2": "Denon Home Cinema",
+    "hdmi3": "Apple OTT",
+    "hdmi4": "PS5 Console de jeu"
+  },
+  "powerState": {
+    "raw": "Active Standby",
+    "label": "Standby",
+    "systemOn": false,
+    "screenOn": false,
+    "onReason": "remoteKey",
+    "onTime": {
+      "uptime": 53517.76,
+      "ontime": 0
+    }
+  },
+  "screenSaver": false,
+  "screensaverMode": "starfield",
+  "screensaverLevel": "dim",
+  "sleepTimer": "off",
+  "powerTimers": {
+    "on": {
+      "enabled": false,
+      "time": "00:00",
+      "days": [],
+      "autoOff": true
+    },
+    "off": {
+      "enabled": false,
+      "time": "00:00",
+      "days": []
+    }
+  },
+  "lights": {
+    "standby": true,
+    "logo": false,
+    "powerOn": false,
+    "hasLogo": false
+  },
+  "quickBoot": true,
+  "gpuMhz": null,
+  "gpuHz": null,
+  "wakeOnLan": true,
+  "lgLogo": true,
+  "deviceDetection": true,
+  "alwaysReady": false,
+  "alwaysReadyOff": {
+    "start": "01:00",
+    "end": "06:00"
+  },
+  "alwaysReadyScreen": true,
+  "homeAutoLaunch": true,
+  "ssid": "home-wifi",
+  "dimming": null,
+  "lightSensor": null,
+  "backlight": null,
+  "appStorage": {
+    "totalMb": 5817,
+    "usedMb": 1881,
+    "freeMb": 3920,
+    "pct": 32,
+    "totalKb": 5956796,
+    "availKb": 4013988
+  },
+  "volume": 31,
+  "muted": false,
+  "audio_output": "HDMI ARC",
+  "volume_control": "level",
+  "sound": {
+    "output": "HDMI ARC",
+    "output_raw": "external_arc",
+    "bt_audio": false,
+    "mode": "game",
+    "outputs": [
+      {
+        "id": "tv_speaker",
+        "name": "TV Speaker"
+      },
+      {
+        "id": "external_optical",
+        "name": "Optical"
+      },
+      {
+        "id": "tv_external_speaker",
+        "name": "TV Speaker + Optical"
+      },
+      {
+        "id": "external_arc",
+        "name": "HDMI ARC"
+      },
+      {
+        "id": "bt_soundbar",
+        "name": "Bluetooth"
+      },
+      {
+        "id": "tv_speaker_bluetooth",
+        "name": "TV Speaker + Bluetooth"
+      },
+      {
+        "id": "wow_cast",
+        "name": "LG WOWCAST"
+      },
+      {
+        "id": "mobile_phone",
+        "name": "Mobile Phone"
+      },
+      {
+        "id": "wisa_speaker",
+        "name": "WiSA Speakers"
+      },
+      {
+        "id": "flex_connector",
+        "name": "Flex Connector"
+      }
+    ]
+  },
+  "media": {
+    "state": "idle",
+    "playerType": null,
+    "fullScreen": false
+  },
+  "picture": {
+    "dynamicRange": "SDR",
+    "dynamicRange_raw": "sdr",
+    "mode": "Gallery",
+    "mode_raw": "gallery",
+    "backlight": 100,
+    "backlight_raw": 100,
+    "energySaving": "off",
+    "screenShift": "on",
+    "logoLuminanceAdjust": "light",
+    "modes": []
+  },
+  "apps": [
+    {
+      "id": "amazon.alexa.view",
+      "title": "Amazon Alexa",
+      "iconColor": "#ffffff"
+    },
+    {
+      "id": "com.apple.appletv",
+      "title": "Apple TV",
+      "iconColor": "#000000"
+    },
+    {
+      "id": "com.webos.app.discovery",
+      "title": "Apps",
+      "iconColor": "#4faa6e"
+    },
+    {
+      "id": "com.3827031.168353",
+      "title": "ARTE",
+      "iconColor": "#fa481c"
+    },
+    {
+      "id": "com.webos.app.camera",
+      "title": "Caméra",
+      "iconColor": "#7e56b1"
+    },
+    {
+      "id": "com.disney.disneyplus-prod",
+      "title": "Disney+",
+      "iconColor": "#054553"
+    },
+    {
+      "id": "com.dotscreen.france-tv-smart-tv",
+      "title": "france.tv",
+      "iconColor": "#191e25"
+    },
+    {
+      "id": "oqee.tv",
+      "title": "Free TV",
+      "iconColor": "#ffffff"
+    },
+    {
+      "id": "com.tvweb.dashboard",
+      "title": "Glasshouse",
+      "iconColor": "#000000"
+    },
+    {
+      "id": "org.webosbrew.hbchannel",
+      "title": "Homebrew Channel",
+      "iconColor": "#cf0652"
+    },
+    {
+      "id": "com.lighting.huesync",
+      "title": "Hue Sync",
+      "iconColor": "#ffffff"
+    },
+    {
+      "id": "org.jellyfin.webos",
+      "title": "Jellyfin",
+      "iconColor": "#000b25"
+    },
+    {
+      "id": "com.webos.app.mediadiscovery",
+      "title": "Lecteur multimédia",
+      "iconColor": "#7e56b1"
+    },
+    {
+      "id": "com.webos.app.lgchannels",
+      "title": "LG Channels",
+      "iconColor": "#fd312e"
+    },
+    {
+      "id": "com.webos.app.lifeonscreen",
+      "title": "LG Gallery+",
+      "iconColor": "#ffffff"
+    },
+    {
+      "id": "com.twin.app.gamingportal",
+      "title": "LG Gaming Portal",
+      "iconColor": "#ffffff"
+    },
+    {
+      "id": "com.lgtvod.app",
+      "title": "LG Movies & TV",
+      "iconColor": "#ffffff"
+    },
+    {
+      "id": "com.twin.app.audiochannel",
+      "title": "LG Radio+",
+      "iconColor": "#ffffff"
+    },
+    {
+      "id": "epoxyaisports",
+      "title": "LG Sports Playbook",
+      "iconColor": "#ffffff"
+    },
+    {
+      "id": "webos.day",
+      "title": "LG Streaming Week",
+      "iconColor": "#fd322e"
+    },
+    {
+      "id": "6play",
+      "title": "M6+, TV, Replay & Streaming",
+      "iconColor": "#000000"
+    },
+    {
+      "id": "com.webos.app.multiviewsettings",
+      "title": "Multi-écrans",
+      "iconColor": "#4ba78e"
+    },
+    {
+      "id": "com.webos.app.browser",
+      "title": "Navigateur Web",
+      "iconColor": "#5c75b8"
+    },
+    {
+      "id": "netflix",
+      "title": "Netflix",
+      "iconColor": "#ffffff"
+    },
+    {
+      "id": "com.orange.orangetv",
+      "title": "Orange TV",
+      "iconColor": "#ffffff"
+    },
+    {
+      "id": "app.pathehome",
+      "title": "Pathé Home",
+      "iconColor": "#ffc426"
+    },
+    {
+      "id": "amazon",
+      "title": "Prime Video",
+      "iconColor": "#0578ff"
+    },
+    {
+      "id": "ui30",
+      "title": "Rakuten TV",
+      "iconColor": "#bf0000"
+    },
+    {
+      "id": "fr.public.value",
+      "title": "Services d'intérêt général",
+      "iconColor": "#5e7bce"
+    },
+    {
+      "id": "com.webos.app.sportsteamsettings",
+      "title": "Sports",
+      "iconColor": "#8baa35"
+    },
+    {
+      "id": "spotify-beehive",
+      "title": "Spotify - Musique et podcasts",
+      "iconColor": "#191414"
+    },
+    {
+      "id": "com.webos.app.homeconnect",
+      "title": "Tableau de bord maison",
+      "iconColor": "#5e7bce"
+    },
+    {
+      "id": "fr.tf1.mytf1",
+      "title": "TF1+",
+      "iconColor": "#1937ff"
+    },
+    {
+      "id": "art.vasari.app",
+      "title": "VASARI - Streaming artistique",
+      "iconColor": "#4d4d4d"
+    },
+    {
+      "id": "youtube.leanback.v4",
+      "title": "YouTube AdFree",
+      "iconColor": "#ff0000"
+    }
+  ],
+  "privacy": {
+    "adblock": {
+      "enabled": true,
+      "count": 78
+    }
+  },
+  "capabilities": {
+    "oled": true,
+    "thermal": true,
+    "emmcWear": true
+  },
+  "oled": {
+    "panel_usage_units": 9233,
+    "last_compensation_units": 9210,
+    "panel_hours": 1538,
+    "panel_hours_exact": 1538.8,
+    "last_compensation_hours": 1535,
+    "hours_since_comp": 3.8,
+    "hours_until_comp": 0.2,
+    "comp_interval_hours": 4,
+    "comp_interval_units": 24,
+    "comp_cycles": 305,
+    "comp_status": "Idle",
+    "comp_status_label": "Idle",
+    "refresher_interval_hours": 2000,
+    "last_refresher_hours": 1501,
+    "hours_since_refresher": 37,
+    "hours_until_refresher": 1963,
+    "refresher_cycles": 3,
+    "refresher_status": "Idle",
+    "refresher_status_raw": "schedule",
+    "failure_alerts": 0,
+    "asbl_protection": "Active",
+    "gsr_protection": "Active",
+    "gsr_enabled": true,
+    "tpc_enabled": true,
+    "gsr_stress_count": 1769216,
+    "screen_shift": "on",
+    "logo_dimming": "light"
+  },
+  "clockHour12": true,
+  "huesyncStreaming": {
+    "streaming": false
+  }
+}

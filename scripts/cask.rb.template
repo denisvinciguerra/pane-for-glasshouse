@@ -1,0 +1,25 @@
+cask "pane-for-glasshouse" do
+  version "@VERSION@"
+  sha256 "@SHA256@"
+
+  url "https://github.com/denisvinciguerra/pane-for-glasshouse/releases/download/v#{version}/Pane-for-Glasshouse-#{version}.dmg"
+  name "Pane for Glasshouse"
+  desc "Menu bar remote for LG TVs running Glasshouse"
+  homepage "https://github.com/denisvinciguerra/pane-for-glasshouse"
+
+  livecheck do
+    url "https://github.com/denisvinciguerra/pane-for-glasshouse/releases/latest/download/appcast.xml"
+    strategy :sparkle
+  end
+
+  auto_updates true
+  depends_on macos: :sonoma
+
+  app "Pane for Glasshouse.app"
+
+  zap trash: [
+    "~/Library/Caches/fr.synlink.pane",
+    "~/Library/HTTPStorages/fr.synlink.pane",
+    "~/Library/Preferences/fr.synlink.pane.plist",
+  ]
+end

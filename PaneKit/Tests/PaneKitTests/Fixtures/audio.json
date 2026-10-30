@@ -1,0 +1,662 @@
+{
+  "ok": true,
+  "capturedAt": 1793310704852,
+  "identity": {
+    "model": "OLED65G45LW.DEUQLJP",
+    "firmware": "33.31.24",
+    "webos": "10.3.0",
+    "kernel": "5.4.268-329.ptl4tv.5"
+  },
+  "tv": {
+    "edidType": "TrueHD+dts",
+    "input": null,
+    "dtsDecoder": true,
+    "formats": [
+      {
+        "id": "pcm",
+        "name": "PCM",
+        "advertised": null,
+        "receiver": true,
+        "playback": true,
+        "playbackChannels": 2
+      },
+      {
+        "id": "ac3",
+        "name": "Dolby Digital",
+        "advertised": null,
+        "receiver": null,
+        "playback": true,
+        "playbackChannels": 6
+      },
+      {
+        "id": "eac3",
+        "name": "Dolby Digital Plus",
+        "advertised": null,
+        "receiver": null,
+        "playback": true,
+        "playbackChannels": 8
+      },
+      {
+        "id": "mat",
+        "name": "Dolby TrueHD / MAT",
+        "advertised": true,
+        "receiver": true,
+        "playback": false,
+        "playbackChannels": null
+      },
+      {
+        "id": "dts",
+        "name": "DTS",
+        "advertised": true,
+        "receiver": true,
+        "playback": true,
+        "playbackChannels": 6
+      },
+      {
+        "id": "dtshd",
+        "name": "DTS-HD",
+        "advertised": null,
+        "receiver": true,
+        "playback": true,
+        "playbackChannels": 6
+      },
+      {
+        "id": "dtsx",
+        "name": "DTS:X",
+        "advertised": null,
+        "receiver": null,
+        "playback": false,
+        "playbackChannels": null
+      }
+    ],
+    "playbackDeclarations": [
+      {
+        "name": "MPEG",
+        "channels": 2
+      },
+      {
+        "name": "AAC",
+        "channels": 6
+      },
+      {
+        "name": "WMA",
+        "channels": 6
+      },
+      {
+        "name": "WMAP",
+        "channels": 8
+      },
+      {
+        "name": "WMAL",
+        "channels": 8
+      },
+      {
+        "name": "PCM",
+        "channels": 2
+      },
+      {
+        "name": "LPCM",
+        "channels": 2
+      },
+      {
+        "name": "AC3",
+        "channels": 6
+      },
+      {
+        "name": "EAC3",
+        "channels": 8
+      },
+      {
+        "name": "DTS",
+        "channels": 6
+      },
+      {
+        "name": "DTSH",
+        "channels": 6
+      },
+      {
+        "name": "DTSE",
+        "channels": 6
+      },
+      {
+        "name": "DRA",
+        "channels": 6
+      },
+      {
+        "name": "Vorbis",
+        "channels": 6
+      },
+      {
+        "name": "RA6",
+        "channels": 2
+      },
+      {
+        "name": "RA8",
+        "channels": 6
+      },
+      {
+        "name": "AMR",
+        "channels": 1
+      },
+      {
+        "name": "FLAC",
+        "channels": 6
+      },
+      {
+        "name": "OPUS",
+        "channels": 6
+      }
+    ]
+  },
+  "receiver": {
+    "name": "AVR-X4500H",
+    "connected": true,
+    "link": "eARC",
+    "port": 2,
+    "formatsKnown": true
+  },
+  "settings": {
+    "soundMode": "aiSoundPlus",
+    "inputAudioFormatHDMI1": "bitstream",
+    "audioBalance": "0",
+    "soundOutput": "external_arc",
+    "inputAudioFormatHDMI2": "bitstream",
+    "blegattSoundbar": {
+      "soundbarName": "",
+      "connected": false
+    },
+    "volumeStep": 3,
+    "coSoundOutputState": "off",
+    "lgSoundSync": "off",
+    "btSpeakerMode": "off",
+    "tvPowerSound": "off",
+    "inputAudioFormatHDMI3": "bitstream",
+    "magicSoundModified": "false",
+    "clearVoice": "off",
+    "gameTVEqualizer": "off",
+    "ac4DialogueEnhancer": "off",
+    "inputAudioFormatHDMI4": "bitstream",
+    "deviceCntOfBtGeneral": "singleConnection",
+    "avSyncBtSurround": "0",
+    "magicSoundTime": "0",
+    "smartSoundMode": "off",
+    "dialogEnhancementVolumeAtsc30": "3",
+    "avSyncBypassInput": "off",
+    "avSyncBypass": "off",
+    "coSoundOutput": "off",
+    "userEqualizerValues": [
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "wisaSpeakerChannelType": "2",
+    "soundAlive": "off",
+    "soundModeModified": "false",
+    "avSyncWisa": "0",
+    "bluetoothMode": "surroundMode",
+    "hdmiArcMode": "off",
+    "volumeControl": "medium",
+    "avSyncSpeaker": "0",
+    "soundEffect": "on",
+    "prevSoundOutput": "tv_speaker",
+    "audioLanguageSecond": "spa",
+    "startupSound": "on",
+    "inputAudioFormatUSBC1": "bitstream",
+    "soundOutputList": [
+      {
+        "_id": "50cb",
+        "volume": 9,
+        "soundOutput": "tv_speaker"
+      },
+      {
+        "_id": "50cc",
+        "volume": 10,
+        "soundOutput": "external_optical"
+      },
+      {
+        "_id": "50cd",
+        "volume": 31,
+        "soundOutput": "external_arc"
+      },
+      {
+        "_id": "50ce",
+        "volume": 10,
+        "soundOutput": "external_arc_bno"
+      },
+      {
+        "_id": "50cf",
+        "volume": 10,
+        "soundOutput": "external_arc_sound_alive"
+      },
+      {
+        "_id": "50d0",
+        "volume": 31,
+        "soundOutput": "external_arc_sound_mode_sync"
+      },
+      {
+        "_id": "50d1",
+        "volume": 10,
+        "soundOutput": "lineout"
+      },
+      {
+        "_id": "50d2",
+        "volume": 10,
+        "soundOutput": "headphone"
+      },
+      {
+        "_id": "50d3",
+        "volume": 9,
+        "soundOutput": "tv_external_speaker"
+      },
+      {
+        "_id": "50d4",
+        "volume": 9,
+        "soundOutput": "tv_speaker_headphone"
+      },
+      {
+        "_id": "50d5",
+        "volume": 10,
+        "soundOutput": "alsa"
+      },
+      {
+        "_id": "50d6",
+        "volume": 10,
+        "soundOutput": "wisa_speaker"
+      },
+      {
+        "_id": "50d7",
+        "volume": 10,
+        "soundOutput": "lgSoundSync"
+      },
+      {
+        "_id": "50d8",
+        "volume": 10,
+        "soundOutput": "bt_soundbar"
+      },
+      {
+        "_id": "50d9",
+        "volume": 9,
+        "soundOutput": "tv_speaker_optical_arc"
+      },
+      {
+        "_id": "50da",
+        "volume": 9,
+        "soundOutput": "tv_speaker_bluetooth"
+      },
+      {
+        "_id": "50db",
+        "volume": 9,
+        "soundOutput": "tv_speaker_bt_surround"
+      },
+      {
+        "_id": "50dc",
+        "volume": 10,
+        "soundOutput": "mobile_phone"
+      },
+      {
+        "_id": "50dd",
+        "volume": 9,
+        "soundOutput": "tv_speaker_external_arc"
+      },
+      {
+        "_id": "50de",
+        "volume": 9,
+        "soundOutput": "tv_speaker_external_arc_harmony"
+      },
+      {
+        "_id": "50df",
+        "volume": 10,
+        "soundOutput": "usb_speaker"
+      },
+      {
+        "_id": "50e0",
+        "volume": 10,
+        "soundOutput": "wow_cast"
+      },
+      {
+        "_id": "50e1",
+        "volume": 9,
+        "soundOutput": "tv_speaker_wow_cast"
+      },
+      {
+        "_id": "6488",
+        "volume": 10,
+        "soundOutput": "bt_atmos"
+      },
+      {
+        "_id": "6489",
+        "volume": 10,
+        "soundOutput": "urcu_oss"
+      },
+      {
+        "_id": "f44ca",
+        "volume": 10,
+        "soundOutput": "bt_soundengine"
+      },
+      {
+        "_id": "f44cb",
+        "volume": 10,
+        "soundOutput": "bt_tv_atmos"
+      },
+      {
+        "_id": "f44cc",
+        "volume": 9,
+        "soundOutput": "flex_connector"
+      },
+      {
+        "_id": "f44cd",
+        "volume": 9,
+        "soundOutput": "tv_speaker_bt_tv_atmos"
+      }
+    ],
+    "audioLanguageFirst": "eng",
+    "soundOutputDigital": "passThrough",
+    "audioDescriptionAtsc30": "off",
+    "aigamesound": "on",
+    "userEqualizer": "on",
+    "autoVolume": "off",
+    "auracast": "off",
+    "equalizerStatus": "on",
+    "avSync": "on",
+    "inputAudioFormatUSBC2": "bitstream",
+    "tvSetupConfiguration": "wall_mount",
+    "slidingSpeaker": "openPowerOn",
+    "multiAudioOutputWithBt": "off",
+    "hearingAid": "off",
+    "analogOut": "headphone",
+    "avSyncSpdif": "0",
+    "audioDescription": "off",
+    "virtualSurround": "off",
+    "dialogEnhancementAtsc30": "off",
+    "applyToAllInputSSM": "done",
+    "digitalAudioPriority": "auto",
+    "aiSound": "off",
+    "magicSpaceSound": "off",
+    "inputAudioFormatDP1": "bitstream",
+    "slidingSpeakerMelody": "on",
+    "eArcSupport": "on",
+    "wooferLevel": "10",
+    "audioDescriptionVolume": "10",
+    "soundModeSync": "on",
+    "soundOptimizer": "normal",
+    "gameTVEqualizer10band": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "inputAudioFormatDP2": "bitstream",
+    "headphoneDetection": "off",
+    "visualImpaired": "off",
+    "soundOutputs": [
+      "tv_speaker"
+    ],
+    "sound": "on",
+    "supportATMOS": "on",
+    "soundEngineStatus": "on"
+  },
+  "outputName": "HDMI ARC",
+  "live": {
+    "input": {
+      "codec": "PCM",
+      "immersive": null
+    },
+    "hdmi": null,
+    "output": null
+  },
+  "writable": true,
+  "lgSettings": [
+    {
+      "id": "soundOutput",
+      "section": "sound",
+      "type": "choice",
+      "title": "Sound output",
+      "desc": "Where the TV plays its sound. Sound mode and balance apply only to the TV speakers.",
+      "value": "external_arc",
+      "choices": [
+        {
+          "value": "tv_speaker",
+          "label": "TV Speaker"
+        },
+        {
+          "value": "external_arc",
+          "label": "HDMI ARC"
+        },
+        {
+          "value": "external_optical",
+          "label": "Optical"
+        },
+        {
+          "value": "bt_soundbar",
+          "label": "Bluetooth"
+        },
+        {
+          "value": "headphone",
+          "label": "Headphone / AUX"
+        },
+        {
+          "value": "tv_speaker_external_arc",
+          "label": "TV Speaker + HDMI ARC"
+        },
+        {
+          "value": "tv_speaker_bluetooth",
+          "label": "TV Speaker + Bluetooth"
+        },
+        {
+          "value": "tv_speaker_headphone",
+          "label": "TV Speaker + Headphone"
+        }
+      ]
+    },
+    {
+      "id": "soundMode",
+      "section": "sound",
+      "type": "choice",
+      "title": "Sound mode",
+      "desc": "How the TV tunes its sound, through its own speakers only. AI Sound Pro adjusts it to what is on by itself.",
+      "value": "game",
+      "choices": [
+        {
+          "value": "aiSoundPlus",
+          "label": "AI Sound Pro"
+        },
+        {
+          "value": "standard",
+          "label": "Standard"
+        },
+        {
+          "value": "news",
+          "label": "Clear Voice"
+        },
+        {
+          "value": "movie",
+          "label": "Cinema"
+        },
+        {
+          "value": "sports",
+          "label": "Sports"
+        },
+        {
+          "value": "music",
+          "label": "Music"
+        },
+        {
+          "value": "game",
+          "label": "Game Optimizer"
+        }
+      ]
+    },
+    {
+      "id": "soundOutputDigital",
+      "section": "sound",
+      "type": "choice",
+      "title": "Digital sound output",
+      "desc": "The audio sent to a soundbar or receiver over HDMI ARC/eARC or optical. Pass Through requests encoded audio; PCM sends decoded audio.",
+      "value": "passThrough",
+      "choices": [
+        {
+          "value": "auto",
+          "label": "Auto"
+        },
+        {
+          "value": "pcm",
+          "label": "PCM"
+        },
+        {
+          "value": "passThrough",
+          "label": "Pass Through"
+        }
+      ]
+    },
+    {
+      "id": "audioBalance",
+      "section": "sound",
+      "type": "number",
+      "title": "Balance",
+      "desc": "Between the left and right TV speakers, and only those. At 0 both play at the same level.",
+      "value": 0,
+      "min": -50,
+      "max": 50
+    },
+    {
+      "id": "autoVolume",
+      "section": "sound",
+      "type": "switch",
+      "title": "Automatic volume",
+      "desc": "Keeps the volume level when switching channels. LG calls this Automatic Volume Adjustment.",
+      "on": false
+    },
+    {
+      "id": "btSpeakerMode",
+      "section": "sound",
+      "type": "switch",
+      "title": "Bluetooth speaker mode",
+      "desc": "Lets phones in Bluetooth range connect and play music through the TV, even while it is switched off. LG calls this Bluetooth Speaker Mode.",
+      "on": true
+    },
+    {
+      "id": "eArcSupport",
+      "section": "sound",
+      "type": "switch",
+      "title": "eARC",
+      "desc": "Sends lossless and Dolby Atmos audio to a soundbar or receiver on the HDMI (eARC) input, where both support it.",
+      "on": true
+    },
+    {
+      "id": "deepColor",
+      "section": "hdmi",
+      "type": "choice",
+      "title": "HDMI Deep Colour",
+      "desc": "For the input on screen. Lets it take 4K HDR and high frame rates. The picture can drop out for a moment while the TV and the device agree the change, and turning it off also turns off Game Optimizer for that input.",
+      "column": "deepColor",
+      "value": "4k",
+      "choices": [
+        {
+          "value": "off",
+          "label": "Off"
+        },
+        {
+          "value": "4k",
+          "label": "4K"
+        }
+      ]
+    },
+    {
+      "id": "audioFormatHDMI1",
+      "section": "hdmi",
+      "type": "choice",
+      "title": "HDMI 1 audio format",
+      "desc": "What the TV asks the device on this input to send. Bitstream allows encoded audio; PCM requests decoded audio.",
+      "port": 1,
+      "column": "audioFormat",
+      "active": false,
+      "value": "bitstream",
+      "choices": [
+        {
+          "value": "bitstream",
+          "label": "Bitstream"
+        },
+        {
+          "value": "pcm",
+          "label": "PCM"
+        }
+      ]
+    },
+    {
+      "id": "audioFormatHDMI2",
+      "section": "hdmi",
+      "type": "choice",
+      "title": "HDMI 2 audio format",
+      "desc": "What the TV asks the device on this input to send. Bitstream allows encoded audio; PCM requests decoded audio.",
+      "port": 2,
+      "column": "audioFormat",
+      "active": false,
+      "value": "bitstream",
+      "choices": [
+        {
+          "value": "bitstream",
+          "label": "Bitstream"
+        },
+        {
+          "value": "pcm",
+          "label": "PCM"
+        }
+      ]
+    },
+    {
+      "id": "audioFormatHDMI3",
+      "section": "hdmi",
+      "type": "choice",
+      "title": "HDMI 3 audio format",
+      "desc": "What the TV asks the device on this input to send. Bitstream allows encoded audio; PCM requests decoded audio.",
+      "port": 3,
+      "column": "audioFormat",
+      "active": false,
+      "value": "bitstream",
+      "choices": [
+        {
+          "value": "bitstream",
+          "label": "Bitstream"
+        },
+        {
+          "value": "pcm",
+          "label": "PCM"
+        }
+      ]
+    },
+    {
+      "id": "audioFormatHDMI4",
+      "section": "hdmi",
+      "type": "choice",
+      "title": "HDMI 4 audio format",
+      "desc": "What the TV asks the device on this input to send. Bitstream allows encoded audio; PCM requests decoded audio.",
+      "port": 4,
+      "column": "audioFormat",
+      "value": "bitstream",
+      "choices": [
+        {
+          "value": "bitstream",
+          "label": "Bitstream"
+        },
+        {
+          "value": "pcm",
+          "label": "PCM"
+        }
+      ]
+    }
+  ],
+  "inputs": {
+    "hdmi1": "HDMI 1",
+    "hdmi2": "Denon Home Cinema",
+    "hdmi3": "Apple OTT",
+    "hdmi4": "PS5 Console de jeu"
+  }
+}

@@ -1,0 +1,87 @@
+{
+  "ok": true,
+  "inputs": [
+    {
+      "id": "HDMI_1",
+      "port": 1,
+      "label": "HDMI 1",
+      "appId": "com.webos.app.hdmi1",
+      "active": false,
+      "deviceSeen": true,
+      "signal": null
+    },
+    {
+      "id": "HDMI_2",
+      "port": 2,
+      "label": "Denon Home Cinema",
+      "appId": "com.webos.app.hdmi2",
+      "active": false,
+      "deviceSeen": true,
+      "signal": null
+    },
+    {
+      "id": "HDMI_3",
+      "port": 3,
+      "label": "Apple OTT",
+      "appId": "com.webos.app.hdmi3",
+      "active": false,
+      "deviceSeen": true,
+      "signal": null
+    },
+    {
+      "id": "HDMI_4",
+      "port": 4,
+      "label": "PS5 Console de jeu",
+      "appId": "com.webos.app.hdmi4",
+      "active": true,
+      "deviceSeen": true,
+      "signal": {
+        "port": 3,
+        "connected": true,
+        "resolution": "3840x2160",
+        "refreshHz": 60,
+        "pixelClockMhz": 594,
+        "colorDepth": "12BIT",
+        "interlaced": false
+      }
+    }
+  ],
+  "ports": [
+    {
+      "port": 0,
+      "connected": false,
+      "resolution": null,
+      "refreshHz": null,
+      "pixelClockMhz": null,
+      "colorDepth": null,
+      "interlaced": false
+    },
+    {
+      "port": 1,
+      "connected": false,
+      "resolution": null,
+      "refreshHz": null,
+      "pixelClockMhz": null,
+      "colorDepth": null,
+      "interlaced": false
+    },
+    {
+      "port": 2,
+      "connected": false,
+      "resolution": null,
+      "refreshHz": null,
+      "pixelClockMhz": null,
+      "colorDepth": null,
+      "interlaced": false
+    },
+    {
+      "port": 3,
+      "connected": true,
+      "resolution": "3840x2160",
+      "refreshHz": 60,
+      "pixelClockMhz": 594,
+      "colorDepth": "12BIT",
+      "interlaced": false
+    }
+  ]
+}

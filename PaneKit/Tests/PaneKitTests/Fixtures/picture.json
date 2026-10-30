@@ -1,0 +1,962 @@
+{
+  "ok": true,
+  "available": true,
+  "writable": true,
+  "rows": [
+    {
+      "id": "pictureMode",
+      "section": "picture",
+      "type": "choice",
+      "title": "Picture mode",
+      "desc": "The starting point for every setting below. The TV keeps a picture mode, and its adjustments, for each input.",
+      "group": "mode",
+      "value": "hdrGame",
+      "choices": [
+        {
+          "value": "hdrPersonalized",
+          "label": "HDR Personalized"
+        },
+        {
+          "value": "hdrVivid",
+          "label": "HDR Vivid"
+        },
+        {
+          "value": "hdrStandard",
+          "label": "HDR Standard"
+        },
+        {
+          "value": "hdrEco",
+          "label": "HDR Eco"
+        },
+        {
+          "value": "hdrCinemaBright",
+          "label": "HDR Cinema Bright"
+        },
+        {
+          "value": "hdrCinema",
+          "label": "HDR Cinema"
+        },
+        {
+          "value": "hdrGame",
+          "label": "HDR Game"
+        },
+        {
+          "value": "hdrFilmMaker",
+          "label": "HDR Filmmaker"
+        }
+      ]
+    },
+    {
+      "id": "filmMakerMode",
+      "section": "picture",
+      "type": "switch",
+      "title": "FILMMAKER MODE auto start",
+      "desc": "Switches to Filmmaker Mode by itself when a film or show asks for it.",
+      "group": "mode",
+      "on": true
+    },
+    {
+      "id": "backlight",
+      "section": "picture",
+      "type": "number",
+      "title": "Panel brightness",
+      "desc": "How bright the screen is overall. LG calls this OLED Pixel Brightness, OLED Light on older OLEDs, and Backlight on an LCD.",
+      "group": "brightness",
+      "value": 100,
+      "min": 0,
+      "max": 100
+    },
+    {
+      "id": "contrast",
+      "section": "picture",
+      "type": "number",
+      "title": "Contrast",
+      "desc": "The difference between bright and dark areas. Higher values brighten highlights.",
+      "group": "brightness",
+      "active": false,
+      "value": 100,
+      "min": 0,
+      "max": 100
+    },
+    {
+      "id": "brightness",
+      "section": "picture",
+      "type": "number",
+      "title": "Black level",
+      "desc": "How bright the darkest parts of the picture are. Too high greys out black; too low hides shadow detail. LG calls this Screen Brightness on some TVs.",
+      "group": "brightness",
+      "active": false,
+      "value": 50,
+      "min": 0,
+      "max": 100
+    },
+    {
+      "id": "peakBrightness",
+      "section": "picture",
+      "type": "choice",
+      "title": "Peak brightness",
+      "desc": "Lets small bright highlights, such as a lamp or the sun, go brighter than the rest of the picture.",
+      "group": "brightness",
+      "active": false,
+      "value": "high",
+      "choices": [
+        {
+          "value": "off",
+          "label": "Off"
+        },
+        {
+          "value": "low",
+          "label": "Low"
+        },
+        {
+          "value": "medium",
+          "label": "Medium"
+        },
+        {
+          "value": "high",
+          "label": "High"
+        }
+      ]
+    },
+    {
+      "id": "dynamicContrast",
+      "section": "picture",
+      "type": "choice",
+      "title": "Auto dynamic contrast",
+      "desc": "Adjusts contrast scene by scene, from how bright each one is.",
+      "group": "brightness",
+      "active": false,
+      "value": "off",
+      "choices": [
+        {
+          "value": "off",
+          "label": "Off"
+        },
+        {
+          "value": "low",
+          "label": "Low"
+        },
+        {
+          "value": "medium",
+          "label": "Medium"
+        },
+        {
+          "value": "high",
+          "label": "High"
+        }
+      ]
+    },
+    {
+      "id": "expressionEnhancer",
+      "section": "picture",
+      "type": "choice",
+      "title": "Expression enhancer",
+      "desc": "Separates foreground from background in HDR video, favouring detail or brightness.",
+      "group": "brightness",
+      "value": "off",
+      "choices": [
+        {
+          "value": "off",
+          "label": "Off"
+        },
+        {
+          "value": "detail",
+          "label": "Detail"
+        },
+        {
+          "value": "highlight",
+          "label": "Brightness"
+        }
+      ]
+    },
+    {
+      "id": "gamma",
+      "section": "picture",
+      "type": "choice",
+      "title": "Gamma",
+      "desc": "How quickly the picture brightens from black. A lower value brightens the mid-tones; a higher one darkens them.",
+      "group": "brightness",
+      "active": false,
+      "value": "medium",
+      "choices": [
+        {
+          "value": "low",
+          "label": "Low (1.9)"
+        },
+        {
+          "value": "medium",
+          "label": "Medium (2.2)"
+        },
+        {
+          "value": "high1",
+          "label": "High 1 (2.4)"
+        },
+        {
+          "value": "high2",
+          "label": "High 2 (BT.1886)"
+        }
+      ]
+    },
+    {
+      "id": "hdrDynamicToneMapping",
+      "section": "picture",
+      "type": "choice",
+      "title": "Dynamic tone mapping",
+      "desc": "Adjusts HDR video scene by scene to suit the panel. HGIG leaves it to a console that supports it.",
+      "group": "brightness",
+      "value": "on",
+      "choices": [
+        {
+          "value": "on",
+          "label": "On"
+        },
+        {
+          "value": "off",
+          "label": "Off"
+        },
+        {
+          "value": "HGIG",
+          "label": "HGIG"
+        }
+      ]
+    },
+    {
+      "id": "energySaving",
+      "section": "picture",
+      "type": "choice",
+      "title": "Energy saving step",
+      "desc": "Dims the screen to save power. Off leaves panel brightness as set. Some TVs, such as those sold in Europe, ask on screen to confirm any step but Auto, and go back to Auto if it is cancelled.",
+      "group": "brightness",
+      "value": "off",
+      "choices": [
+        {
+          "value": "auto",
+          "label": "Auto"
+        },
+        {
+          "value": "off",
+          "label": "Off"
+        },
+        {
+          "value": "min",
+          "label": "Minimum"
+        },
+        {
+          "value": "med",
+          "label": "Medium"
+        },
+        {
+          "value": "max",
+          "label": "Maximum"
+        }
+      ]
+    },
+    {
+      "id": "color",
+      "section": "picture",
+      "type": "number",
+      "title": "Colour depth",
+      "desc": "How saturated colours are. Higher values are more vivid.",
+      "group": "colour",
+      "track": "saturation",
+      "active": false,
+      "value": 55,
+      "min": 0,
+      "max": 100
+    },
+    {
+      "id": "tint",
+      "section": "picture",
+      "type": "number",
+      "title": "Tint",
+      "desc": "The balance between red and green in the picture.",
+      "group": "colour",
+      "track": "tint",
+      "value": 0,
+      "min": -50,
+      "max": 50
+    },
+    {
+      "id": "colorTemperature",
+      "section": "picture",
+      "type": "number",
+      "title": "Colour temperature",
+      "desc": "From warm, which is yellower, to cool, which is bluer. Filmmaker Mode starts at Warm 50.",
+      "group": "colour",
+      "track": "temperature",
+      "value": 0,
+      "min": -50,
+      "max": 50
+    },
+    {
+      "id": "colorGamut",
+      "section": "picture",
+      "type": "choice",
+      "title": "Colour gamut",
+      "desc": "The range of colours shown. Auto detect follows the signal; Native and Dynamic stretch colours past it.",
+      "group": "colour",
+      "value": "auto",
+      "choices": [
+        {
+          "value": "auto",
+          "label": "Auto detect"
+        },
+        {
+          "value": "native",
+          "label": "Native"
+        },
+        {
+          "value": "dynamic",
+          "label": "Dynamic"
+        },
+        {
+          "value": "adobeRGB",
+          "label": "Adobe RGB"
+        }
+      ]
+    },
+    {
+      "id": "dynamicColor",
+      "section": "picture",
+      "type": "choice",
+      "title": "Colour adjustment",
+      "desc": "User Selection turns on the colour adjustments below.",
+      "group": "cms",
+      "value": "off",
+      "choices": [
+        {
+          "value": "off",
+          "label": "Off"
+        },
+        {
+          "value": "low",
+          "label": "Low"
+        },
+        {
+          "value": "medium",
+          "label": "Medium"
+        },
+        {
+          "value": "high",
+          "label": "High"
+        },
+        {
+          "value": "user",
+          "label": "User Selection"
+        }
+      ]
+    },
+    {
+      "id": "eyeComfortMode",
+      "section": "picture",
+      "type": "switch",
+      "title": "Reduce blue light",
+      "desc": "Warms the picture to cut blue light.",
+      "group": "colour",
+      "on": false
+    },
+    {
+      "id": "skinColor",
+      "section": "picture",
+      "type": "number",
+      "title": "Skin colour",
+      "desc": "Fine-tunes one kind of colour without touching the rest.",
+      "group": "colour",
+      "value": 0,
+      "min": -5,
+      "max": 5
+    },
+    {
+      "id": "skyColor",
+      "section": "picture",
+      "type": "number",
+      "title": "Sky colour",
+      "desc": "Fine-tunes one kind of colour without touching the rest.",
+      "group": "colour",
+      "value": 0,
+      "min": -5,
+      "max": 5
+    },
+    {
+      "id": "grassColor",
+      "section": "picture",
+      "type": "number",
+      "title": "Grass colour",
+      "desc": "Fine-tunes one kind of colour without touching the rest.",
+      "group": "colour",
+      "value": 0,
+      "min": -5,
+      "max": 5
+    },
+    {
+      "id": "wbRedGain",
+      "section": "picture",
+      "type": "number",
+      "title": "Red gain",
+      "desc": "This colour in the bright tones.",
+      "group": "whiteBalance",
+      "track": "red",
+      "value": 0,
+      "min": -50,
+      "max": 50
+    },
+    {
+      "id": "wbRedOffset",
+      "section": "picture",
+      "type": "number",
+      "title": "Red offset",
+      "desc": "This colour in the dark tones.",
+      "group": "whiteBalance",
+      "track": "red",
+      "value": 0,
+      "min": -50,
+      "max": 50
+    },
+    {
+      "id": "wbGreenGain",
+      "section": "picture",
+      "type": "number",
+      "title": "Green gain",
+      "desc": "This colour in the bright tones.",
+      "group": "whiteBalance",
+      "track": "green",
+      "value": 0,
+      "min": -50,
+      "max": 50
+    },
+    {
+      "id": "wbGreenOffset",
+      "section": "picture",
+      "type": "number",
+      "title": "Green offset",
+      "desc": "This colour in the dark tones.",
+      "group": "whiteBalance",
+      "track": "green",
+      "value": 0,
+      "min": -50,
+      "max": 50
+    },
+    {
+      "id": "wbBlueGain",
+      "section": "picture",
+      "type": "number",
+      "title": "Blue gain",
+      "desc": "This colour in the bright tones.",
+      "group": "whiteBalance",
+      "track": "blue",
+      "value": 0,
+      "min": -50,
+      "max": 50
+    },
+    {
+      "id": "wbBlueOffset",
+      "section": "picture",
+      "type": "number",
+      "title": "Blue offset",
+      "desc": "This colour in the dark tones.",
+      "group": "whiteBalance",
+      "track": "blue",
+      "value": 0,
+      "min": -50,
+      "max": 50
+    },
+    {
+      "id": "cmsSaturationRed",
+      "section": "picture",
+      "type": "number",
+      "title": "Red saturation",
+      "desc": "How strong this colour is, without changing the others.",
+      "group": "cms",
+      "cms": "red",
+      "part": "saturation",
+      "value": 0,
+      "min": -30,
+      "max": 30,
+      "active": false,
+      "inactive": "game"
+    },
+    {
+      "id": "cmsHueRed",
+      "section": "picture",
+      "type": "number",
+      "title": "Red hue",
+      "desc": "Shifts this colour towards its neighbours on the colour wheel.",
+      "group": "cms",
+      "cms": "red",
+      "part": "hue",
+      "value": 0,
+      "min": -30,
+      "max": 30,
+      "active": false,
+      "inactive": "game"
+    },
+    {
+      "id": "cmsLuminanceRed",
+      "section": "picture",
+      "type": "number",
+      "title": "Red luminance",
+      "desc": "How bright this colour is, without changing the others.",
+      "group": "cms",
+      "cms": "red",
+      "part": "luminance",
+      "value": 0,
+      "min": -30,
+      "max": 30,
+      "active": false,
+      "inactive": "game"
+    },
+    {
+      "id": "cmsSaturationGreen",
+      "section": "picture",
+      "type": "number",
+      "title": "Green saturation",
+      "desc": "How strong this colour is, without changing the others.",
+      "group": "cms",
+      "cms": "green",
+      "part": "saturation",
+      "value": 0,
+      "min": -30,
+      "max": 30,
+      "active": false,
+      "inactive": "game"
+    },
+    {
+      "id": "cmsHueGreen",
+      "section": "picture",
+      "type": "number",
+      "title": "Green hue",
+      "desc": "Shifts this colour towards its neighbours on the colour wheel.",
+      "group": "cms",
+      "cms": "green",
+      "part": "hue",
+      "value": 0,
+      "min": -30,
+      "max": 30,
+      "active": false,
+      "inactive": "game"
+    },
+    {
+      "id": "cmsLuminanceGreen",
+      "section": "picture",
+      "type": "number",
+      "title": "Green luminance",
+      "desc": "How bright this colour is, without changing the others.",
+      "group": "cms",
+      "cms": "green",
+      "part": "luminance",
+      "value": 0,
+      "min": -30,
+      "max": 30,
+      "active": false,
+      "inactive": "game"
+    },
+    {
+      "id": "cmsSaturationBlue",
+      "section": "picture",
+      "type": "number",
+      "title": "Blue saturation",
+      "desc": "How strong this colour is, without changing the others.",
+      "group": "cms",
+      "cms": "blue",
+      "part": "saturation",
+      "value": 0,
+      "min": -30,
+      "max": 30,
+      "active": false,
+      "inactive": "game"
+    },
+    {
+      "id": "cmsHueBlue",
+      "section": "picture",
+      "type": "number",
+      "title": "Blue hue",
+      "desc": "Shifts this colour towards its neighbours on the colour wheel.",
+      "group": "cms",
+      "cms": "blue",
+      "part": "hue",
+      "value": 0,
+      "min": -30,
+      "max": 30,
+      "active": false,
+      "inactive": "game"
+    },
+    {
+      "id": "cmsLuminanceBlue",
+      "section": "picture",
+      "type": "number",
+      "title": "Blue luminance",
+      "desc": "How bright this colour is, without changing the others.",
+      "group": "cms",
+      "cms": "blue",
+      "part": "luminance",
+      "value": 0,
+      "min": -30,
+      "max": 30,
+      "active": false,
+      "inactive": "game"
+    },
+    {
+      "id": "cmsSaturationCyan",
+      "section": "picture",
+      "type": "number",
+      "title": "Cyan saturation",
+      "desc": "How strong this colour is, without changing the others.",
+      "group": "cms",
+      "cms": "cyan",
+      "part": "saturation",
+      "value": 0,
+      "min": -30,
+      "max": 30,
+      "active": false,
+      "inactive": "game"
+    },
+    {
+      "id": "cmsHueCyan",
+      "section": "picture",
+      "type": "number",
+      "title": "Cyan hue",
+      "desc": "Shifts this colour towards its neighbours on the colour wheel.",
+      "group": "cms",
+      "cms": "cyan",
+      "part": "hue",
+      "value": 0,
+      "min": -30,
+      "max": 30,
+      "active": false,
+      "inactive": "game"
+    },
+    {
+      "id": "cmsLuminanceCyan",
+      "section": "picture",
+      "type": "number",
+      "title": "Cyan luminance",
+      "desc": "How bright this colour is, without changing the others.",
+      "group": "cms",
+      "cms": "cyan",
+      "part": "luminance",
+      "value": 0,
+      "min": -30,
+      "max": 30,
+      "active": false,
+      "inactive": "game"
+    },
+    {
+      "id": "cmsSaturationMagenta",
+      "section": "picture",
+      "type": "number",
+      "title": "Magenta saturation",
+      "desc": "How strong this colour is, without changing the others.",
+      "group": "cms",
+      "cms": "magenta",
+      "part": "saturation",
+      "value": 0,
+      "min": -30,
+      "max": 30,
+      "active": false,
+      "inactive": "game"
+    },
+    {
+      "id": "cmsHueMagenta",
+      "section": "picture",
+      "type": "number",
+      "title": "Magenta hue",
+      "desc": "Shifts this colour towards its neighbours on the colour wheel.",
+      "group": "cms",
+      "cms": "magenta",
+      "part": "hue",
+      "value": 0,
+      "min": -30,
+      "max": 30,
+      "active": false,
+      "inactive": "game"
+    },
+    {
+      "id": "cmsLuminanceMagenta",
+      "section": "picture",
+      "type": "number",
+      "title": "Magenta luminance",
+      "desc": "How bright this colour is, without changing the others.",
+      "group": "cms",
+      "cms": "magenta",
+      "part": "luminance",
+      "value": 0,
+      "min": -30,
+      "max": 30,
+      "active": false,
+      "inactive": "game"
+    },
+    {
+      "id": "cmsSaturationYellow",
+      "section": "picture",
+      "type": "number",
+      "title": "Yellow saturation",
+      "desc": "How strong this colour is, without changing the others.",
+      "group": "cms",
+      "cms": "yellow",
+      "part": "saturation",
+      "value": 0,
+      "min": -30,
+      "max": 30,
+      "active": false,
+      "inactive": "game"
+    },
+    {
+      "id": "cmsHueYellow",
+      "section": "picture",
+      "type": "number",
+      "title": "Yellow hue",
+      "desc": "Shifts this colour towards its neighbours on the colour wheel.",
+      "group": "cms",
+      "cms": "yellow",
+      "part": "hue",
+      "value": 0,
+      "min": -30,
+      "max": 30,
+      "active": false,
+      "inactive": "game"
+    },
+    {
+      "id": "cmsLuminanceYellow",
+      "section": "picture",
+      "type": "number",
+      "title": "Yellow luminance",
+      "desc": "How bright this colour is, without changing the others.",
+      "group": "cms",
+      "cms": "yellow",
+      "part": "luminance",
+      "value": 0,
+      "min": -30,
+      "max": 30,
+      "active": false,
+      "inactive": "game"
+    },
+    {
+      "id": "sharpness",
+      "section": "picture",
+      "type": "number",
+      "title": "Sharpness",
+      "desc": "Sharpens edges. Above 0 it can add outlines that are not in the source.",
+      "group": "clarity",
+      "active": false,
+      "value": 10,
+      "min": 0,
+      "max": 50
+    },
+    {
+      "id": "superResolution",
+      "section": "picture",
+      "type": "choice",
+      "title": "Super resolution",
+      "desc": "Sharpens blurred and low-resolution parts of the picture.",
+      "group": "clarity",
+      "value": "off",
+      "choices": [
+        {
+          "value": "off",
+          "label": "Off"
+        },
+        {
+          "value": "low",
+          "label": "Low"
+        },
+        {
+          "value": "medium",
+          "label": "Medium"
+        },
+        {
+          "value": "high",
+          "label": "High"
+        }
+      ]
+    },
+    {
+      "id": "noiseReduction",
+      "section": "picture",
+      "type": "choice",
+      "title": "Noise reduction",
+      "desc": "Smooths out grain and stray pixels. It can soften fine detail and film grain too.",
+      "group": "clarity",
+      "active": false,
+      "value": "off",
+      "choices": [
+        {
+          "value": "off",
+          "label": "Off"
+        },
+        {
+          "value": "low",
+          "label": "Low"
+        },
+        {
+          "value": "medium",
+          "label": "Medium"
+        },
+        {
+          "value": "high",
+          "label": "High"
+        },
+        {
+          "value": "auto",
+          "label": "Auto"
+        }
+      ]
+    },
+    {
+      "id": "mpegNoiseReduction",
+      "section": "picture",
+      "type": "choice",
+      "title": "MPEG noise reduction",
+      "desc": "Smooths the blocks and halos that compression leaves in streamed and recorded video.",
+      "group": "clarity",
+      "active": false,
+      "value": "off",
+      "choices": [
+        {
+          "value": "off",
+          "label": "Off"
+        },
+        {
+          "value": "low",
+          "label": "Low"
+        },
+        {
+          "value": "medium",
+          "label": "Medium"
+        },
+        {
+          "value": "high",
+          "label": "High"
+        },
+        {
+          "value": "auto",
+          "label": "Auto"
+        }
+      ]
+    },
+    {
+      "id": "smoothGradation",
+      "section": "picture",
+      "type": "choice",
+      "title": "Smooth gradation",
+      "desc": "Smooths visible bands in gradients, such as a sky.",
+      "group": "clarity",
+      "active": false,
+      "value": "off",
+      "choices": [
+        {
+          "value": "off",
+          "label": "Off"
+        },
+        {
+          "value": "low",
+          "label": "Low"
+        },
+        {
+          "value": "medium",
+          "label": "Medium"
+        },
+        {
+          "value": "high",
+          "label": "High"
+        }
+      ]
+    },
+    {
+      "id": "truMotionMode",
+      "section": "picture",
+      "type": "choice",
+      "title": "TruMotion",
+      "desc": "Adds frames between the source's own to smooth motion. Off keeps films as they were shot.",
+      "group": "motion",
+      "active": false,
+      "value": "off",
+      "choices": [
+        {
+          "value": "off",
+          "label": "Off"
+        },
+        {
+          "value": "user",
+          "label": "User Selection"
+        }
+      ]
+    },
+    {
+      "id": "realCinema",
+      "section": "picture",
+      "type": "switch",
+      "title": "Real Cinema",
+      "desc": "Shows 24 fps films at a multiple of their own frame rate, so pans move as in a cinema.",
+      "group": "motion",
+      "active": false,
+      "on": false
+    },
+    {
+      "id": "motionPro",
+      "section": "picture",
+      "type": "switch",
+      "title": "Motion Pro",
+      "desc": "Shows black between frames to make motion clearer. It dims the picture and can flicker.",
+      "group": "motion",
+      "on": false
+    },
+    {
+      "id": "arcPerApp",
+      "section": "picture",
+      "type": "choice",
+      "title": "Aspect ratio",
+      "desc": "How the picture fills the screen. Original shows it as the source sends it.",
+      "group": "aspect",
+      "value": "16x9",
+      "choices": [
+        {
+          "value": "16x9",
+          "label": "16:9"
+        },
+        {
+          "value": "original",
+          "label": "Original"
+        },
+        {
+          "value": "4x3",
+          "label": "4:3"
+        }
+      ]
+    },
+    {
+      "id": "justScan",
+      "section": "picture",
+      "type": "choice",
+      "title": "Just Scan",
+      "desc": "Shows every pixel the source sends, without cropping the edges. Turn it off if a line shows at the edge of the screen.",
+      "group": "aspect",
+      "active": false,
+      "value": "auto",
+      "choices": [
+        {
+          "value": "auto",
+          "label": "Auto"
+        },
+        {
+          "value": "on",
+          "label": "On"
+        },
+        {
+          "value": "off",
+          "label": "Off"
+        }
+      ]
+    }
+  ],
+  "dimension": {
+    "pictureMode": "hdrGame",
+    "dynamicRange": "hdrALLM",
+    "input": "hdmi4"
+  },
+  "inputs": {
+    "hdmi1": "HDMI 1",
+    "hdmi2": "Denon Home Cinema",
+    "hdmi3": "Apple OTT",
+    "hdmi4": "PS5 Console de jeu"
+  }
+}

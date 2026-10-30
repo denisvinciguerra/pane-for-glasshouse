@@ -1,0 +1,150 @@
+{
+  "ok": true,
+  "rows": [
+    {
+      "id": "deepColor",
+      "section": "hdmi",
+      "type": "choice",
+      "title": "HDMI Deep Colour",
+      "desc": "For the input on screen. Lets it take 4K HDR and high frame rates. The picture can drop out for a moment while the TV and the device agree the change, and turning it off also turns off Game Optimizer for that input.",
+      "column": "deepColor",
+      "value": "4k",
+      "choices": [
+        {
+          "value": "off",
+          "label": "Off"
+        },
+        {
+          "value": "4k",
+          "label": "4K"
+        }
+      ]
+    },
+    {
+      "id": "audioFormatHDMI1",
+      "section": "hdmi",
+      "type": "choice",
+      "title": "HDMI 1 audio format",
+      "desc": "What the TV asks the device on this input to send. Bitstream allows encoded audio; PCM requests decoded audio.",
+      "port": 1,
+      "column": "audioFormat",
+      "active": false,
+      "value": "bitstream",
+      "choices": [
+        {
+          "value": "bitstream",
+          "label": "Bitstream"
+        },
+        {
+          "value": "pcm",
+          "label": "PCM"
+        }
+      ]
+    },
+    {
+      "id": "audioFormatHDMI2",
+      "section": "hdmi",
+      "type": "choice",
+      "title": "HDMI 2 audio format",
+      "desc": "What the TV asks the device on this input to send. Bitstream allows encoded audio; PCM requests decoded audio.",
+      "port": 2,
+      "column": "audioFormat",
+      "active": false,
+      "value": "bitstream",
+      "choices": [
+        {
+          "value": "bitstream",
+          "label": "Bitstream"
+        },
+        {
+          "value": "pcm",
+          "label": "PCM"
+        }
+      ]
+    },
+    {
+      "id": "audioFormatHDMI3",
+      "section": "hdmi",
+      "type": "choice",
+      "title": "HDMI 3 audio format",
+      "desc": "What the TV asks the device on this input to send. Bitstream allows encoded audio; PCM requests decoded audio.",
+      "port": 3,
+      "column": "audioFormat",
+      "active": false,
+      "value": "bitstream",
+      "choices": [
+        {
+          "value": "bitstream",
+          "label": "Bitstream"
+        },
+        {
+          "value": "pcm",
+          "label": "PCM"
+        }
+      ]
+    },
+    {
+      "id": "audioFormatHDMI4",
+      "section": "hdmi",
+      "type": "choice",
+      "title": "HDMI 4 audio format",
+      "desc": "What the TV asks the device on this input to send. Bitstream allows encoded audio; PCM requests decoded audio.",
+      "port": 4,
+      "column": "audioFormat",
+      "value": "bitstream",
+      "choices": [
+        {
+          "value": "bitstream",
+          "label": "Bitstream"
+        },
+        {
+          "value": "pcm",
+          "label": "PCM"
+        }
+      ]
+    },
+    {
+      "id": "simplinkEnable",
+      "section": "devices",
+      "type": "switch",
+      "title": "SIMPLINK (HDMI-CEC)",
+      "desc": "Lets the TV remote control devices connected over HDMI, such as a soundbar or console.",
+      "on": true
+    },
+    {
+      "id": "simplinkAutoPowerOn",
+      "section": "devices",
+      "type": "switch",
+      "title": "Auto power sync",
+      "desc": "Switching the TV off switches connected devices off, and switching a device on switches the TV on.",
+      "on": true
+    },
+    {
+      "id": "ipControl",
+      "section": "devices",
+      "type": "switch",
+      "title": "IP control",
+      "desc": "Lets home automation systems control the TV over the network with LG's own protocol. Off unless something needs it.",
+      "on": false
+    }
+  ],
+  "dimensions": {
+    "other": {
+      "dynamicRange": "hdrALLM",
+      "gameInput": "hdmi4",
+      "gameGenre": "RPG"
+    },
+    "sound": {
+      "audioOutput": "default",
+      "audioInput": "hdmi4_game",
+      "soundMode": "game",
+      "soundOutput": "external_arc"
+    }
+  },
+  "inputs": {
+    "hdmi1": "HDMI 1",
+    "hdmi2": "Denon Home Cinema",
+    "hdmi3": "Apple OTT",
+    "hdmi4": "PS5 Console de jeu"
+  }
+}

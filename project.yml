@@ -1,0 +1,42 @@
+name: Pane
+options:
+  deploymentTarget:
+    macOS: "14.0"
+  developmentLanguage: en
+packages:
+  PaneKit:
+    path: PaneKit
+  Sparkle:
+    url: https://github.com/sparkle-project/Sparkle
+    exactVersion: 2.10.0
+targets:
+  Pane:
+    type: application
+    platform: macOS
+    deploymentTarget: "14.0"
+    sources:
+      - path: App
+        excludes:
+          - "Resources/Fonts"
+          - "Resources/Fonts/**"
+      # A folder reference: copied whole to Contents/Resources/Fonts, where ATSApplicationFontsPath looks.
+      - path: App/Resources/Fonts
+        type: folder
+        buildPhase: resources
+    dependencies:
+      - package: PaneKit
+      - package: Sparkle
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: fr.synlink.pane
+        PRODUCT_NAME: "Pane for Glasshouse"
+        CODE_SIGN_IDENTITY: "-"
+        INFOPLIST_FILE: App/Info.plist
+        MACOSX_DEPLOYMENT_TARGET: "14.0"
+        MARKETING_VERSION: 1.0.0
+        CURRENT_PROJECT_VERSION: 1
+        SWIFT_VERSION: "6.0"
+        SWIFT_STRICT_CONCURRENCY: complete
+        SWIFT_EMIT_LOC_STRINGS: YES
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor

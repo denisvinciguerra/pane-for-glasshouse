@@ -1,0 +1,7 @@
+Pane.xcodeproj/
+.build/
+DerivedData/
+.superpowers/
+.DS_Store
+build/
+dist/
