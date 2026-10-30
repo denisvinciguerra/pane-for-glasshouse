@@ -108,6 +108,31 @@ import SwiftUI
         popover.behavior = .applicationDefined
         show()
     }
+
+    /// Draws the popover's content at twice its size into a PNG at `path`, whatever the screen's
+    /// scale, then quits (-PaneSnapshot).
+    func snapshot(to path: String) async {
+        guard let view = popover.contentViewController?.view, let root = view.layer else { return }
+        // SwiftUI's drawn layers (the text) are drawn again at 2x; its image layers keep their image.
+        func sharpen(_ layer: CALayer) {
+            if !String(describing: type(of: layer)).contains("ImageLayer") {
+                layer.contentsScale = 2
+                layer.setNeedsDisplay()
+            }
+            layer.sublayers?.forEach(sharpen)
+        }
+        sharpen(root)
+        view.displayIfNeeded()
+        try? await Task.sleep(for: .milliseconds(300))
+        let size = view.bounds.size
+        guard let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: Int(size.width * 2), pixelsHigh: Int(size.height * 2),
+                                         bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false,
+                                         colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0) else { return }
+        rep.size = size
+        view.cacheDisplay(in: view.bounds, to: rep)
+        try? rep.representation(using: .png, properties: [:])?.write(to: URL(fileURLWithPath: path))
+        NSApp.terminate(nil)
+    }
     #endif
 
     private func showMenu() {

@@ -114,8 +114,12 @@ import SwiftUI
         }
         let client = GlasshouseClient(endpoint: store.endpoint(for: tv), timeout: Discovery.detailTimeout)
         self.client = client
+        var api: any GlasshouseAPI = client
+        #if DEBUG
+        if UserDefaults.standard.bool(forKey: "PaneDemoInputs") { api = DemoInputsAPI(base: client) }
+        #endif
         // The MAC the TV reports is stored: once it is off, it no longer reports one to wake it with.
-        session = TVSession(api: client, mac: tv.mac, learnedMAC: { [weak self] mac in
+        session = TVSession(api: api, mac: tv.mac, learnedMAC: { [weak self] mac in
             self?.remember(mac: mac, for: tv.id)
         }, lostContact: { [weak self] in
             self?.relocate(tv.id)

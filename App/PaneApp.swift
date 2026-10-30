@@ -66,6 +66,10 @@ struct PaneApp: App {
                 try? await Task.sleep(for: .milliseconds(500))
                 statusBar.showForScreenshot()
                 if let keys { statusBar.keyboard.enterForScreenshot(keys) }
+                if let path = args.string(forKey: "PaneSnapshot") {
+                    try? await Task.sleep(for: .seconds(6))
+                    await statusBar.snapshot(to: path)
+                }
             }
         }
         if let pane = args.string(forKey: "PaneOpenPreferences").flatMap(PreferencesPane.init) {
@@ -116,14 +120,23 @@ struct PaneApp: App {
         return ActionStore(defaults: defaults)
     }
 
-    /// Two pins (an app, a setting) and an action of two steps open in the editor, for the active TV.
+    /// Six pins (three apps shown as their icons, an input with a setting, the screen, the sleep
+    /// timer) and an action of two steps open in the editor, for the active TV.
     private static func seedDemo(_ model: AppModel, pins: Bool, editor: Bool) {
         guard let tv = model.store.activeID else { return }
         let game = ActionStep.setting(id: "gameOptimization", section: "game", title: "VRR & G-Sync",
                                       value: .bool(true), valueLabel: "ON")
         if pins {
-            for steps: [ActionStep] in [[.launchApp(id: "youtube.leanback.v4", title: "YouTube")], [game]] {
-                let action = CustomAction(title: CustomAction.defaultTitle(steps, sources: []), steps: steps)
+            let demo: [(String?, [ActionStep])] = [
+                (nil, [.launchApp(id: "com.apple.appletv", title: "Apple TV")]),
+                (nil, [.launchApp(id: "netflix", title: "Netflix")]),
+                (nil, [.launchApp(id: "spotify-beehive", title: "Spotify")]),
+                ("PS5 + Game", [.button(.source("hdmi4")), game]),
+                (nil, [.screenOff]),
+                (nil, [.sleepTimer("30")]),
+            ]
+            for (title, steps) in demo {
+                let action = CustomAction(title: title ?? CustomAction.defaultTitle(steps, sources: []), steps: steps)
                 model.actions.save(action, for: tv)
                 model.actions.pin(action.id, for: tv)
             }

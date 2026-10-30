@@ -4,7 +4,7 @@
 
 A macOS menu-bar remote for an LG webOS TV running [Glasshouse](https://github.com/rorygallagher2024/glasshouse): remote control, sources, Picture, Audio and Game settings, HDMI ports and metrics, without opening the web dashboard. The rest of the dashboard opens from a link, on the right tab.
 
-![Control, keys shown](docs/screenshots/keys-dark.png)
+<p align="center"><img src="docs/screenshots/hero.png" width="830" alt="Pane's popover under its menu-bar icon: remote, inputs, and pinned Apple TV, Netflix and Spotify tiles"></p>
 
 - Keyboard remote while the popover is open: Arrows and Gaming profiles (by key position, whatever the keyboard layout), and every key can be changed in a Custom profile kept apart.
 - Pinned items: a setting or a sequence of actions on the Control tab, with its own key. A pin that launches an app can show the app's icon.
@@ -14,19 +14,20 @@ A macOS menu-bar remote for an LG webOS TV running [Glasshouse](https://github.c
 
 ## Screenshots
 
-<p align="center">
-  <img src="docs/screenshots/remote-dark.png" alt="Remote tab, dark theme" width="260">
-  &nbsp;
-  <img src="docs/screenshots/picture-dark.png" alt="Picture tab, dark theme" width="260">
-  &nbsp;
-  <img src="docs/screenshots/stats-dark.png" alt="Stats tab, dark theme" width="260">
-  <br>
-  <img src="docs/screenshots/hdmi-dark.png" alt="HDMI tab, dark theme" width="260">
-  &nbsp;
-  <img src="docs/screenshots/remote-light.png" alt="Remote tab, light theme" width="260">
-  <br>
-  <sub>Remote, Picture, Stats and HDMI tabs, in dark and light themes.</sub>
-</p>
+<table>
+  <tr>
+    <td align="center" valign="top"><img src="docs/screenshots/keys-dark.png" width="328" alt="Remote tab with the keyboard keys shown"><br><sub>Keyboard keys shown on every button</sub></td>
+    <td align="center" valign="top"><img src="docs/screenshots/remote-light.png" width="328" alt="Remote tab, light theme"><br><sub>Light theme</sub></td>
+  </tr>
+  <tr>
+    <td align="center" valign="top"><img src="docs/screenshots/picture-dark.png" width="328" alt="Picture tab"><br><sub>Picture settings, as the TV sends them</sub></td>
+    <td align="center" valign="top"><img src="docs/screenshots/hdmi-dark.png" width="328" alt="HDMI tab"><br><sub>HDMI ports, receiver and settings</sub></td>
+  </tr>
+  <tr>
+    <td align="center" valign="top"><img src="docs/screenshots/game-dark.png" width="328" alt="Game tab"><br><sub>Game settings</sub></td>
+    <td align="center" valign="top"><img src="docs/screenshots/stats-dark.png" width="328" alt="Stats tab"><br><sub>Live statistics</sub></td>
+  </tr>
+</table>
 
 ## Install
 
