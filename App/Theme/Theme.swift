@@ -37,17 +37,19 @@ struct Palette {
     let divider: Color
     /// The active state.
     let on: Color
-    /// Amber: the edit mode and the key capture only.
+    /// Amber: the key capture only.
     let accent: Color
+    /// Blue: the global shortcuts only.
+    let global: Color
 
     static let dark = Palette(fg: .white, bg: Color(red: 0, green: 0, blue: 0), on: Color(hex: 0x30DE61),
-                              accent: Color(hex: 0xFFDEA1))
+                              accent: Color(hex: 0xFFDEA1), global: Color(hex: 0x7FB8FF))
     static let light = Palette(fg: .black, bg: Color(hex: 0xF5F5F5), on: Color(hex: 0x157F37),
-                               accent: Color(hex: 0x8C5E00))
+                               accent: Color(hex: 0x8C5E00), global: Color(hex: 0x1F6FD1))
 
     static func of(_ scheme: ColorScheme) -> Palette { scheme == .dark ? .dark : .light }
 
-    private init(fg: Color, bg: Color, on: Color, accent: Color) {
+    private init(fg: Color, bg: Color, on: Color, accent: Color, global: Color) {
         self.bg = bg
         self.fg = fg
         self.line = fg.opacity(0.40)
@@ -55,6 +57,7 @@ struct Palette {
         self.divider = fg.opacity(0.18)
         self.on = on
         self.accent = accent
+        self.global = global
     }
 
     /// For a button awaiting its key: its text and edge in amber.

@@ -11,6 +11,8 @@ import SwiftUI
     let keyboard: KeyboardController
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
     private let popover = NSPopover()
+    /// What a global shortcut does while the popover is closed.
+    private let card = ShortcutCard()
 
     init(model: AppModel) {
         self.model = model
@@ -29,6 +31,8 @@ import SwiftUI
             button.sendAction(on: [.leftMouseUp, .rightMouseUp])
         }
         follow()
+        model.hotKeys.onPress = { [weak self] id in self?.fire(id) }
+        followShortcuts()
     }
 
     // MARK: Icon and appearance
@@ -76,6 +80,38 @@ import SwiftUI
         return image
     }
 
+    // MARK: Global shortcuts
+
+    /// Registers the global shortcuts now, and again each time they, the active TV or its actions
+    /// change. They are suspended while a recorder listens or a button of the popover awaits its key,
+    /// so that the combination reaches it; the popover open suspends nothing.
+    private func followShortcuts() {
+        let (wanted, suspended) = withObservationTracking {
+            (model.globalAssignments.slots.compactMapValues(\.primary), model.keyRecorderActive || keyboard.awaitingKey != nil)
+        } onChange: { [weak self] in
+            Task { @MainActor in self?.followShortcuts() }
+        }
+        model.hotKeys.update(wanted, suspended: suspended)
+    }
+
+    /// A global shortcut: its press, and the card under the icon with its result. With the popover
+    /// open, no card: the status line says it.
+    private func fire(_ id: ButtonID) {
+        let token = popover.isShown ? nil : statusItem.button.map { card.show(for: id, model: model, below: $0) }
+        let launchesApp = id.actionID.flatMap { actionID in
+            model.store.activeID.flatMap { tv in model.actions.actions(for: tv).first { $0.id == actionID } }
+        }?.iconAppID != nil
+        Task {
+            let result = await model.fire(id)
+            guard let token else { return }
+            if let phase = ShortcutPhase.after(result, launchesApp: launchesApp) {
+                card.finish(phase, for: token, id: id)
+            } else {
+                card.release(for: token, id: id)
+            }
+        }
+    }
+
     // MARK: Clicks
 
     @objc private func clicked(_ sender: NSStatusBarButton) {
@@ -90,6 +126,7 @@ import SwiftUI
 
     func show() {
         guard let button = statusItem.button else { return }
+        card.hide()
         // An agent app must be active for the popover to take the keyboard.
         NSApp.activate()
         popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)

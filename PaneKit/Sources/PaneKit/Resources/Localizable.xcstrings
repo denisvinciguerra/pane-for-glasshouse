@@ -817,6 +817,70 @@
         }
       }
     },
+    "Turning on the TV…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Turning on the TV…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allumage de la TV…"
+          }
+        }
+      }
+    },
+    "The TV didn't turn on" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The TV didn't turn on"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La TV ne s'est pas allumée"
+          }
+        }
+      }
+    },
+    "Panel maintenance in progress · see Preferences › General" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Panel maintenance in progress · see Preferences › General"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entretien de la dalle en cours · voir Préférences › Général"
+          }
+        }
+      }
+    },
+    "Action cancelled" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Action cancelled"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Action annulée"
+          }
+        }
+      }
+    },
     "MB" : {
       "localizations" : {
         "en" : {
@@ -845,6 +909,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "ko/s"
+          }
+        }
+      }
+    },
+    "Power" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Power"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Marche/Arrêt"
           }
         }
       }
@@ -1294,6 +1374,38 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "L’accès au réseau local est coupé pour Pane"
+          }
+        }
+      }
+    },
+    "Sent to the TV" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sent to the TV"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Envoyé à la TV"
+          }
+        }
+      }
+    },
+    "Launched on the TV" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Launched on the TV"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lancé sur la TV"
           }
         }
       }

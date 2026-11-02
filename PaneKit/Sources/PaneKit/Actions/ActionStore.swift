@@ -44,9 +44,17 @@ import SwiftUI
         pinned(for: tv).contains { $0.steps.count == 1 && $0.steps[0].hasSameEffect(as: step) }
     }
 
+    /// Replaces the action of the same id, or adds it. The global key stored stays: it only changes
+    /// through `setGlobalKey`, so an editor's copy cannot erase it.
     public func save(_ action: CustomAction, for tv: UUID) {
         var list = actions(for: tv)
-        if let i = list.firstIndex(where: { $0.id == action.id }) { list[i] = action } else { list.append(action) }
+        if let i = list.firstIndex(where: { $0.id == action.id }) {
+            var action = action
+            action.globalKey = list[i].globalKey
+            list[i] = action
+        } else {
+            list.append(action)
+        }
         actionsByTV[tv.uuidString] = list
         persist()
     }
@@ -88,6 +96,20 @@ import SwiftUI
     public func keySlots(for tv: UUID) -> [ButtonID: KeySlot] {
         Dictionary(actions(for: tv).compactMap { a in
             a.key.map { (ButtonID.action(a.id), KeySlot(primary: $0)) }
+        }, uniquingKeysWith: { first, _ in first })
+    }
+
+    public func setGlobalKey(_ key: KeyBinding?, action id: UUID, for tv: UUID) {
+        guard var list = actionsByTV[tv.uuidString], let i = list.firstIndex(where: { $0.id == id }) else { return }
+        list[i].globalKey = key
+        actionsByTV[tv.uuidString] = list
+        persist()
+    }
+
+    /// `.action(id)` → its global key, for the actions of this TV that have one.
+    public func globalSlots(for tv: UUID) -> [ButtonID: KeySlot] {
+        Dictionary(actions(for: tv).compactMap { a in
+            a.globalKey.map { (ButtonID.action(a.id), KeySlot(primary: $0)) }
         }, uniquingKeysWith: { first, _ in first })
     }
 

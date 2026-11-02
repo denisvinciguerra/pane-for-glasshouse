@@ -35,17 +35,23 @@ public struct CustomKeymap: Equatable, Sendable, Codable {
 /// The keymap shared by every TV: the fixed profiles, and the Custom one kept apart. Choosing a
 /// fixed profile keeps Custom; a change of keys on a fixed profile makes Custom from it.
 @MainActor @Observable public final class KeymapStore {
-    private static let profileKey = "keyProfile", customKey = "customKeymap"
+    private static let profileKey = "keyProfile", customKey = "customKeymap", globalsKey = "globalShortcuts"
     /// Before Custom was kept apart: the keys in use, and whether they differed from the profile.
     private static let legacyKeymapKey = "keymap", legacyCustomKey = "keyCustom"
 
     public private(set) var choice: KeymapChoice
     public private(set) var custom: CustomKeymap?
+    /// The global shortcuts, kept apart from the profiles: choosing, editing or resetting a profile
+    /// leaves them as they are. Buttons and sources only; the actions' are on the actions.
+    public private(set) var globals: [ButtonID: KeyBinding]
 
     @ObservationIgnored private let defaults: UserDefaults
 
     public init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
+        globals = defaults.data(forKey: Self.globalsKey)
+            .flatMap { try? JSONDecoder().decode([String: KeyBinding].self, from: $0) }
+            .map { Dictionary(uniqueKeysWithValues: $0.map { (ButtonID(rawValue: $0.key), $0.value) }) } ?? [:]
         let stored = defaults.string(forKey: Self.profileKey)
         let custom = defaults.data(forKey: Self.customKey).flatMap { try? JSONDecoder().decode(CustomKeymap.self, from: $0) }
         if defaults.object(forKey: Self.customKey) == nil, let legacy = defaults.data(forKey: Self.legacyKeymapKey) {
@@ -95,6 +101,14 @@ public struct CustomKeymap: Equatable, Sendable, Codable {
         }
         choice = .custom
         save()
+    }
+
+    /// Sets or, with `nil`, removes the global shortcut of a button or a source; any other id is ignored.
+    public func setGlobal(_ binding: KeyBinding?, for id: ButtonID) {
+        guard ButtonID.globalButtons.contains(id) || id.sourceID != nil else { return }
+        globals[id] = binding
+        defaults.set(try? JSONEncoder().encode(Dictionary(uniqueKeysWithValues: globals.map { ($0.key.rawValue, $0.value) })),
+                     forKey: Self.globalsKey)
     }
 
     /// Whether `set(slots)` would replace the Custom profile there is: a change made on a fixed profile.

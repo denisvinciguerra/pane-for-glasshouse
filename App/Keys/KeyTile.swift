@@ -1,57 +1,62 @@
+import AppKit
 import PaneKit
 import SwiftUI
 
 extension View {
-    /// A button that can carry a key: its tile while the keys show, and the right-click menu to set
-    /// or remove it (and, for a pinned action, to unpin or edit it).
-    func keyed(_ id: ButtonID, pinned: CustomAction? = nil) -> some View {
-        modifier(Keyed(id: id, pinned: pinned))
+    /// A button that can carry a key: its tiles while the keys show, its edge while it is the one
+    /// chosen, and the area a right-click finds it by.
+    func keyed(_ id: ButtonID) -> some View {
+        modifier(Keyed(id: id))
     }
 }
 
 private struct Keyed: ViewModifier {
     let id: ButtonID
-    let pinned: CustomAction?
     @Environment(\.keyboard) private var keyboard
-    @Environment(\.appModel) private var model
     @Environment(\.palette) private var palette
 
     func body(content: Content) -> some View {
-        let label = keyboard?.label(for: id)
-        let awaiting = keyboard?.awaitingKey == id
+        let awaiting = keyboard?.state.mode == .capturing(id)
+        let awaitingGlobal = keyboard?.state.mode == .capturingGlobal(id)
+        let chosen = keyboard?.state.selected == id
         content
             .environment(\.palette, awaiting ? palette.awaitingKey : palette)
-            .background(awaiting ? palette.accent.opacity(0.08) : .clear)
+            .background(awaiting ? palette.accent.opacity(0.08) : chosen ? palette.fg.opacity(0.08) : .clear)
+            // The button chosen in the keys shown: a white edge (amber while it awaits its key), drawn
+            // over its own, which a pin's coloured tile may not have.
+            .overlay {
+                if chosen {
+                    Rectangle().strokeBorder(awaiting ? palette.accent : palette.fg, lineWidth: 1)
+                        .allowsHitTesting(false)
+                }
+            }
+            // Its key in the top right corner and, in blue on its left, its global shortcut when it has
+            // one or awaits one: nothing sticks out under the button, onto the key of the one below.
             .overlay(alignment: .topTrailing) {
                 if keyboard?.state.showsTiles == true {
-                    KeyTile(text: awaiting ? "?" : label, amber: awaiting)
-                        .offset(x: 5, y: -6)
-                        .allowsHitTesting(false)
-                        .accessibilityHidden(true)
-                }
-            }
-            .contextMenu {
-                Button("Set Key…") { keyboard?.setKey(for: id) }
-                Button("Remove Key") { keyboard?.removeKey(of: id) }
-                    .keyboardShortcut(keyboard.flatMap { $0.shortcut(for: id) })
-                    .disabled(label == nil)
-                if let pinned {
-                    Divider()
-                    Button("Unpin") { model?.unpin(pinned.id) }
-                    Button("Edit Action…") {
-                        keyboard?.leaveKeyModes()
-                        model?.edit(pinned)
+                    HStack(spacing: 2) {
+                        if let global = awaitingGlobal ? "?" : keyboard?.globalLabel(for: id) {
+                            KeyTile(text: global, fill: palette.global, ring: awaitingGlobal)
+                        }
+                        KeyTile(text: awaiting ? "?" : keyboard?.label(for: id), amber: awaiting)
                     }
+                    .offset(x: 5, y: -6)
+                    .allowsHitTesting(false)
+                    .accessibilityHidden(true)
                 }
             }
+            .background(KeyAreaView(id: id).allowsHitTesting(false).accessibilityHidden(true))
     }
 }
 
 /// The small inverted tile in a button's top right corner: its key, a dashed "·" without one,
-/// an amber "?" while it awaits one.
+/// an amber "?" while it awaits one. With `fill`, that colour under the text (the global shortcut),
+/// ringed with it while the button awaits its shortcut.
 private struct KeyTile: View {
     let text: String?
-    let amber: Bool
+    var amber = false
+    var fill: Color?
+    var ring = false
     @Environment(\.palette) private var palette
 
     var body: some View {
@@ -64,56 +69,43 @@ private struct KeyTile: View {
             .padding(.horizontal, 3)
             .frame(minWidth: 14, minHeight: 14, maxHeight: 14)
             .foregroundStyle(text == nil ? palette.fg.opacity(0.5) : palette.bg)
-            .background(amber ? palette.accent : text == nil ? palette.bg : palette.fg)
+            .background(amber ? palette.accent : fill ?? (text == nil ? palette.bg : palette.fg))
             .overlay {
                 if text == nil {
                     Rectangle().strokeBorder(palette.fg.opacity(0.5), style: StrokeStyle(lineWidth: 1, dash: [2, 2]))
                 }
             }
+            .background {
+                if ring, let fill { Rectangle().fill(fill.opacity(0.35)).padding(-2) }
+            }
     }
 }
 
-extension KeyboardController {
-    /// The button awaiting its key, in the edit mode or after "Set Key…".
-    var awaitingKey: ButtonID? {
-        switch state.mode {
-        case .editing(let id): id
-        case .capturing(let id): id
-        case .normal, .showing: nil
-        }
-    }
+/// An empty AppKit view under a keyed button, where it is in the window: the keyboard controller's
+/// monitor looks for the one under a right-click, as SwiftUI has no right-click gesture. It takes no
+/// click itself.
+final class KeyArea: NSView {
+    var id: ButtonID?
 
-    /// The main key as a menu shortcut, only to show it on the right of "Remove Key".
-    func shortcut(for id: ButtonID) -> KeyboardShortcut? {
-        guard let binding = key(of: id) else { return nil }
-        let key: KeyEquivalent?
-        switch binding.trigger {
-        case .keyCode(let code): key = Self.equivalents[code] ?? layout.character(for: code).flatMap(Self.equivalent)
-        case .character(let c): key = c == " " ? .space : Self.equivalent(c)
-        }
-        guard let key else { return nil }
-        var modifiers: EventModifiers = []
-        if binding.modifiers.contains(.command) { modifiers.insert(.command) }
-        if binding.modifiers.contains(.option) { modifiers.insert(.option) }
-        if binding.modifiers.contains(.control) { modifiers.insert(.control) }
-        if binding.modifiers.contains(.shift) { modifiers.insert(.shift) }
-        return KeyboardShortcut(key, modifiers: modifiers)
-    }
+    override func hitTest(_ point: NSPoint) -> NSView? { nil }
 
-    private static func equivalent(_ s: String) -> KeyEquivalent? {
-        s.count == 1 ? KeyEquivalent(Character(s.lowercased())) : nil
-    }
-
-    private static let equivalents: [UInt16: KeyEquivalent] = {
-        var map: [UInt16: KeyEquivalent] = [
-            KeyCode.up: .upArrow, KeyCode.down: .downArrow, KeyCode.left: .leftArrow, KeyCode.right: .rightArrow,
-            KeyCode.returnKey: .return, KeyCode.keypadEnter: KeyEquivalent("\u{3}"), KeyCode.escape: .escape,
-            48: .tab, 51: .delete, 117: .deleteForward, 115: .home, 119: .end, 116: .pageUp, 121: .pageDown,
-        ]
-        // F1–F12: NSF1FunctionKey (0xF704) onwards.
-        for (n, code) in [122, 120, 99, 118, 96, 97, 98, 100, 101, 109, 103, 111].enumerated() {
-            if let scalar = Unicode.Scalar(0xF704 + n) { map[UInt16(code)] = KeyEquivalent(Character(scalar)) }
+    /// The button whose area holds the point, in window coordinates, among the views under `root`.
+    static func button(at point: NSPoint, in root: NSView) -> ButtonID? {
+        if let area = root as? KeyArea, let id = area.id, !area.isHiddenOrHasHiddenAncestor,
+           area.convert(area.bounds, to: nil).contains(point) {
+            return id
         }
-        return map
-    }()
+        for view in root.subviews.reversed() {
+            if let id = button(at: point, in: view) { return id }
+        }
+        return nil
+    }
+}
+
+private struct KeyAreaView: NSViewRepresentable {
+    let id: ButtonID
+
+    func makeNSView(context: Context) -> KeyArea { KeyArea() }
+
+    func updateNSView(_ view: KeyArea, context: Context) { view.id = id }
 }

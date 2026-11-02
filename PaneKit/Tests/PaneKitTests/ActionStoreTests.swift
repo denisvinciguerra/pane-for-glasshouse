@@ -151,4 +151,47 @@ final class ActionStoreTests: XCTestCase {
         XCTAssertTrue(s.isPinned(onlyStep: same, for: tv))
         XCTAssertFalse(s.isPinned(onlyStep: same, for: UUID()), "pins are per TV")
     }
+
+    func testGlobalBindingsFollowTheActiveTV() {
+        let s = ActionStore(defaults: scratchDefaults())
+        let tvA = UUID(), tvB = UUID()
+        let global = KeyBinding(.keyCode(45), modifiers: [.control, .option])
+        let a = action("A"), b = action("B")
+        s.save(a, for: tvA)
+        s.save(b, for: tvB)
+        s.setGlobalKey(global, action: a.id, for: tvA)
+        s.setGlobalKey(global, action: b.id, for: tvB)
+        XCTAssertEqual(s.globalSlots(for: tvA), [.action(a.id): KeySlot(primary: global)])
+        XCTAssertEqual(s.globalSlots(for: tvB), [.action(b.id): KeySlot(primary: global)])
+        s.delete(a.id, for: tvA)
+        XCTAssertEqual(s.globalSlots(for: tvA), [:])
+        XCTAssertEqual(s.globalSlots(for: tvB).count, 1)
+    }
+
+    func testSaveKeepsTheGlobalKeyWhenTheDraftHasNone() {
+        let d = scratchDefaults()
+        let s = ActionStore(defaults: d)
+        let tv = UUID()
+        let global = KeyBinding(.keyCode(45), modifiers: [.control, .option])
+        var act = action()
+        s.save(act, for: tv)
+        s.setGlobalKey(global, action: act.id, for: tv)
+        XCTAssertNil(act.globalKey)
+        act.title = "B"
+        s.save(act, for: tv)
+        XCTAssertEqual(s.actions(for: tv).first?.title, "B")
+        XCTAssertEqual(s.actions(for: tv).first?.globalKey, global)
+        XCTAssertEqual(ActionStore(defaults: d).actions(for: tv).first?.globalKey, global)
+        s.setGlobalKey(nil, action: act.id, for: tv)
+        XCTAssertNil(s.actions(for: tv).first?.globalKey)
+    }
+
+    func testSaveOfANewActionKeepsItsGlobalKey() {
+        let s = ActionStore(defaults: scratchDefaults())
+        let tv = UUID()
+        let global = KeyBinding(.keyCode(45), modifiers: [.control, .option])
+        let act = CustomAction(title: "A", steps: [.screenOff], globalKey: global)
+        s.save(act, for: tv)
+        XCTAssertEqual(s.actions(for: tv), [act])
+    }
 }

@@ -174,4 +174,29 @@ final class KeymapStoreTests: XCTestCase {
         XCTAssertNil(s.custom)
         XCTAssertEqual(s.slots, KeyProfile.arrows.slots)
     }
+
+    func testGlobalsSurviveProfileChanges() {
+        let d = scratchDefaults()
+        let s = KeymapStore(defaults: d)
+        let global = KeyBinding(.keyCode(35), modifiers: [.control, .option])
+        s.setGlobal(global, for: .media(.playPause))
+        s.choose(.profile(.gaming))
+        s.set(editing(KeyProfile.gaming.slots))
+        XCTAssertEqual(s.choice, .custom)
+        s.reset()
+        XCTAssertEqual(s.globals, [.media(.playPause): global])
+        XCTAssertEqual(KeymapStore(defaults: d).globals, [.media(.playPause): global])
+    }
+
+    func testGlobalsKeepOnlyButtonsAndSources() {
+        let s = KeymapStore(defaults: scratchDefaults())
+        let global = KeyBinding(.keyCode(35), modifiers: [.control, .option])
+        s.setGlobal(global, for: .action(UUID()))
+        XCTAssertEqual(s.globals, [:])
+        s.setGlobal(global, for: .power)
+        s.setGlobal(global, for: .source("hdmi1"))
+        XCTAssertEqual(s.globals, [.power: global, .source("hdmi1"): global])
+        s.setGlobal(nil, for: .power)
+        XCTAssertEqual(s.globals, [.source("hdmi1"): global])
+    }
 }

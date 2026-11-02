@@ -3,7 +3,7 @@ import SwiftUI
 
 /// The remote: sources, d-pad, playback, volume, pinned actions. Every button goes through the
 /// keyboard controller and can carry a key; all but the pins' "+" are off when the TV can't be
-/// controlled, unless keys are being set.
+/// controlled, unless the keys show: a click then chooses the button and sends nothing.
 struct RemoteTab: View {
     let model: AppModel
     let session: TVSession
@@ -21,7 +21,8 @@ struct RemoteTab: View {
                 section("Playback") { playback }
                 section("Volume", trailing: stats?.sound?.output ?? stats?.audioOutput) { volume(stats) }
             }
-            .disabled(controlsOff)
+            // The pins' edit sends nothing either.
+            .disabled(controlsOff || keyboard?.pinsEditing == true)
             PinnedSection(model: model, session: session, controlsOff: controlsOff)
         }
     }

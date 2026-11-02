@@ -2,6 +2,16 @@
 
 All notable changes to Pane for Glasshouse. Versions follow [Semantic Versioning](https://semver.org).
 
+## Unreleased
+
+## 1.1.0
+
+- Global shortcuts: give a button, an input or an action a key combination that works in any app, with a small card under the menu-bar icon. Set them in Settings › Keys or from the popover's keyboard icon.
+- Click the keyboard icon, then a button, to set its popover key and its global shortcut from the bottom bar; the keys' edit mode (⌥-click) is gone.
+- A pinned action triggered while the TV is off, from its tile, its key or its global shortcut, now turns it on first, then runs.
+- Edit the pins on Remote: the pencil next to Pinned adds a pin, deletes one with its keys, or moves it by dragging. Unpin is gone from the keys' bar.
+- A pinned app tile is greyed evenly while the TV is off: its icon no longer shows brighter than the colour around it.
+
 ## 1.0.0
 
 The first public release.

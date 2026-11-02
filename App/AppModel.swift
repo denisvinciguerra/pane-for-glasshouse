@@ -15,6 +15,8 @@ import SwiftUI
     let icons: AppIconStore
     /// The updates, through Sparkle.
     let updates: Updates
+    /// The global shortcuts, registered with the system.
+    let hotKeys = GlobalHotKeys()
     private(set) var session: TVSession?
     /// The active TV's client, for the dashboard links.
     private(set) var client: GlasshouseClient?
@@ -23,8 +25,18 @@ import SwiftUI
     var editingAction: CustomAction?
     /// Whether the popover is shown: the session polls every 2 s then, every 30 s otherwise.
     var isOpen = false
+    /// Whether a recorder of global shortcuts is listening: the shortcuts are suspended meanwhile,
+    /// so that a combination Pane holds reaches the recorder.
+    var keyRecorderActive = false
     var theme: ThemeMode {
         didSet { defaults.set(theme.rawValue, forKey: ThemeMode.defaultsKey) }
+    }
+    /// Whether an action turns the TV on even during panel maintenance, which it then interrupts.
+    var powersOnDuringMaintenance: Bool {
+        didSet {
+            defaults.set(powersOnDuringMaintenance, forKey: Self.maintenanceKey)
+            session?.powersOnDuringMaintenance = powersOnDuringMaintenance
+        }
     }
 
     /// Opens the preferences window on a pane (set by the app delegate).
@@ -34,20 +46,24 @@ import SwiftUI
     @ObservationIgnored let discovery = Discovery()
     @ObservationIgnored let probe = TVProbe(makeDetailAPI: { GlasshouseClient(endpoint: $0, timeout: Discovery.detailTimeout) })
 
+    private static let maintenanceKey = "powerOnDuringMaintenance"
+
     @ObservationIgnored private let defaults: UserDefaults
     @ObservationIgnored private var runTask: Task<Void, Never>?
     @ObservationIgnored private var throttle = RelocationThrottle()
     @ObservationIgnored private var relocateTasks: [UUID: Task<Void, Never>] = [:]
 
-    /// `actions`: the store of the custom actions, by default in `defaults`.
-    init(updates: Updates, store: TVConfigStore = TVConfigStore(), defaults: UserDefaults = .standard, actions: ActionStore? = nil) {
+    /// `actions` and `keymap`: the stores of the custom actions and of the keys, by default in `defaults`.
+    init(updates: Updates, store: TVConfigStore = TVConfigStore(), defaults: UserDefaults = .standard,
+         actions: ActionStore? = nil, keymap: KeymapStore? = nil) {
         self.updates = updates
         self.store = store
         self.defaults = defaults
-        keymap = KeymapStore(defaults: defaults)
+        self.keymap = keymap ?? KeymapStore(defaults: defaults)
         self.actions = actions ?? ActionStore(defaults: defaults)
         icons = AppIconStore(directory: Self.iconsDirectory)
         theme = defaults.string(forKey: ThemeMode.defaultsKey).flatMap(ThemeMode.init) ?? .auto
+        powersOnDuringMaintenance = defaults.bool(forKey: Self.maintenanceKey)
         startSession()
     }
 
@@ -104,6 +120,8 @@ import SwiftUI
     /// A new session with the active TV, replacing the previous one and its polling. An action
     /// open in the editor belonged to the previous TV: it is closed.
     private func startSession() {
+        // An action still waiting for the TV to come on belongs to the previous session.
+        session?.end()
         runTask?.cancel()
         runTask = nil
         editingAction = nil
@@ -126,6 +144,7 @@ import SwiftUI
         }, answered: { [weak self] in
             self?.throttle.reset(tv.id)
         })
+        session?.powersOnDuringMaintenance = powersOnDuringMaintenance
         restartPolling()
     }
 
@@ -199,9 +218,46 @@ import SwiftUI
             guard let tv = store.activeID,
                   let action = actions.actions(for: tv).first(where: { $0.id == actionID }) else { return }
             Task { await session.trigger(action) }
-        } else if let command = ActionStep.button(id).command(stats: session.stats) {
-            Task { await session.send(command) }
+        } else {
+            Task { await session.press(id) }
         }
+    }
+
+    // MARK: Global shortcuts
+
+    /// Every global shortcut in play: the shared ones, and those of the active TV's actions.
+    var globalAssignments: KeyAssignments {
+        var slots = keymap.globals.mapValues { KeySlot(primary: $0) }
+        if let tv = store.activeID {
+            slots.merge(actions.globalSlots(for: tv)) { shared, _ in shared }
+        }
+        return KeyAssignments(slots: slots)
+    }
+
+    /// Stores new global shortcuts: the buttons' and sources' in the shared keymap, the actions'
+    /// with the active TV.
+    func applyGlobals(_ assignments: KeyAssignments) {
+        let shared = Set(keymap.globals.keys).union(assignments.slots.keys).filter { $0.actionID == nil }
+        for id in shared {
+            let key = assignments.slots[id]?.primary
+            if key != keymap.globals[id] { keymap.setGlobal(key, for: id) }
+        }
+        guard let tv = store.activeID else { return }
+        for action in actions.actions(for: tv) {
+            let key = assignments.slots[.action(action.id)]?.primary
+            if key != action.globalKey { actions.setGlobalKey(key, action: action.id, for: tv) }
+        }
+    }
+
+    /// What a global shortcut does: the active TV's action, or the button's press; its result, for
+    /// the feedback card.
+    func fire(_ id: ButtonID) async -> ActionResult {
+        guard let session else { return .failed(String(localized: "No TV")) }
+        if let actionID = id.actionID, let tv = store.activeID,
+           let action = actions.actions(for: tv).first(where: { $0.id == actionID }) {
+            return await session.trigger(action)
+        }
+        return await session.press(id)
     }
 
     // MARK: Actions and pins
@@ -243,6 +299,20 @@ import SwiftUI
         actions.pin(id, for: tv)
     }
 
+    /// Moves the pin to the place of the target pin, the others making room.
+    func movePin(_ id: UUID, to target: UUID) {
+        guard let tv = store.activeID else { return }
+        let ids = actions.pinned(for: tv).map(\.id)
+        guard let from = ids.firstIndex(of: id), let to = ids.firstIndex(of: target), from != to else { return }
+        actions.movePin(for: tv, from: [from], to: to > from ? to + 1 : to)
+    }
+
+    /// The active TV's actions that no pin shows, in their order: the pins' "+" offers them again.
+    var unpinnedActions: [CustomAction] {
+        guard let tv = store.activeID else { return [] }
+        return actions.actions(for: tv).filter { !actions.isPinned($0.id, for: tv) }
+    }
+
     func unpin(_ id: UUID) {
         guard let tv = store.activeID else { return }
         actions.unpin(id, for: tv)
@@ -272,6 +342,7 @@ import SwiftUI
     }
 
     func stop() {
+        session?.end()
         runTask?.cancel()
         runTask = nil
         relocateTasks.values.forEach { $0.cancel() }
@@ -286,6 +357,6 @@ import SwiftUI
 }
 
 extension EnvironmentValues {
-    /// The app's model, for the right-click menu of a pinned button.
+    /// The app's model, for the key recorders of Settings.
     @Entry var appModel: AppModel?
 }

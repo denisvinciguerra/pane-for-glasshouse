@@ -2,10 +2,9 @@ import PaneKit
 import SwiftUI
 
 /// The popover: the masthead, a status line, the tab bar, the tab, the footer, and under it the
-/// quiet bar while the keys show or the amber bar while they are being set, then the bar
-/// announcing an update. The action editor, while open, takes the place of the tab bar and the
-/// tab. Without a TV, the welcome screen. Its palette follows the popover's appearance, which
-/// follows the theme.
+/// bar of the keys while they show, then the bar announcing an update. The action editor, while
+/// open, takes the place of the tab bar and the tab. Without a TV, the welcome screen. Its palette
+/// follows the popover's appearance, which follows the theme.
 struct PopoverRoot: View {
     let model: AppModel
     let keyboard: KeyboardController
@@ -13,16 +12,13 @@ struct PopoverRoot: View {
 
     var body: some View {
         let palette = Palette.of(colorScheme)
-        let editBar = model.session != nil && keyboard.state.showsEditBar
-        let showBar = model.session != nil && model.editingAction == nil && keyboard.state.mode == .showing
-            && !editBar
+        let keysBar = model.session != nil && model.editingAction == nil && keyboard.state.keysShown
         let updateBar = model.updates.available != nil && !model.updates.barDismissed
         VStack(alignment: .leading, spacing: 0) {
             content
                 .padding(.top, 18)
-                .padding(.bottom, editBar || showBar || updateBar ? 10 : 14)
-            if editBar { EditBar(keyboard: keyboard) }
-            if showBar { ShowBar(keyboard: keyboard) }
+                .padding(.bottom, keysBar || updateBar ? 10 : 14)
+            if keysBar { KeysBar(model: model, keyboard: keyboard) }
             if updateBar, let version = model.updates.available { UpdateBar(updates: model.updates, version: version) }
         }
         // A tab the TV can't offer (Game Optimizer missing) goes from the bar; leave it.
@@ -31,12 +27,34 @@ struct PopoverRoot: View {
         }
         .frame(width: Metrics.width, alignment: .topLeading)
         .fixedSize(horizontal: false, vertical: true)
+        .overlayPreferenceValue(PinsListAnchor.self) { anchor in
+            if keyboard.pinsListOpen, let anchor { pinsList(above: anchor) }
+        }
         .font(.manrope(11))
         .foregroundStyle(palette.fg)
         .background(palette.bg)
         .environment(\.palette, palette)
         .environment(\.keyboard, keyboard)
-        .environment(\.appModel, model)
+    }
+
+    /// The pins' "+" list over everything, its bottom just above the "+" and its right edge on the
+    /// "+"'s; a click beside it closes it.
+    private func pinsList(above anchor: Anchor<CGRect>) -> some View {
+        GeometryReader { proxy in
+            let plus = proxy[anchor]
+            let left = min(max(Metrics.gutter, plus.maxX - PinsList.width), proxy.size.width - PinsList.width)
+            ZStack(alignment: .topLeading) {
+                Color.clear
+                    .contentShape(Rectangle())
+                    .onTapGesture { keyboard.pinsListOpen = false }
+                VStack(spacing: 0) {
+                    Spacer(minLength: 0)
+                    PinsList(model: model, keyboard: keyboard)
+                }
+                .frame(height: max(0, plus.minY - 4))
+                .offset(x: left)
+            }
+        }
     }
 
     @ViewBuilder private var content: some View {

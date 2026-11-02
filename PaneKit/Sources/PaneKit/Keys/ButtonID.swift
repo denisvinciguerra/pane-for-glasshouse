@@ -10,6 +10,8 @@ public struct ButtonID: RawRepresentable, Hashable, Codable, Sendable {
 
     public static func rcu(_ k: RemoteKey) -> ButtonID { ButtonID(rawValue: "rcu.\(k.rawValue)") }
     public static func media(_ k: MediaKey) -> ButtonID { ButtonID(rawValue: "media.\(k.rawValue)") }
+    /// Power is no remote key: only the global shortcuts offer it.
+    public static let power = ButtonID(rawValue: "power")
     public static let volumeDown = ButtonID(rawValue: "volume.down")
     public static let volumeUp = ButtonID(rawValue: "volume.up")
     public static let mute = ButtonID(rawValue: "mute")
@@ -25,11 +27,15 @@ public struct ButtonID: RawRepresentable, Hashable, Codable, Sendable {
         .media(.rewind), .media(.playPause), .media(.stop), .media(.fastForward), .volumeDown, .volumeUp, .mute,
     ]
 
+    /// Buttons a global shortcut can drive: Power first, then the remote.
+    public static let globalButtons: [ButtonID] = [.power] + remote
+
     /// Localized name of a fixed button; nil for the others.
     public var fixedTitle: String? { fixedTitle(bundle: .module) }
 
     func fixedTitle(bundle: Bundle) -> String? {
         switch rawValue {
+        case "power": String(localized: "Power", bundle: bundle)
         case "rcu.up": String(localized: "Up", bundle: bundle)
         case "rcu.down": String(localized: "Down", bundle: bundle)
         case "rcu.left": String(localized: "Left", bundle: bundle)

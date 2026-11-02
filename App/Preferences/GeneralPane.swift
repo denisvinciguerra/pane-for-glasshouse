@@ -38,7 +38,7 @@ enum LanguageChoice: String, CaseIterable {
     }
 }
 
-/// Preferences › General: the theme, opening at login, the language and the updates.
+/// Preferences › General: the theme, opening at login, panel maintenance, the language and the updates.
 struct GeneralPane: View {
     let model: AppModel
     @State private var loginStatus = SMAppService.mainApp.status
@@ -51,6 +51,7 @@ struct GeneralPane: View {
         PreferencesScroll {
             theme
             login
+            maintenance
             languageSection
             updatesSection
         }
@@ -104,6 +105,27 @@ struct GeneralPane: View {
             loginError = error.localizedDescription
         }
         refreshLogin()
+    }
+
+    // MARK: Panel maintenance
+
+    private var maintenance: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            SectionLabel("Panel maintenance")
+            HStack(spacing: 12) {
+                Text("Turn on the TV even during panel maintenance")
+                    .font(.manrope(10.5))
+                    .foregroundStyle(palette.label)
+                    .lineLimit(2)
+                Spacer(minLength: 0)
+                HStack(spacing: 6) {
+                    GHButton("maintenance.on", selected: model.powersOnDuringMaintenance, height: 30) { model.powersOnDuringMaintenance = true }
+                    GHButton("maintenance.off", selected: !model.powersOnDuringMaintenance, height: 30) { model.powersOnDuringMaintenance = false }
+                }
+                .frame(width: 160)
+            }
+            line("Triggering an action then interrupts the maintenance.")
+        }
     }
 
     // MARK: Language

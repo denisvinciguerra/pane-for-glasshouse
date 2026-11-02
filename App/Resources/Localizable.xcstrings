@@ -1025,38 +1025,6 @@
         }
       }
     },
-    "Set Key…" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Set Key…"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Définir la touche…"
-          }
-        }
-      }
-    },
-    "Remove Key" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Remove Key"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Retirer la touche"
-          }
-        }
-      }
-    },
     "Unpin" : {
       "localizations" : {
         "en" : {
@@ -1089,34 +1057,34 @@
         }
       }
     },
-    "Click a button, then press its key" : {
+    "%@ alone isn't enough: add ⌘, ⌃ or ⌥" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Click a button, then press its key"
+            "value" : "%@ alone isn't enough: add ⌘, ⌃ or ⌥"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Clique un bouton, puis appuie sur sa touche"
+            "value" : "%@ seul ne suffit pas : ajoute ⌘, ⌃ ou ⌥"
           }
         }
       }
     },
-    "%@: press a key" : {
+    "Another app already uses %@" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@: press a key"
+            "value" : "Another app already uses %@"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@ : appuie sur une touche"
+            "value" : "Une autre app utilise déjà %@"
           }
         }
       }
@@ -1133,6 +1101,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ est la touche de %2$@"
+          }
+        }
+      }
+    },
+    "%@ is %@'s global shortcut" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ is %2$@'s global shortcut"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ est le raccourci global de %2$@"
           }
         }
       }
@@ -1745,6 +1729,22 @@
         }
       }
     },
+    "Shortcut used by %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shortcut used by %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Utilisé par %@"
+          }
+        }
+      }
+    },
     "Nothing pinned yet. Use PIN on a setting, or + under Pinned on Remote." : {
       "localizations" : {
         "en" : {
@@ -1825,66 +1825,178 @@
         }
       }
     },
-    "Keys shown" : {
+    "Done" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Keys shown"
+            "value" : "Done"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Touches affichées"
+            "value" : "Terminé"
           }
         }
       }
     },
-    "Edit Keys" : {
+    "Close" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Edit Keys"
+            "value" : "Close"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Modifier"
+            "value" : "Fermer"
           }
         }
       }
     },
-    "Hide" : {
+    "Click a button to set its keys" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hide"
+            "value" : "Click a button to set its keys"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Masquer"
+            "value" : "Clique un bouton pour régler ses touches"
           }
         }
       }
     },
-    "Profile" : {
+    "Popover key" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Profile"
+            "value" : "Popover key"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Profil"
+            "value" : "Touche du popover"
+          }
+        }
+      }
+    },
+    "Global shortcut" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Global shortcut"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Raccourci global"
+          }
+        }
+      }
+    },
+    "key.none" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "none"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "aucune"
+          }
+        }
+      }
+    },
+    "shortcut.none" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "none"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "aucun"
+          }
+        }
+      }
+    },
+    "Change" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Change"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Changer"
+          }
+        }
+      }
+    },
+    "Set" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Set"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Définir"
+          }
+        }
+      }
+    },
+    "Press a key" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Press a key"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Appuie sur une touche"
+          }
+        }
+      }
+    },
+    "Press ⌘, ⌃ or ⌥ + a key" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Press ⌘, ⌃ or ⌥ + a key"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Appuie sur ⌘, ⌃ ou ⌥ + une touche"
           }
         }
       }
@@ -1949,22 +2061,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Remplacer ton profil Perso ?"
-          }
-        }
-      }
-    },
-    "Done" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Done"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Terminé"
           }
         }
       }
@@ -2397,6 +2493,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ajouter une TV"
+          }
+        }
+      }
+    },
+    "No TV" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No TV"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucune TV"
           }
         }
       }
@@ -3085,6 +3197,294 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "par le Sparkle Project"
+          }
+        }
+      }
+    },
+    "Panel maintenance" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Panel maintenance"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entretien de la dalle"
+          }
+        }
+      }
+    },
+    "Turn on the TV even during panel maintenance" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Turn on the TV even during panel maintenance"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allumer la TV même pendant l'entretien de la dalle"
+          }
+        }
+      }
+    },
+    "maintenance.on" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activée"
+          }
+        }
+      }
+    },
+    "maintenance.off" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Off"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Désactivée"
+          }
+        }
+      }
+    },
+    "Triggering an action then interrupts the maintenance." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Triggering an action then interrupts the maintenance."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Déclencher une action interrompt alors l'entretien."
+          }
+        }
+      }
+    },
+    "Global shortcuts" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Global shortcuts"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Raccourcis globaux"
+          }
+        }
+      }
+    },
+    "They work in any app, even with the popover closed. Use ⌘, ⌃ or ⌥." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "They work in any app, even with the popover closed. Use ⌘, ⌃ or ⌥."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Marchent partout, même popover fermé, dans n'importe quelle app. Avec ⌘, ⌃ ou ⌥."
+          }
+        }
+      }
+    },
+    "Not active: another app uses it" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not active: another app uses it"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inactif : une autre app l'utilise"
+          }
+        }
+      }
+    },
+    "Already used by %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Already used by %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Déjà utilisé par %@"
+          }
+        }
+      }
+    },
+    "+ Add a global shortcut…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "+ Add a global shortcut…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "+ Ajouter un raccourci global…"
+          }
+        }
+      }
+    },
+    "Buttons" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buttons"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Boutons"
+          }
+        }
+      }
+    },
+    "Another app already uses this shortcut" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Another app already uses this shortcut"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Une autre app utilise déjà ce raccourci"
+          }
+        }
+      }
+    },
+    "Add ⌘, ⌃ or ⌥" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add ⌘, ⌃ or ⌥"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajoute ⌘, ⌃ ou ⌥"
+          }
+        }
+      }
+    },
+    "Profile · popover open" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Profile · popover open"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Profil · popover ouvert"
+          }
+        }
+      }
+    },
+    "Turning on the TV…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Turning on the TV…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allumage de la TV…"
+          }
+        }
+      }
+    },
+    "Pin again" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pin again"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Réépingler"
+          }
+        }
+      }
+    },
+    "New Action…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New Action…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nouvelle action…"
+          }
+        }
+      }
+    },
+    "Drag a pin to move it, click it to edit it." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drag a pin to move it, click it to edit it."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Glisse un pin pour le déplacer, clique-le pour le modifier."
           }
         }
       }

@@ -59,7 +59,7 @@ final class TVSessionActionTests: XCTestCase {
         let api = FakeAPI()
         await api.serve("/api/stats", Fixture.data("stats-standby"))
         let s = await ready(api)
-        await s.trigger(CustomAction(title: "A", steps: [.button(.source("hdmi4"))]))
+        await s.trigger(CustomAction(title: "A", steps: [.screenOff]))
         let sent = await api.commands
         XCTAssertTrue(sent.isEmpty)
         XCTAssertEqual(s.transientMessage, "TV is in standby")

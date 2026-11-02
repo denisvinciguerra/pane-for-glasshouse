@@ -168,4 +168,28 @@ final class CustomActionTests: XCTestCase {
         XCTAssertFalse(ActionStep.screenOff.hasSameEffect(as: .screenOn))
         XCTAssertFalse(ActionStep.pictureMode(value: "x", label: "X").hasSameEffect(as: .launchApp(id: "x", title: "X")))
     }
+
+    func testOnlyScreenOffAndSleepTimerDoNotWakeTheTV() {
+        XCTAssertFalse(CustomAction(title: "A", steps: [.screenOff]).wakesTV)
+        XCTAssertFalse(CustomAction(title: "A", steps: [.screenOff, .sleepTimer("30")]).wakesTV)
+        XCTAssertTrue(CustomAction(title: "A", steps: [.screenOn]).wakesTV)
+        XCTAssertTrue(CustomAction(title: "A", steps: [.screenOff, .launchApp(id: "netflix", title: "Netflix")]).wakesTV)
+        XCTAssertTrue(CustomAction(title: "A", steps: [.button(.mute)]).wakesTV)
+        XCTAssertFalse(CustomAction(title: "A", steps: []).wakesTV)
+    }
+
+    func testActionWithoutGlobalKeyDecodes() throws {
+        let id = UUID()
+        let old = #"{"id":"\#(id.uuidString)","title":"A","steps":[],"key":{"char":"n","mods":0}}"#
+        let a = try JSONDecoder().decode(CustomAction.self, from: Data(old.utf8))
+        XCTAssertNil(a.globalKey)
+        XCTAssertEqual(a.key, KeyBinding(.character("n")))
+        XCTAssertEqual(a.id, id)
+    }
+
+    func testGlobalKeyRoundTrips() throws {
+        let global = KeyBinding(.keyCode(45), modifiers: [.control, .option])
+        let a = CustomAction(title: "A", steps: [], globalKey: global)
+        XCTAssertEqual(try JSONDecoder().decode(CustomAction.self, from: JSONEncoder().encode(a)).globalKey, global)
+    }
 }

@@ -47,7 +47,8 @@ struct PaneApp: App {
         }
         #if DEBUG
         // Screenshots without clicking the menu bar: -PaneTheme dark|light|auto, -PaneTab remote|…,
-        // -PaneOpenOnLaunch YES, and with it -PaneKeys show|edit; -PaneDemoPins YES (two pins) and
+        // -PaneOpenOnLaunch YES, and with it -PaneKeys show; -PaneDemoPins YES (six pins, and the global
+        // shortcuts ⌃⌥M on Mute and ⌘Y on Netflix in place of the real ones) and
         // -PaneEditAction demo (the editor on two steps), both on throwaway actions;
         // -PaneOpenPreferences general|tv|keys|pinned|about (the preferences window on that pane);
         // -PaneFirstLaunch YES (no TV, the welcome screen, all on throwaway defaults and tokens);
@@ -90,6 +91,7 @@ struct PaneApp: App {
 
     #if DEBUG
     private static let demoSuite = "fr.synlink.pane.demo"
+    private static let demoKeysSuite = "fr.synlink.pane.demo.keys"
 
     /// The model: on throwaway defaults and in-memory tokens under -PaneFirstLaunch (keys, actions,
     /// theme and TVs never touch the real settings or the keychain), else the real one.
@@ -107,7 +109,20 @@ struct PaneApp: App {
             return AppModel(updates: updates, store: store,
                             defaults: demo, actions: ActionStore(defaults: demo))
         }
-        return AppModel(updates: updates, actions: demoActions())
+        return AppModel(updates: updates, actions: demoActions(), keymap: demoKeymap())
+    }
+
+    /// For -PaneDemoPins: the real keys, in their own defaults, with ⌃⌥M on Mute as the only
+    /// global shortcut of a button, so the screenshots show neither the real ones nor touch them.
+    private static func demoKeymap() -> KeymapStore? {
+        let args = UserDefaults.standard
+        guard args.bool(forKey: "PaneDemoPins"), let defaults = UserDefaults(suiteName: demoKeysSuite) else { return nil }
+        defaults.removePersistentDomain(forName: demoKeysSuite)
+        for key in ["keyProfile", "customKeymap"] { defaults.set(args.object(forKey: key), forKey: key) }
+        let keymap = KeymapStore(defaults: defaults)
+        // By key position: 41 is M on an AZERTY keyboard, the one the screenshots are made on.
+        keymap.setGlobal(KeyBinding(.keyCode(41), modifiers: [.control, .option]), for: .mute)
+        return keymap
     }
 
     /// For -PaneDemoPins or -PaneEditAction: the actions in their own defaults, emptied at each
@@ -120,23 +135,25 @@ struct PaneApp: App {
         return ActionStore(defaults: defaults)
     }
 
-    /// Six pins (three apps shown as their icons, an input with a setting, the screen, the sleep
-    /// timer) and an action of two steps open in the editor, for the active TV.
+    /// Six pins (three apps shown as their icons, Netflix's with ⌘Y, an input with a setting, the
+    /// screen, the sleep timer) and an action of two steps open in the editor, for the active TV.
     private static func seedDemo(_ model: AppModel, pins: Bool, editor: Bool) {
         guard let tv = model.store.activeID else { return }
         let game = ActionStep.setting(id: "gameOptimization", section: "game", title: "VRR & G-Sync",
                                       value: .bool(true), valueLabel: "ON")
         if pins {
-            let demo: [(String?, [ActionStep])] = [
-                (nil, [.launchApp(id: "com.apple.appletv", title: "Apple TV")]),
-                (nil, [.launchApp(id: "netflix", title: "Netflix")]),
-                (nil, [.launchApp(id: "spotify-beehive", title: "Spotify")]),
-                ("PS5 + Game", [.button(.source("hdmi4")), game]),
-                (nil, [.screenOff]),
-                (nil, [.sleepTimer("30")]),
+            let netflix = KeyBinding(.keyCode(16), modifiers: .command)   // Y, AZERTY or QWERTY
+            let demo: [(String?, [ActionStep], KeyBinding?)] = [
+                (nil, [.launchApp(id: "com.apple.appletv", title: "Apple TV")], nil),
+                (nil, [.launchApp(id: "netflix", title: "Netflix")], netflix),
+                (nil, [.launchApp(id: "spotify-beehive", title: "Spotify")], nil),
+                ("PS5 + Game", [.button(.source("hdmi4")), game], nil),
+                (nil, [.screenOff], nil),
+                (nil, [.sleepTimer("30")], nil),
             ]
-            for (title, steps) in demo {
-                let action = CustomAction(title: title ?? CustomAction.defaultTitle(steps, sources: []), steps: steps)
+            for (title, steps, global) in demo {
+                let action = CustomAction(title: title ?? CustomAction.defaultTitle(steps, sources: []), steps: steps,
+                                          globalKey: global)
                 model.actions.save(action, for: tv)
                 model.actions.pin(action.id, for: tv)
             }

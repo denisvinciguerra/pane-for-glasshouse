@@ -274,6 +274,58 @@ final class TVSessionTests: XCTestCase {
         XCTAssertEqual(s.transientMessage, SessionText.noWakeOnLAN())
     }
 
+    func testPressMuteOnStandbySaysWhyAndSendsNothing() async {
+        let api = FakeAPI()
+        await api.serve("/api/stats", Fixture.data("stats-standby"))
+        let s = await ready(api)
+        let result = await s.press(.mute)
+        XCTAssertEqual(result, .failed(SessionText.standby()))
+        let commands = await api.commands
+        XCTAssertEqual(commands, [])
+    }
+
+    func testPressPowerFromStandbySendsPowerOn() async {
+        let api = FakeAPI()
+        await api.serve("/api/stats", Fixture.data("stats-standby"))
+        let s = await ready(api)
+        let result = await s.press(.power)
+        XCTAssertEqual(result, .sent)
+        let commands = await api.commands
+        XCTAssertEqual(commands, [.powerOn])
+    }
+
+    func testPressPowerWithoutMACFails() async {
+        let api = FakeAPI()
+        await api.fail("/api/stats", .unreachable)
+        let s = session(api)
+        await s.refreshStats()
+        let result = await s.press(.power)
+        XCTAssertEqual(result, .failed(SessionText.noWakeOnLAN()))
+    }
+
+    func testPressMuteOnATVThatTakesCommandsSends() async {
+        let api = FakeAPI()
+        let s = await ready(api)
+        let result = await s.press(.mute)
+        XCTAssertEqual(result, .sent)
+        let commands = await api.commands
+        XCTAssertEqual(commands.count, 1)
+    }
+
+    func testPressRefusedByTheTVReturnsItsMessage() async {
+        let api = FakeAPI()
+        let s = await ready(api)
+        await api.failSend(.rejected("Not now"))
+        let result = await s.press(.mute)
+        XCTAssertEqual(result, .failed("Not now"))
+    }
+
+    func testPressUnknownButtonFails() async {
+        let s = await ready()
+        let result = await s.press(ButtonID(rawValue: "nonsense"))
+        XCTAssertEqual(result, .failed(String(localized: "Unknown button", bundle: .module)))
+    }
+
     func testRefreshPictureFillsPayload() async {
         let api = FakeAPI()
         let s = session(api)

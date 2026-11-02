@@ -138,11 +138,26 @@ public struct CustomAction: Codable, Equatable, Sendable, Identifiable {
     public var title: String
     public var steps: [ActionStep]
     public var key: KeyBinding?
+    /// The shortcut that works from any app, kept by key position; changed only through
+    /// `ActionStore.setGlobalKey`. Absent from what version 1.0.0 saved.
+    public var globalKey: KeyBinding?
     /// The tile chosen in the editor; `nil` for the default (see `shownTile`).
     public var tile: Tile?
 
-    public init(id: UUID = UUID(), title: String, steps: [ActionStep], key: KeyBinding? = nil, tile: Tile? = nil) {
-        self.id = id; self.title = title; self.steps = steps; self.key = key; self.tile = tile
+    public init(id: UUID = UUID(), title: String, steps: [ActionStep], key: KeyBinding? = nil, globalKey: KeyBinding? = nil,
+                tile: Tile? = nil) {
+        self.id = id; self.title = title; self.steps = steps; self.key = key; self.globalKey = globalKey; self.tile = tile
+    }
+
+    /// Whether triggering it on a TV that is off turns the TV on first: not for an action made only
+    /// of Screen off and Sleep timer.
+    public var wakesTV: Bool {
+        steps.contains { step in
+            switch step {
+            case .screenOff, .sleepTimer: false
+            default: true
+            }
+        }
     }
 
     /// The first app the action launches: the one whose icon its tile can show.

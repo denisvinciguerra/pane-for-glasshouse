@@ -7,7 +7,8 @@ A macOS menu-bar remote for an LG webOS TV running [Glasshouse](https://github.c
 <p align="center"><img src="docs/screenshots/hero.png" width="830" alt="Pane's popover under its menu-bar icon: remote, inputs, and pinned Apple TV, Netflix and Spotify tiles"></p>
 
 - Keyboard remote while the popover is open: Arrows and Gaming profiles (by key position, whatever the keyboard layout), and every key can be changed in a Custom profile kept apart.
-- Pinned items: a setting or a sequence of actions on the Control tab, with its own key. A pin that launches an app can show the app's icon.
+- Global shortcuts: a key combination for a button, an input or an action that works in any app, with a small card under the menu-bar icon.
+- Pinned items: a setting or a sequence of actions on the Remote tab, with its own key and shortcut. A pin that launches an app can show the app's icon. Triggered while the TV is off, it turns the TV on first.
 - Settings are drawn from what the server sends, so a setting added on the server appears without updating the app.
 - Power from any state: on, Active Standby, LG's Always Ready screen, and Wake-on-LAN for a TV in deep standby.
 - Several TVs, dark and light themes, English and French.
@@ -16,7 +17,7 @@ A macOS menu-bar remote for an LG webOS TV running [Glasshouse](https://github.c
 
 <table>
   <tr>
-    <td align="center" valign="top"><img src="docs/screenshots/keys-dark.png" width="328" alt="Remote tab with the keyboard keys shown"><br><sub>Keyboard keys shown on every button</sub></td>
+    <td align="center" valign="top"><img src="docs/screenshots/keys-dark.png" width="328" alt="Remote tab with the keyboard keys and global shortcuts shown"><br><sub>Keys and global shortcuts, set from the bottom bar</sub></td>
     <td align="center" valign="top"><img src="docs/screenshots/remote-light.png" width="328" alt="Remote tab, light theme"><br><sub>Light theme</sub></td>
   </tr>
   <tr>

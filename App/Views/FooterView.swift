@@ -3,7 +3,7 @@ import SwiftUI
 
 /// Power on the left, the keyboard icon between, the web dashboard on the right (a click opens
 /// it, the chevron's menu opens one of its tabs), then the preferences' ⚙ at the edge, away from
-/// the keyboard. Power sends nothing while keys are being set. In French the row is tight (≈95 pt
+/// the keyboard. Power does nothing while the keys show. In French the row is tight (≈95 pt
 /// « ALIMENTATION », ≈134 pt « TABLEAU DE BORD ↗ » with its chevron, in 292 pt): hence the 6 pt
 /// gaps and an icon without its name.
 struct FooterView: View {
@@ -23,7 +23,7 @@ struct FooterView: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(FooterButtonStyle())
-            .disabled(!session.canPower || keyboard?.state.setsKeys == true)
+            .disabled(!session.canPower || keyboard?.state.sendsCommands == false)
             .fixedSize()
             .layoutPriority(1)
             Spacer(minLength: 6)
@@ -71,15 +71,17 @@ struct FooterView: View {
     }
 }
 
-/// Shows the keys (click), edits them all (⌥-click). Boxed while they show, amber while they are set.
+/// Shows the keys, hides them. Boxed while they show, amber while a key is set, blue while a global
+/// shortcut is.
 private struct KeyboardIcon: View {
     @Environment(\.keyboard) private var keyboard
     @Environment(\.palette) private var palette
 
     var body: some View {
         let state = keyboard?.state
-        let color = state?.setsKeys == true ? palette.accent : state?.mode == .showing ? palette.fg : palette.label
-        let edge = state?.setsKeys == true ? palette.accent : state?.mode == .showing ? palette.fg.opacity(0.5) : .clear
+        let tint = state?.setsGlobal == true ? palette.global : palette.accent
+        let color = state?.setsKeys == true ? tint : state?.keysShown == true ? palette.fg : palette.label
+        let edge = state?.setsKeys == true ? tint : state?.keysShown == true ? palette.fg.opacity(0.5) : .clear
         Button { keyboard?.iconClicked() } label: {
             Image(systemName: "keyboard")
                 .font(.system(size: 11))

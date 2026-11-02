@@ -44,6 +44,18 @@ enum SessionText {
     static func standby(_ bundle: Bundle = .module) -> String {
         String(localized: "TV is in standby", bundle: bundle)
     }
+    static func turningOn(_ bundle: Bundle = .module) -> String {
+        String(localized: "Turning on the TV…", bundle: bundle)
+    }
+    static func didNotTurnOn(_ bundle: Bundle = .module) -> String {
+        String(localized: "The TV didn't turn on", bundle: bundle)
+    }
+    static func maintenance(_ bundle: Bundle = .module) -> String {
+        String(localized: "Panel maintenance in progress · see Preferences › General", bundle: bundle)
+    }
+    static func cancelled(_ bundle: Bundle = .module) -> String {
+        String(localized: "Action cancelled", bundle: bundle)
+    }
 }
 
 /// When to ask again for something that failed: after 2 s of waiting, then 4 s, 8 s… up to 60 s.
@@ -109,6 +121,23 @@ struct ReadGate {
     /// available or its request answers 404, and comes back when a later read says otherwise.
     public private(set) var availableTabs: [PaneTab] = PaneTab.allCases
     public private(set) var webTabs: [DashboardTab] = DashboardTabs.fallback
+    /// Whether an action triggered during panel maintenance turns the TV on, interrupting it.
+    public var powersOnDuringMaintenance = false
+    /// The action waiting for the TV to turn on; set by `trigger` (TVSession+Actions.swift).
+    public internal(set) var pendingAction: CustomAction?
+    /// The power-on every waiting trigger shares, settle pause included; cleared by the task when
+    /// it is done.
+    @ObservationIgnored var powerOnTask: Task<String?, Never>?
+    /// Numbers the power-on tasks, so a cancelled one does not clear a newer `powerOnTask`.
+    @ObservationIgnored var powerOnRun = 0
+    /// Bumped by each trigger that waits (which takes the new value as its own), by Power during the
+    /// wait and by `end()`. A waiting trigger sends nothing unless it is still current: one older
+    /// than `latestTrigger` was replaced; the latest one, with the generation moved on, was cancelled.
+    @ObservationIgnored var pendingGeneration = 0
+    /// The number of the last trigger that waited.
+    @ObservationIgnored var latestTrigger = 0
+    /// Set by `end()`: the session sends nothing more for an action.
+    @ObservationIgnored var ended = false
 
     /// The commands other than power: allowed by the caps, the TV on (its screen may be off).
     public var canControl: Bool {
@@ -117,9 +146,23 @@ struct ReadGate {
     /// Power commands and Wake-on-LAN; allowed unless the server says otherwise.
     public var canPower: Bool { caps?.allowPower != false }
 
+    /// Whether the action's tile can be pressed: the TV takes commands, or the action turns it on
+    /// and nothing stops the power-on. Panel maintenance does not: the click says why.
+    public func canTrigger(_ action: CustomAction) -> Bool {
+        if canControl { return true }
+        guard action.wakesTV, !connecting, canPower, powerBlock == nil, !localNetworkDenied else { return false }
+        switch power {
+        case .standby, .maintenance: return true
+        case .unreachable: return stats?.wakeOnLan != false && wakeTarget != nil
+        // The TV is on but its caps are unknown: there is nothing to turn on.
+        case .on, .screenOff: return false
+        }
+    }
+
     /// Why the commands are off, in one line; `nil` when they are on.
     public var blockedReason: String? {
         if canControl { return nil }
+        if pendingAction != nil { return SessionText.turningOn() }
         if connecting { return SessionText.connecting() }
         if localNetworkDenied { return SessionText.localNetworkDenied() }
         if let powerBlock { return powerBlock }
@@ -132,7 +175,7 @@ struct ReadGate {
     }
 
     /// What also stops the power commands, which work in standby and with the caps unknown.
-    private var powerBlock: String? {
+    var powerBlock: String? {
         if caps?.allowControl == false { return SessionText.controlsOff() }
         if lastError == .badToken { return SessionText.badToken() }
         return nil
@@ -281,7 +324,7 @@ struct ReadGate {
 
     /// A 404 is a server without caps: everything is allowed. Another failure leaves the caps
     /// unknown (`nil`), or as last read.
-    private func loadCaps() async {
+    func loadCaps() async {
         let result = await load("/api/caps", as: Caps.self)
         guard !Task.isCancelled else { return }
         switch result {
@@ -390,66 +433,98 @@ struct ReadGate {
         }
     }
 
-    /// On or screen off → power off; standby or maintenance → power on, after a power off when the TV
-    /// shows Always Ready; unreachable → Wake-on-LAN, to the MAC the TV last reported, else the stored
-    /// one, unless the TV has it turned off.
+    /// On or screen off → power off; otherwise `turnOn()`. While an action waits for the TV to turn
+    /// on, it only cancels that action; while the TV is still turning on after that, it does nothing.
     /// Standby and unknown caps do not stop it; controls turned off and a bad token do.
-    public func togglePower() async {
-        guard canPower else {
-            post(SessionText.powerOff())
-            return
+    /// `.sent` when the power command or Wake-on-LAN went out, or the TV is already turning on after
+    /// a cancelled wait; `.cancelled` when it dropped a pending action; else `.failed` with the
+    /// message shown.
+    @discardableResult public func togglePower() async -> ActionResult {
+        // During a trigger's wait: the action is dropped, the power-on carries on and the TV ends up on.
+        if pendingAction != nil {
+            pendingAction = nil
+            pendingGeneration += 1
+            return .cancelled
         }
+        // The TV is still turning on after that: no power command either way.
+        if powerOnTask != nil { return .sent }
+        guard canPower else { return .failed(refused(SessionText.powerOff())) }
         switch power {
-        case .on, .screenOff, .standby, .maintenance:
-            if let powerBlock {
-                post(powerBlock)
-                return
-            }
+        case .on, .screenOff:
+            if let powerBlock { return .failed(refused(powerBlock)) }
+            if await perform(.powerOff) { return .sent }
+            return failedMessage().map { .failed($0) } ?? .cancelled
+        case .standby, .maintenance, .unreachable:
+            if let failure = await turnOn() { return .failed(failure) }
+            return Task.isCancelled ? .cancelled : .sent
+        }
+    }
+
+    /// Turns on a TV that is not on: standby or maintenance → power on, after a power off when the TV
+    /// shows Always Ready; unreachable → Wake-on-LAN, to the MAC the TV last reported, else the stored
+    /// one, unless the TV has it turned off. Nothing to do for a TV that is on.
+    /// Returns the message `post` showed when it was refused or failed; `nil` once the command went
+    /// out, or the task was cancelled.
+    func turnOn() async -> String? {
+        guard canPower else { return refused(SessionText.powerOff()) }
+        switch power {
+        case .on, .screenOff:
+            return nil
+        case .standby, .maintenance:
+            if let powerBlock { return refused(powerBlock) }
             if stats?.powerState?.raw == "Always Ready" {
-                await leaveAlwaysReady()
-                return
+                guard await leaveAlwaysReady() else { return failedMessage() }
+                return nil
             }
-            await perform(power == .on || power == .screenOff ? .powerOff : .powerOn)
+            guard await perform(.powerOn) else { return failedMessage() }
+            return nil
         case .unreachable:
             // A refused local network cannot reach any TV: waking it would not help.
-            if localNetworkDenied {
-                post(SessionText.localNetworkDenied())
-                return
-            }
+            if localNetworkDenied { return refused(SessionText.localNetworkDenied()) }
             // A 401 also reads as unreachable, but the TV is up: waking it would not help.
-            if lastError == .badToken {
-                post(SessionText.badToken())
-                return
-            }
-            if stats?.wakeOnLan == false {
-                post(SessionText.wakeOnLANOff())
-                return
-            }
-            guard let target = [stats?.mac, mac].compactMap({ $0 }).first(where: { !$0.isEmpty }) else {
-                post(SessionText.noWakeOnLAN())
-                return
+            if lastError == .badToken { return refused(SessionText.badToken()) }
+            if stats?.wakeOnLan == false { return refused(SessionText.wakeOnLANOff()) }
+            guard let target = wakeTarget else {
+                return refused(SessionText.noWakeOnLAN())
             }
             do {
                 try await wake(target)
             } catch {
-                guard !Task.isCancelled else { return }
-                post(SessionText.wakeFailed())
+                guard !Task.isCancelled else { return nil }
+                return refused(SessionText.wakeFailed())
             }
+            return nil
         }
+    }
+
+    /// The MAC to wake: the one the TV last reported, else the stored one.
+    private var wakeTarget: String? { [stats?.mac, mac].compactMap { $0 }.first { !$0.isEmpty } }
+
+    /// Says the message and gives it back.
+    func refused(_ message: String) -> String {
+        post(message)
+        return message
+    }
+
+    /// What a failed command already said; `nil` when the task was cancelled, which says nothing.
+    private func failedMessage() -> String? {
+        guard !Task.isCancelled else { return nil }
+        return transientMessage ?? SessionText.sendFailed()
     }
 
     /// LG's Always Ready screen ignores powerOn: powerOff takes the TV to Active Standby first
     /// (seen on the G4 with Glasshouse 0.135). powerOn goes once it gets there, or after 10 s.
-    private func leaveAlwaysReady() async {
-        guard await perform(.powerOff) else { return }
+    /// Whether powerOn went out.
+    private func leaveAlwaysReady() async -> Bool {
+        guard await perform(.powerOff) else { return false }
         for _ in 0..<10 {
             await sleep(.seconds(1))
-            guard !Task.isCancelled else { return }
+            guard !Task.isCancelled else { return false }
             await refreshStats()
             if stats?.powerState?.raw != "Always Ready" { break }
         }
-        guard !Task.isCancelled else { return }
-        await perform(.powerOn)
+        guard !Task.isCancelled else { return false }
+        return await perform(.powerOn)
     }
 
     private func applyOptimistically(_ command: Command) {

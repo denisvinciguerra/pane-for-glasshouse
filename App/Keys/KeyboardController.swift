@@ -5,11 +5,17 @@ import PaneKit
 import SwiftUI
 
 /// The keyboard while the popover is open: a local monitor on its window turns the keys into
-/// presses or new keys, by the key modes of `KeyModeState`. There is no global shortcut.
+/// presses or new keys, by the key modes of `KeyModeState`, and a right-click on a button into its
+/// choice in the keys shown. The global shortcuts are registered apart, by `GlobalHotKeys`, and are
+/// suspended while a button awaits its key or its shortcut.
 @MainActor @Observable final class KeyboardController {
     private(set) var state = KeyModeState()
     /// Read again at each opening and when the input source changes.
     private(set) var layout = CurrentKeyboardLayout()
+    /// The pins' "+" list is open: it takes the keys, Esc closes it.
+    var pinsListOpen = false
+    /// Remote's pins are being edited (Edit, next to Pinned): the keys send nothing, Esc ends it.
+    private(set) var pinsEditing = false
 
     @ObservationIgnored private let model: AppModel
     @ObservationIgnored private weak var window: NSWindow?
@@ -20,12 +26,14 @@ import SwiftUI
         self.model = model
     }
 
-    /// Starts listening to the popover's window: its key presses and its modifier changes (⌥).
+    /// Starts listening to the popover's window: its key presses, its modifier changes (⌥) and its
+    /// right-clicks.
     func attach(to window: NSWindow) {
         detachMonitors()
         self.window = window
         layout = CurrentKeyboardLayout()
-        monitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .flagsChanged]) { [weak self] event in
+        let events: NSEvent.EventTypeMask = [.keyDown, .flagsChanged, .rightMouseDown, .leftMouseDown]
+        monitor = NSEvent.addLocalMonitorForEvents(matching: events) { [weak self] event in
             MainActor.assumeIsolated {
                 guard let self else { return false }
                 return self.handle(event)
@@ -43,6 +51,7 @@ import SwiftUI
     func detach() {
         detachMonitors()
         window = nil
+        finishEditingPins()
         state.closed()
     }
 
@@ -59,6 +68,9 @@ import SwiftUI
     private func handle(_ event: NSEvent) -> Bool {
         guard let window, event.window === window else { return false }
         let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+        if event.type == .rightMouseDown || event.type == .leftMouseDown {
+            return rightClicked(event, control: flags.contains(.control))
+        }
         // ⌘, opens the preferences, from the connect form and the action editor too.
         if event.type == .keyDown, KeyModifiers(flags) == .command, event.charactersIgnoringModifiers == "," {
             model.openPreferences(.keys)
@@ -66,26 +78,44 @@ import SwiftUI
         }
         // The action editor has no buttons to press: its keys are its own.
         guard model.session != nil, model.editingAction == nil else { return false }
+        if pinsListOpen, event.type == .keyDown {
+            if event.keyCode == UInt16(kVK_Escape) { pinsListOpen = false }
+            return true
+        }
+        if pinsEditing, event.type == .keyDown {
+            if event.keyCode == UInt16(kVK_Escape) { finishEditingPins() }
+            return true
+        }
         if event.type == .flagsChanged {
             state.optionChanged(down: flags.contains(.option))
             return false
         }
         let key = KeyEvent(keyCode: event.keyCode, characters: event.charactersIgnoringModifiers,
                            modifiers: KeyModifiers(flags), isRepeat: event.isARepeat)
-        let effect = state.key(key, assignments: model.assignments, layout: layout,
-                               textInputActive: window.firstResponder is NSText)
+        let effect = state.key(key, assignments: model.assignments, globalAssignments: model.globalAssignments,
+                               layout: layout, textInputActive: window.firstResponder is NSText)
         if effect == .pass { return false }
         perform(effect)
         return true
     }
 
-    /// A change of keys that would replace the Custom profile asks first, unless `confirmed`.
+    /// A change of keys that would replace the Custom profile asks first, unless `confirmed`; the
+    /// global shortcuts are no part of the profile.
     private func perform(_ effect: KeyModeState.Effect, confirmed: Bool = false) {
         let assignments: KeyAssignments
         switch effect {
         case .none, .pass: return
         case .fire(let id):
             model.press(id)
+            return
+        case .assignGlobal(let binding, let id):
+            assignGlobal(binding, to: id)
+            return
+        case .swapGlobal(let binding, let id, let owner):
+            model.applyGlobals(model.globalAssignments.swapping(binding, to: id, from: owner, layout: layout))
+            return
+        case .removeGlobal(let id):
+            model.applyGlobals(model.globalAssignments.removing(.primary, of: id))
             return
         case .assign(let binding, let id):
             guard case .assigned(let result) = model.assignments.assigning(binding, to: id, layout: layout) else { return }
@@ -102,24 +132,63 @@ import SwiftUI
         }
     }
 
+    /// A combination another app holds is not kept: the capture waits for another. Pane's own
+    /// shortcuts are suspended while it waits, so `isFree` weighs only the other apps'. Once the
+    /// combination is free, the capture ends whether or not `assigning` changed anything, as when
+    /// the button's own combination is typed again.
+    private func assignGlobal(_ binding: KeyBinding, to id: ButtonID) {
+        guard model.hotKeys.isFree(binding) else {
+            state.globalTaken(binding)
+            return
+        }
+        if case .assigned(let result) = model.globalAssignments.assigning(binding, to: id, layout: layout) {
+            model.applyGlobals(result)
+        }
+        state.globalRecorded()
+    }
+
     // MARK: Clicks
 
-    /// The footer's keyboard icon: shows the keys, hides them; ⌥-click edits them all.
+    /// A right-click (or ⌃-click) on a button that can carry a key chooses it in the keys shown, the
+    /// TV off too; no menu. The button is found by the `KeyArea` under it, the other clicks pass.
+    private func rightClicked(_ event: NSEvent, control: Bool) -> Bool {
+        guard event.type == .rightMouseDown || control, !pinsListOpen, !pinsEditing, model.session != nil, model.editingAction == nil,
+              let root = window?.contentView, let id = KeyArea.button(at: event.locationInWindow, in: root)
+        else { return false }
+        state.select(id)
+        return true
+    }
+
+    /// The footer's keyboard icon: shows the keys, hides them; it ends the pins' edit first.
     func iconClicked() {
-        state.iconClicked(option: NSEvent.modifierFlags.contains(.option))
+        finishEditingPins()
+        state.iconClicked()
     }
 
-    /// "Edit" in the bar while the keys show: every button awaits a click, as after ⌥-click.
-    func editAll() {
-        state.editAll()
+    /// Edit, next to Pinned: no key mode is left under it.
+    func editPins() {
+        state.closed()
+        pinsListOpen = false
+        pinsEditing = true
     }
 
-    /// A button of Remote: its press, or, while editing, the button that awaits its key.
+    /// Done, next to Pinned, or Esc.
+    func finishEditingPins() {
+        pinsListOpen = false
+        pinsEditing = false
+    }
+
+    /// The × of the chosen button's bar, or its button clicked again: back to "Click a button to set its keys".
+    func deselect() {
+        state.deselect()
+    }
+
+    /// A button of Remote: its press, or, while the keys show, its choice.
     func buttonClicked(_ id: ButtonID) {
         perform(state.buttonClicked(id))
     }
 
-    /// "Set Key…": the next key goes to this button.
+    /// "Change" in the bar: the next key goes to this button.
     func setKey(for id: ButtonID) {
         state.setKey(for: id)
     }
@@ -130,11 +199,23 @@ import SwiftUI
         state.closed()
     }
 
+    /// "Remove" in the bar: a wait on another row ends first.
     func removeKey(of id: ButtonID) {
+        state.select(id)
         perform(.remove(id))
     }
 
-    /// "Done" in the edit bar: back to the normal mode.
+    /// "Change" in the bar: the next combination becomes this button's system-wide shortcut.
+    func setGlobal(for id: ButtonID) {
+        state.setGlobal(for: id)
+    }
+
+    func removeGlobal(of id: ButtonID) {
+        state.select(id)
+        perform(.removeGlobal(id))
+    }
+
+    /// "Cancel" on the row that waits: back to the keys shown, on the same button.
     func done() {
         state.done()
     }
@@ -158,7 +239,25 @@ import SwiftUI
         key(of: id).map { KeyLabel.text($0, layout: layout) }
     }
 
-    /// A button's name, for the edit bar.
+    /// The button's global shortcut.
+    func globalKey(of id: ButtonID) -> KeyBinding? {
+        model.globalAssignments.slots[id]?.primary
+    }
+
+    /// The button's global shortcut as the Mac's layout types it; nil without one.
+    func globalLabel(for id: ButtonID) -> String? {
+        globalKey(of: id).map { KeyLabel.text($0, layout: layout) }
+    }
+
+    /// The button awaiting its key or its global shortcut: the global shortcuts are suspended meanwhile.
+    var awaitingKey: ButtonID? {
+        switch state.mode {
+        case .capturing(let id), .capturingGlobal(let id): id
+        case .normal, .showing: nil
+        }
+    }
+
+    /// A button's name, for the bar.
     func title(of id: ButtonID) -> String {
         let inputs = model.session?.stats.map(sources(from:)) ?? []
         let actions = model.store.activeID.map(model.actions.actions(for:)) ?? []
@@ -166,15 +265,9 @@ import SwiftUI
     }
 
     #if DEBUG
-    /// Screenshots (-PaneKeys): "show" shows the keys; "edit" is the edit mode, Back awaiting its key.
+    /// Screenshots (-PaneKeys): "show" shows the keys.
     func enterForScreenshot(_ mode: String) {
-        switch mode {
-        case "show": state.iconClicked(option: false)
-        case "edit":
-            state.iconClicked(option: true)
-            _ = state.buttonClicked(.rcu(.back))
-        default: break
-        }
+        if mode == "show" { state.iconClicked() }
     }
     #endif
 }

@@ -80,6 +80,8 @@ private struct GHButtonStyle: ButtonStyle {
             .brightness(fill != nil && configuration.isPressed ? -0.15 : 0)
             .overlay(Rectangle().strokeBorder(outlined ? selected ? palette.fg : palette.line : .clear,
                                               style: StrokeStyle(lineWidth: 1, dash: dashed ? [3, 2] : [])))
+            // Greyed as one: an icon over its fill would otherwise show through brighter than the fill.
+            .compositingGroup()
             .opacity(isEnabled && !dimmed ? 1 : 0.35)
     }
 
@@ -94,11 +96,14 @@ private struct GHButtonStyle: ButtonStyle {
 struct SectionLabel: View {
     private let title: LocalizedStringKey
     private let trailing: String?
+    private let tint: Color?
     @Environment(\.palette) private var palette
 
-    init(_ title: LocalizedStringKey, trailing: String? = nil) {
+    /// `tint`: a colour in place of the label colour.
+    init(_ title: LocalizedStringKey, trailing: String? = nil, tint: Color? = nil) {
         self.title = title
         self.trailing = trailing
+        self.tint = tint
     }
 
     var body: some View {
@@ -107,6 +112,7 @@ struct SectionLabel: View {
             Spacer(minLength: 8)
             if let trailing { Text(verbatim: trailing) }
         }
+        .foregroundStyle(tint ?? palette.label)
         .sectionLabelStyle()
         .padding(.bottom, 7)
     }
