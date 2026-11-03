@@ -2,7 +2,8 @@ import Foundation
 
 /// Finds a TV again by its MAC when its address changed: the add screen's search (SSDP, then the
 /// sweep), without any token. The Mac's ARP table proves which host has the MAC; only when it has
-/// no entry does an open server's word, the MAC in its /api/stats, count.
+/// no entry does an open server's word, the MAC in its /api/stats, count. Without an ARP table (iOS),
+/// only an open server can be found again, by that MAC; a token-protected TV never is.
 public struct Relocator: Sendable {
     public typealias Search = @Sendable (_ port: Int, _ found: @escaping @MainActor (DiscoveredTV) -> Void) async -> DiscoveryEnd
 

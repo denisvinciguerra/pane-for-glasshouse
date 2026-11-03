@@ -53,4 +53,11 @@ final class WakeOnLANTests: XCTestCase {
         XCTAssertEqual(WakeOnLAN.directedBroadcast(address: addr(10, 1, 2, 3), netmask: addr(255, 255, 0, 0)),
                        addr(10, 1, 255, 255))
     }
+
+    func testHostUnreachableMeansNotPermitted() {
+        XCTAssertEqual(WakeOnLANError.from(errno: EHOSTUNREACH), .notPermitted)
+        XCTAssertEqual(WakeOnLANError.from(errno: EPERM), .notPermitted)
+        XCTAssertEqual(WakeOnLANError.from(errno: EACCES), .notPermitted)
+        XCTAssertNil(WakeOnLANError.from(errno: ETIMEDOUT))
+    }
 }

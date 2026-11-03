@@ -4,6 +4,18 @@ All notable changes to Pane for Glasshouse. Versions follow [Semantic Versioning
 
 ## Unreleased
 
+- Mac: the search for TVs no longer reports local network access as blocked only because the SSDP search was refused while the subnet probes went through.
+
+## 1.2.0
+
+- iOS: first version, for iPhone and iPad (iOS 17 or later): the whole remote on one screen, Picture, Audio, Game, HDMI and Stats under tabs, pinned apps and actions with an editor you reorder by dragging, and the other TVs shown as chips with their live state.
+- iOS: on iPad in landscape, the remote and a tab side by side (the remote on the right, or on the left with Settings › Remote column); with a hardware keyboard, the Arrows, Gaming and Custom profiles.
+- iOS: "Try without a TV" runs the app on a demo TV, offline.
+- iOS: the demo TV's apps and inputs have invented names and icons (PearTV, NetMovies, Musicify; Pear, PS7, YBox).
+- iOS: long picture mode names (HDR Cinema, HDR Filmmaker) are no longer cut in the Picture tab's title.
+- iOS: a TV with a token that changed address is not found again automatically (iOS cannot read the ARP table): search again or type the new address.
+- iOS: Wake-on-LAN and SSDP search wait for Apple's multicast entitlement; until then Pane sweeps the subnet and asks to keep the TV in Active Standby.
+
 ## 1.1.0
 
 - Global shortcuts: give a button, an input or an action a key combination that works in any app, with a small card under the menu-bar icon. Set them in Settings › Keys or from the popover's keyboard icon.

@@ -5,6 +5,8 @@
   `xcodegen generate`, then
   `xcodebuild -project Pane.xcodeproj -scheme Pane -configuration Debug -scmProvider system -derivedDataPath build build`,
   and `swift test --package-path PaneKit`. No new warnings.
+  A change to `Shared/`, `iOSApp/` or `PaneKit/` also builds the iOS app:
+  `xcodebuild -project Pane.xcodeproj -scheme "Pane iOS" -configuration Debug -scmProvider system -derivedDataPath build -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build`.
 - Automated tests never use the network or run processes such as `arp`: they read the fixtures in
   `PaneKit/Tests/PaneKitTests/Fixtures/`.
 - Never send a command to a real TV (power, input, volume, settings) without the user's go-ahead
@@ -25,7 +27,10 @@
   commands, power and Wake-on-LAN; `TVConfig`: saved TVs), `Discovery/` (SSDP, subnet sweep,
   ARP table, relocation), `Keys/` (keyboard profiles), `Actions/` (pinned and custom actions),
   `Logic/` (power state, Wake-on-LAN packet, small helpers).
-- `App/` - SwiftUI and AppKit: `AppModel` (wiring), `StatusBarController` (menu-bar item and
-  popover), `Views/` (popover tabs), `Preferences/`, `Keys/` (keyboard capture), `Updates/`
-  (Sparkle), `Theme/`.
-- `scripts/release.sh` - maintainer-only release pipeline.
+- `Shared/` - the model and the screens both apps show, built into each: `AppModel` (wiring),
+  `Views/` (tabs, pins, action editor), `TVs/` (welcome and add screens), `Keys/` (key modes and
+  their tiles), `Theme/`, `Platform.swift` (the few calls that differ on macOS and iOS), and the
+  strings and fonts (`Resources/`).
+- `App/` - the Mac app only: `StatusBarController` (menu-bar item and popover), `Views/` (popover
+  frame and footer), `Preferences/`, `Keys/` (key bar, global shortcuts), `Updates/` (Sparkle).
+- `iOSApp/` - the iPhone and iPad app.

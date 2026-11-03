@@ -4,6 +4,16 @@ import Foundation
 public enum WakeOnLANError: Error, Equatable, Sendable {
     case invalidMAC
     case timedOut
+    /// The system refused the broadcast (iOS without the multicast entitlement, say).
+    case notPermitted
+
+    /// `.notPermitted` for the errors a refused broadcast gives; nil for any other.
+    static func from(errno code: Int32) -> WakeOnLANError? {
+        switch code {
+        case EHOSTUNREACH, EPERM, EACCES: .notPermitted
+        default: nil
+        }
+    }
 }
 
 public enum WakeOnLAN {
@@ -76,7 +86,7 @@ public enum WakeOnLAN {
                     }
                 }
             }
-            if count == data.count { sent = true } else { failure = posixError() }
+            if count == data.count { sent = true } else { failure = sendFailure(errno, keeping: failure) }
         }
         return sent ? nil : failure
     }
@@ -98,6 +108,16 @@ public enum WakeOnLAN {
             if !out.contains(b) { out.append(b) }
         }
         return out
+    }
+
+    /// The error to report after a failed `sendto`. On iOS a refused broadcast reads as `.notPermitted`
+    /// and stays so; on the Mac the plain POSIX error is kept, as it always was.
+    private static func sendFailure(_ code: Int32, keeping previous: Error?) -> Error {
+        #if os(iOS)
+        if previous as? WakeOnLANError == .notPermitted { return WakeOnLANError.notPermitted }
+        if let refused = WakeOnLANError.from(errno: code) { return refused }
+        #endif
+        return POSIXError(POSIXErrorCode(rawValue: code) ?? .EIO)
     }
 
     private static func posixError() -> Error {

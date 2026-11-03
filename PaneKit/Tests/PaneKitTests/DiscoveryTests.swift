@@ -185,6 +185,30 @@ final class DiscoveryTests: XCTestCase {
         XCTAssertEqual(end, .localNetworkDenied)
     }
 
+    /// iOS without the multicast entitlement: the SSDP sends fail as when access is off, yet the
+    /// sweep's TCP probes are allowed. Their verdict wins: nothing found is not a refusal.
+    func testSSDPRefusedButProbesNotDeniedEndsFinished() async {
+        let d = discovery(ssdp: SSDPResult(hosts: [], denied: true), local: ["192.0.2.1", "192.0.2.2"]) { _ in .failure(.unreachable) }
+        let end = await d.run(tokensByHost: [:], found: { _ in })
+        XCTAssertEqual(end, .finished)
+    }
+
+    func testSSDPRefusedAndEveryProbeDeniedEndsDenied() async {
+        let d = discovery(ssdp: SSDPResult(hosts: [], denied: true), local: ["192.0.2.1", "192.0.2.2"]) { _ in .failure(.localNetworkDenied) }
+        let end = await d.run(tokensByHost: [:], found: { _ in })
+        XCTAssertEqual(end, .localNetworkDenied)
+    }
+
+    /// The Mac: SSDP refused is a real refusal; one probe that says so too confirms it, even when
+    /// the others' checks timed out (unreachable) under load.
+    func testSSDPRefusedAndOneProbeDeniedEndsDenied() async {
+        let d = discovery(ssdp: SSDPResult(hosts: [], denied: true), local: ["192.0.2.1", "192.0.2.2", "192.0.2.3"]) {
+            $0 == "192.0.2.1" ? .failure(.localNetworkDenied) : .failure(.unreachable)
+        }
+        let end = await d.run(tokensByHost: [:], found: { _ in })
+        XCTAssertEqual(end, .localNetworkDenied)
+    }
+
     func testSSDPDeniedButTVFoundEndsFinished() async {
         let d = discovery(ssdp: SSDPResult(hosts: [], denied: true), local: ["192.0.2.1"])
         let end = await d.run(tokensByHost: [:], found: { _ in })

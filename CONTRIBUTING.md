@@ -4,10 +4,10 @@ Contributions are welcome. This guide covers how to propose a change, the conven
 
 ## Core principles
 
-- **Local only.** Pane talks to your TVs and, for updates, to GitHub. No telemetry, no analytics, no account, no other server.
+- **Local only.** Pane talks to your TVs and, on the Mac for updates, to GitHub. No telemetry, no analytics, no account, no other server.
 - **A token stays with its TV.** A TV's token is only ever sent to that TV's saved address, or to the host whose MAC address matches it when the TV moved. Any change near discovery, relocation or the API client keeps that rule.
 - **The server describes, the app draws.** Picture, Audio, Game and HDMI rows come from what Glasshouse sends. Prefer reading a new field over hard-coding a list.
-- **One dependency.** Sparkle, in the app target only. `PaneKit` has none.
+- **One dependency.** Sparkle, in the Mac app target only. `PaneKit` and the iOS app have none.
 
 ## Working conventions
 
@@ -32,10 +32,10 @@ Review comments follow [Conventional Comments](https://conventionalcomments.org/
 ## Code conventions
 
 - **Swift 6, strict concurrency** (`SWIFT_STRICT_CONCURRENCY = complete`). No new warnings.
-- **macOS 14** is the minimum. Gate anything newer with `if #available`.
-- **Testable logic goes in `PaneKit`**: models, parsing, the API client, discovery, the session, keys and actions. The app (`App/`) is SwiftUI and AppKit, and stays thin.
+- **macOS 14** and **iOS 17** are the minimums. Gate anything newer with `if #available`.
+- **Testable logic goes in `PaneKit`**: models, parsing, the API client, discovery, the session, keys and actions. The apps stay thin: `App/` is the Mac app (SwiftUI and AppKit), `iOSApp/` the iPhone and iPad app (SwiftUI), and `Shared/` what both use (the model, theme and views). Code in `Shared/` must build for both platforms.
 - **Every visible string is localized**, in English (source) and French:
-  - in the app, `String(localized:)`, catalogued in `App/Resources/Localizable.xcstrings`;
+  - in the app, `String(localized:)`, catalogued in `Shared/Resources/Localizable.xcstrings`;
   - in `PaneKit`, `String(localized:bundle: .module)`, catalogued in `PaneKit/Sources/PaneKit/Resources/Localizable.xcstrings`.
 
   If you don't speak French, leave the French string empty and say so in the pull request: a maintainer fills it in.
@@ -47,8 +47,11 @@ Review comments follow [Conventional Comments](https://conventionalcomments.org/
 brew install xcodegen
 xcodegen generate
 xcodebuild -project Pane.xcodeproj -scheme Pane -configuration Debug -scmProvider system -derivedDataPath build build
+xcodebuild -project Pane.xcodeproj -scheme "Pane iOS" -configuration Debug -scmProvider system -derivedDataPath build -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build
 swift test --package-path PaneKit
 ```
+
+A change to `Shared/`, `iOSApp/` or `PaneKit/` builds the iOS app too. A device build needs your own signing team.
 
 `Pane.xcodeproj` is generated from `project.yml` and is not committed: edit `project.yml`, then run `xcodegen generate` again.
 
@@ -56,7 +59,7 @@ All tests must pass, without warnings. **Automated tests never use the network**
 
 ### Previewing without a TV
 
-Debug builds accept launch arguments for screenshots and UI work, listed at the top of `App/PaneApp.swift`. For example:
+Debug builds accept launch arguments for screenshots and UI work, listed at the top of `App/PaneApp.swift` (and in `iOSApp/DebugLaunch.swift` for the iOS app; on iPhone and iPad, "Try without a TV" also runs the whole app against a demo TV). For the Mac app, for example:
 
 ```sh
 open "build/Build/Products/Debug/Pane for Glasshouse.app" --args -PaneFirstLaunch YES -PaneDemoSecondTV YES
@@ -89,4 +92,4 @@ If you have no TV to test on, say so in the pull request.
 
 ## Releases
 
-Releases are made by the maintainer with `scripts/release.sh` (Developer ID signing, notarization, Sparkle appcast, Homebrew cask). Contributors don't need it.
+Releases are made by the maintainer (Developer ID signing, notarization, Sparkle appcast, Homebrew cask, App Store). The tooling for them is not in this repository, and contributors don't need it.

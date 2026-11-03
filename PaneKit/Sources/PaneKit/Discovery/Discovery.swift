@@ -35,7 +35,11 @@ public struct Discovery: Sendable {
     /// SSDP hosts first, then the sweep, each probed once on `port`, `width` at a time: without a token,
     /// then with the one in `tokensByHost` for that host (keys compared case-insensitively). A host
     /// never receives another TV's token; one that wants a token and has none is `.needsToken`. `found` receives each Glasshouse TV as soon as it answers. Ends
-    /// `.localNetworkDenied` when nothing was found and either SSDP was refused or every probe was.
+    /// `.localNetworkDenied` when nothing was found and the refusal is confirmed: with nothing to probe,
+    /// SSDP was refused; with SSDP refused, at least one probe was too (the others' checks may time out
+    /// under load); otherwise every probe was. A refused SSDP send alone is no proof: on iOS it also
+    /// means only that the app lacks the multicast entitlement, while a probe's refusal is the
+    /// system's own reason (`LocalNetworkCheck`).
     public func run(port: Int = 8080, tokensByHost: [String: String], found: @escaping @MainActor (DiscoveredTV) -> Void) async -> DiscoveryEnd {
         let search = await ssdp()
         var seen = Set<String>()
@@ -78,7 +82,8 @@ public struct Discovery: Sendable {
             }
             for await outcome in group { collect(outcome) }
         }
-        if !reported, search.denied || (probed > 0 && denied == probed) { return .localNetworkDenied }
+        let refused = probed > 0 ? (search.denied ? denied > 0 : denied == probed) : search.denied
+        if !reported, refused { return .localNetworkDenied }
         return .finished
     }
 }

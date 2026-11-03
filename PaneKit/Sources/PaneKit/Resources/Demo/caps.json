@@ -1,0 +1,10 @@
+{
+  "ok": true,
+  "allowControl": true,
+  "allowPower": true,
+  "origin": "192.0.2.10",
+  "version": "0.132.0",
+  "fromHomebrewChannel": false,
+  "setupNeeded": false,
+  "clockHour12": true
+}

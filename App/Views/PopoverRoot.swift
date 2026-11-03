@@ -131,41 +131,6 @@ private struct StatusLine: View {
     }
 }
 
-/// Equal columns (one per visible tab) across the window's full width (10 pt in from its edges), a 1 pt underline
-/// under the selected tab, a separator under the bar. The popover's tabs, and the preferences' panes.
-struct TabBar<Tab: Hashable>: View {
-    let tabs: [Tab]
-    @Binding var selection: Tab
-    let title: (Tab) -> LocalizedStringKey
-    @Environment(\.palette) private var palette
-
-    var body: some View {
-        HStack(spacing: 0) {
-            ForEach(tabs, id: \.self) { tab in
-                Button { selection = tab } label: {
-                    Text(title(tab))
-                        .font(.manrope(9))
-                        .tracking(0.9)
-                        .textCase(.uppercase)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.8)
-                        .foregroundStyle(selection == tab ? palette.fg : palette.fg.opacity(0.55))
-                        .padding(.top, 9)
-                        .padding(.bottom, 8)
-                        .frame(maxWidth: .infinity)
-                        .overlay(alignment: .bottom) {
-                            if selection == tab { Rectangle().fill(palette.fg).frame(height: 1) }
-                        }
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-            }
-        }
-        .padding(.horizontal, 10)
-        .background(alignment: .bottom) { Hairline() }
-    }
-}
-
 /// The selected tab.
 private struct TabContent: View {
     let tab: PaneTab
@@ -180,19 +145,6 @@ private struct TabContent: View {
         case .game: SettingsTab(kind: .game, model: model, session: session)
         case .hdmi: HDMITab(model: model, session: session)
         case .stats: StatsTab(model: model, session: session)
-        }
-    }
-}
-
-extension PaneTab {
-    var title: LocalizedStringKey {
-        switch self {
-        case .remote: "Remote"
-        case .picture: "Picture"
-        case .audio: "Audio"
-        case .game: "Game"
-        case .hdmi: "HDMI"
-        case .stats: "Stats"
         }
     }
 }

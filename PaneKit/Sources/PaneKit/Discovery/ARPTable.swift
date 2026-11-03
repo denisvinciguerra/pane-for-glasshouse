@@ -18,11 +18,16 @@ public enum ARPTable {
 
     /// The MAC the ARP table gives for `host` (`/usr/sbin/arp -n`, 2 s at most); nil on any failure.
     public static func mac(of host: String) async -> String? {
+        #if os(macOS)
         await withCheckedContinuation { continuation in
             DispatchQueue.global().async { continuation.resume(returning: run(host: host)) }
         }
+        #else
+        nil   // iOS has no `arp` and no way to run it
+        #endif
     }
 
+    #if os(macOS)
     /// Blocks its (non-cooperative) thread until `arp` ends or is terminated at the timeout.
     private static func run(host: String) -> String? {
         let process = Process()
@@ -40,4 +45,5 @@ public enum ARPTable {
         guard process.terminationStatus == 0 else { return nil }
         return parse(String(decoding: data, as: UTF8.self), host: host)
     }
+    #endif
 }

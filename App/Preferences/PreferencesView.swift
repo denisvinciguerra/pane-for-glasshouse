@@ -86,28 +86,3 @@ struct PreferencesNote: View {
             .fixedSize(horizontal: false, vertical: true)
     }
 }
-
-/// A small text button in the label colour, full strength while pressed.
-struct TextButtonStyle: ButtonStyle {
-    @Environment(\.palette) private var palette
-    @Environment(\.isEnabled) private var isEnabled
-
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .font(.manrope(10.5))
-            .foregroundStyle(configuration.isPressed ? palette.fg : palette.label)
-            .opacity(isEnabled ? 1 : 0.35)
-            .contentShape(Rectangle())
-    }
-}
-
-/// One row of a preferences list: its line, what may come under it, a hairline at the bottom.
-struct PreferencesRow<Content: View>: View {
-    @ViewBuilder let content: Content
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 0) { content }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .overlay(alignment: .bottom) { Hairline().opacity(0.6) }
-    }
-}

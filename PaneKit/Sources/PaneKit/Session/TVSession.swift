@@ -17,6 +17,9 @@ enum SessionText {
     static func wakeFailed(_ bundle: Bundle = .module) -> String {
         String(localized: "Couldn't send Wake-on-LAN", bundle: bundle)
     }
+    static func wakeNotPermitted(_ bundle: Bundle = .module) -> String {
+        String(localized: "This device can't wake the TV from deep standby. Keep Quick Start+ or Always Ready on to turn it on from here.", bundle: bundle)
+    }
     static func rejected(_ bundle: Bundle = .module) -> String {
         String(localized: "The TV refused the command", bundle: bundle)
     }
@@ -105,6 +108,9 @@ struct ReadGate {
     public private(set) var lastError: APIError?
     /// True until the first stats read and the first caps attempt have both completed.
     public private(set) var connecting = true
+    /// The state shown is old (the app was away, iOS): true from `markStale()` until the next stats
+    /// read lands, answered or failed.
+    public private(set) var stale = false
     /// macOS refuses this app the local network.
     public var localNetworkDenied: Bool { lastError == .localNetworkDenied }
     /// The server's version when it is older than the Picture tab's; `nil` when current or unreadable.
@@ -163,7 +169,7 @@ struct ReadGate {
     public var blockedReason: String? {
         if canControl { return nil }
         if pendingAction != nil { return SessionText.turningOn() }
-        if connecting { return SessionText.connecting() }
+        if connecting || stale { return SessionText.connecting() }
         if localNetworkDenied { return SessionText.localNetworkDenied() }
         if let powerBlock { return powerBlock }
         switch power {
@@ -205,14 +211,19 @@ struct ReadGate {
     @ObservationIgnored private var gameGate = ReadGate()
     @ObservationIgnored private var audioGate = ReadGate()
     @ObservationIgnored private var hdmiGate = ReadGate()
+    /// Reads the stats again right after each command accepted, rather than at the next poll: for
+    /// the demo TV, whose state changes at once (a real TV needs time, the poll waits for it).
+    @ObservationIgnored private let rereadsAfterCommands: Bool
 
     public init(api: any GlasshouseAPI, mac: String?,
                 sleep: @escaping @Sendable (Duration) async -> Void = { try? await Task.sleep(for: $0) },
                 wake: @escaping @Sendable (String) async throws -> Void = { try await WakeOnLAN.send(mac: $0) },
                 learnedMAC: @escaping @MainActor (String) -> Void = { _ in },
                 lostContact: @escaping @MainActor () -> Void = {},
-                answered: @escaping @MainActor () -> Void = {}) {
+                answered: @escaping @MainActor () -> Void = {},
+                rereadsAfterCommands: Bool = false) {
         self.api = api
+        self.rereadsAfterCommands = rereadsAfterCommands
         self.mac = mac
         self.learnedMAC = learnedMAC
         self.sleep = sleep
@@ -254,6 +265,13 @@ struct ReadGate {
         }
         statsRead = true
         connecting = !capsTried
+        if stale { stale = false }
+    }
+
+    /// What the session shows is old news: `stale` until the next stats read lands. Nothing else
+    /// changes, so the commands stay as they were.
+    public func markStale() {
+        stale = true
     }
 
     public func refresh(_ tab: PaneTab) async {
@@ -419,6 +437,7 @@ struct ReadGate {
         do {
             try await api.send(command)
             lastError = nil
+            if rereadsAfterCommands { await refreshStats() }
             return true
         } catch {
             guard !Task.isCancelled else { return false }
@@ -491,6 +510,9 @@ struct ReadGate {
                 try await wake(target)
             } catch {
                 guard !Task.isCancelled else { return nil }
+                if let wakeError = error as? WakeOnLANError, wakeError == .notPermitted {
+                    return refused(SessionText.wakeNotPermitted())
+                }
                 return refused(SessionText.wakeFailed())
             }
             return nil

@@ -16,11 +16,12 @@ targets:
     deploymentTarget: "14.0"
     sources:
       - path: App
+      - path: Shared
         excludes:
           - "Resources/Fonts"
           - "Resources/Fonts/**"
       # A folder reference: copied whole to Contents/Resources/Fonts, where ATSApplicationFontsPath looks.
-      - path: App/Resources/Fonts
+      - path: Shared/Resources/Fonts
         type: folder
         buildPhase: resources
     dependencies:
@@ -40,3 +41,25 @@ targets:
         SWIFT_EMIT_LOC_STRINGS: YES
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+  Pane iOS:
+    type: application
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      # The fonts are plain resources here, at the bundle's root, where UIAppFonts looks.
+      - path: Shared
+      - path: iOSApp
+    dependencies:
+      - package: PaneKit
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: fr.synlink.pane
+        PRODUCT_NAME: "Pane for Glasshouse"
+        INFOPLIST_FILE: iOSApp/Info.plist
+        TARGETED_DEVICE_FAMILY: "1,2"
+        MARKETING_VERSION: 1.2.0
+        CURRENT_PROJECT_VERSION: 2
+        SWIFT_VERSION: "6.0"
+        SWIFT_STRICT_CONCURRENCY: complete
+        SWIFT_EMIT_LOC_STRINGS: YES
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon

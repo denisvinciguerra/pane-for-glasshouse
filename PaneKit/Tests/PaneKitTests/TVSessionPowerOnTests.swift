@@ -223,6 +223,19 @@ final class TVSessionPowerOnTests: XCTestCase {
         XCTAssertEqual(commands, [])
     }
 
+    func testWakeNotPermittedSaysToKeepActiveStandby() async {
+        let api = FakeAPI()
+        await api.fail("/api/stats", .unreachable)
+        let s = await ready(api, turnedOn: nil, mac: "00:11:22:33:44:55", wake: { _ in throw WakeOnLANError.notPermitted })
+        let result = await s.trigger(netflix)
+        XCTAssertEqual(result, .failed(SessionText.wakeNotPermitted()))
+        // iPhone and iPad alike.
+        XCTAssertEqual(SessionText.wakeNotPermitted(lproj("en")),
+                       "This device can't wake the TV from deep standby. Keep Quick Start+ or Always Ready on to turn it on from here.")
+        XCTAssertEqual(SessionText.wakeNotPermitted(lproj("fr")),
+                       "Cet appareil ne peut pas réveiller la TV en veille profonde. Garde Allumage rapide+ ou Always Ready activé pour l’allumer d’ici.")
+    }
+
     func testTriggerRechecksTheActionOnceTheTVIsOn() async {
         let api = FakeAPI()
         await api.fail("/api/stats", .unreachable)

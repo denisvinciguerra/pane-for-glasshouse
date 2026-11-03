@@ -26,7 +26,8 @@ public enum SSDP {
     }
 
     /// Sends both searches, listens `listen` seconds and returns the source address of each webOS
-    /// reply, once each. `denied`: every send failed with EHOSTUNREACH (local network access is off).
+    /// reply, once each. `denied`: every send failed with EHOSTUNREACH, which says local network
+    /// access is off, or on iOS just as well that the app lacks the multicast entitlement.
     public static func search(listen: TimeInterval = 3) async -> SSDPResult {
         let queue = DispatchQueue(label: "fr.synlink.pane.ssdp")
         return await withCheckedContinuation { (continuation: CheckedContinuation<SSDPResult, Never>) in

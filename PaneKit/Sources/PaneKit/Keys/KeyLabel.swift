@@ -1,11 +1,14 @@
-import Carbon.HIToolbox
 import Foundation
+#if os(macOS)
+import Carbon.HIToolbox
+#endif
 
 public protocol KeyboardLayout: Sendable {
     /// Le caractère de la touche sans modificateur, nil si elle n'en produit pas.
     func character(for keyCode: UInt16) -> String?
 }
 
+#if os(macOS)
 /// La disposition active, lue une fois à l'init (à appeler sur le fil principal) : les données
 /// `kTISPropertyUnicodeKeyLayoutData` sont copiées, `character(for:)` appelle `UCKeyTranslate`.
 public struct CurrentKeyboardLayout: KeyboardLayout {
@@ -37,6 +40,7 @@ public struct CurrentKeyboardLayout: KeyboardLayout {
         return s.unicodeScalars.allSatisfy { $0.value < 0x20 || $0.value == 0x7F } ? nil : s
     }
 }
+#endif
 
 public enum KeyLabel {
     private static let glyphs: [UInt16: String] = [

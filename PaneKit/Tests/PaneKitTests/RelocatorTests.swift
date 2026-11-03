@@ -62,6 +62,27 @@ final class RelocatorTests: XCTestCase {
         XCTAssertEqual(host, "192.0.2.21")
     }
 
+    // iOS cannot read the ARP table: it builds the Relocator with `macOf: { _ in nil }`.
+    func testWithoutARPAnOpenServerIsFoundByItsReportedMAC() async {
+        let tvs = [found("192.0.2.20", mac: Self.wanted)]
+        let r = Relocator(search: { _, found in
+            for tv in tvs { await found(tv) }
+            return .finished
+        }, macOf: { _ in nil })
+        let host = await r.locate(mac: Self.wanted, port: 8080, excluding: "192.0.2.10")
+        XCTAssertEqual(host, "192.0.2.20")
+    }
+
+    func testWithoutARPATokenServerIsNeverFound() async {
+        let tvs = [locked("192.0.2.20")]
+        let r = Relocator(search: { _, found in
+            for tv in tvs { await found(tv) }
+            return .finished
+        }, macOf: { _ in nil })
+        let host = await r.locate(mac: Self.wanted, port: 8080, excluding: "192.0.2.10")
+        XCTAssertNil(host)
+    }
+
     func testFirstMatchCancelsTheSearch() async {
         let log = Log()
         let cancelled = expectation(description: "the search is cancelled")

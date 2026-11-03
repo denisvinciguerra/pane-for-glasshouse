@@ -705,6 +705,22 @@
         }
       }
     },
+    "This device can't wake the TV from deep standby. Keep Quick Start+ or Always Ready on to turn it on from here." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This device can't wake the TV from deep standby. Keep Quick Start+ or Always Ready on to turn it on from here."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cet appareil ne peut pas réveiller la TV en veille profonde. Garde Allumage rapide+ ou Always Ready activé pour l’allumer d’ici."
+          }
+        }
+      }
+    },
     "The TV refused the command" : {
       "localizations" : {
         "en" : {

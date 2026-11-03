@@ -50,6 +50,36 @@ final class TVSessionTests: XCTestCase {
         XCTAssertNil(s.lastError)
     }
 
+    func testMarkStaleHoldsUntilTheNextStatsRead() async {
+        let api = FakeAPI()
+        let s = await ready(api)
+        XCTAssertFalse(s.stale)
+        s.markStale()
+        XCTAssertTrue(s.stale)
+        XCTAssertEqual(s.power, .on, "the last state stays, marked as old")
+        await s.refreshStats()
+        XCTAssertFalse(s.stale)
+
+        s.markStale()
+        await api.fail("/api/stats", .unreachable)
+        await s.refreshStats()
+        XCTAssertFalse(s.stale, "a failed read is an answer too")
+        XCTAssertEqual(s.power, .unreachable)
+        XCTAssertEqual(s.blockedReason, SessionText.unreachable())
+
+        s.markStale()
+        XCTAssertEqual(s.blockedReason, SessionText.connecting(), "not unreachable until it is read again")
+    }
+
+    func testCancelledReadLeavesTheSessionStale() async {
+        let api = FakeAPI()
+        let s = await ready(api)
+        s.markStale()
+        await api.cancelCallerOnStats()
+        await Task { await s.refreshStats() }.value
+        XCTAssertTrue(s.stale)
+    }
+
     func testBadTokenIsDistinctFromUnreachable() async {
         let api = FakeAPI()
         await api.fail("/api/stats", .badToken)
