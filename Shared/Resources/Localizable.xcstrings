@@ -1,6 +1,54 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Drag to move · Click to select\nUse the wheel or two fingers to scroll" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drag to move · Click to select\nUse the wheel or two fingers to scroll"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Glissez pour déplacer · Cliquez pour sélectionner\nUtilisez la molette ou deux doigts pour défiler"
+          }
+        }
+      }
+    },
+    "Pointer" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pointer"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pointeur"
+          }
+        }
+      }
+    },
+    "Slide to move · Tap to click\nUse two fingers to scroll" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Slide to move · Tap to click\nUse two fingers to scroll"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Glissez pour déplacer · Touchez pour cliquer\nFaites défiler avec deux doigts"
+          }
+        }
+      }
+    },
     "Pane for Glasshouse" : {
       "localizations" : {
         "en" : {

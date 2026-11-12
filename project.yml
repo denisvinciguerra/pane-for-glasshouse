@@ -9,6 +9,19 @@ packages:
   Sparkle:
     url: https://github.com/sparkle-project/Sparkle
     exactVersion: 2.10.0
+schemes:
+  Pane:
+    build:
+      targets:
+        Pane: all
+    run:
+      config: Debug
+  Pane iOS:
+    build:
+      targets:
+        Pane iOS: all
+    run:
+      config: Debug
 targets:
   Pane:
     type: application

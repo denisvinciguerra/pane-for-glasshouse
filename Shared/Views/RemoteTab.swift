@@ -10,11 +10,14 @@ struct RemoteTab: View {
     let model: AppModel
     let session: TVSession
     @Environment(\.keyboard) private var keyboard
+    @State private var pointerMode = false
+    @State private var pointerController: PointerController?
+    @Environment(\.palette) private var palette
     #if os(iOS)
     /// − and + held down repeat, each on its own.
     @State private var volumeDown = KeyRepeater()
     @State private var volumeUp = KeyRepeater()
-    @Environment(\.palette) private var palette
+    @Environment(\.scenePhase) private var scenePhase
     #endif
 
     private static let gap: CGFloat = 6
@@ -28,7 +31,14 @@ struct RemoteTab: View {
         VStack(alignment: .leading, spacing: 14) {
             Group {
                 section("Source") { sourceGrid(stats.map(sources(from:)) ?? []) }
-                section("D-pad") { dpad }
+                section(pointerMode ? "Pointer" : "D-pad") {
+                    if pointerMode {
+                        VStack(spacing: Self.gap) {
+                            pointerMacPad
+                            navigation
+                        }
+                    } else { dpad }
+                }
                 section("Playback") { playback }
                 section("Volume", trailing: stats?.sound?.output ?? stats?.audioOutput) { volume(stats) }
             }
@@ -82,13 +92,27 @@ struct RemoteTab: View {
                 arrow(.right, "Right")
             }
             HStack(spacing: Self.gap) { gap; arrow(.down, "Down"); gap }
-            HStack(spacing: Self.gap) {
-                GHButton("Back") { click(.rcu(.back)) }.keyed(.rcu(.back))
-                GHButton("Home") { click(.rcu(.home)) }.keyed(.rcu(.home))
-                GHButton("Settings") { click(.rcu(.settings)) }.keyed(.rcu(.settings))
-            }
+            navigation
         }
         .frame(maxWidth: .infinity)
+    }
+
+    private var navigation: some View {
+        HStack(spacing: Self.gap) {
+            GHButton("Back") { click(.rcu(.back)) }.keyed(.rcu(.back))
+            GHButton("Home") { click(.rcu(.home)) }.keyed(.rcu(.home))
+            GHButton("Settings") { click(.rcu(.settings)) }.keyed(.rcu(.settings))
+            if session.caps?.pointer == true {
+                Group {
+                    if pointerMode {
+                        GHButton("D-pad") { pointerMode = false }
+                    } else {
+                        GHButton("Pointer") { pointerMode = true }
+                    }
+                }
+                .transaction { $0.animation = nil }
+            }
+        }
     }
 
     private var gap: some View { Color.clear.frame(width: 58, height: 50) }
@@ -140,6 +164,33 @@ struct RemoteTab: View {
     }
 }
 
+#if os(macOS)
+extension RemoteTab {
+    private var pointerMacPad: some View {
+        ZStack {
+            if let pointerController { PointerMacPad(controller: pointerController) }
+            Text("Drag to move · Click to select\nUse the wheel or two fingers to scroll")
+                .font(.manrope(13))
+                .foregroundStyle(palette.label)
+                .multilineTextAlignment(.center)
+                .allowsHitTesting(false)
+        }
+        .frame(height: 3 * 50 + 2 * Self.gap)
+        .background(palette.key)
+        .overlay(Rectangle().strokeBorder(palette.line, lineWidth: 1))
+        .onAppear { openPointer() }
+        .onDisappear { pointerController?.close() }
+    }
+
+    private func openPointer() {
+        if pointerController == nil, let client = model.client {
+            pointerController = PointerController(client: client, updatesPerSecond: session.caps?.pointerRate ?? 120)
+        }
+        pointerController?.open()
+    }
+}
+#endif
+
 #if os(iOS)
 extension RemoteTab {
     /// A key of the cross, at most: the cross narrows with the screen.
@@ -156,11 +207,25 @@ extension RemoteTab {
             PinnedSection(model: model, session: session, controlsOff: controlsOff)
                 .padding(.top, 16)
             Group {
-                phonePad.padding(.top, 16)
+                if pointerMode && session.caps?.pointer == true {
+                    pointerPad.padding(.top, 16)
+                } else {
+                    phonePad.padding(.top, 16)
+                }
                 HStack(spacing: Self.gap) {
                     GHButton("Back") { click(.rcu(.back)) }.keyed(.rcu(.back))
                     GHButton("Home") { click(.rcu(.home)) }.keyed(.rcu(.home))
                     GHButton("Settings") { click(.rcu(.settings)) }.keyed(.rcu(.settings))
+                    if session.caps?.pointer == true {
+                        Group {
+                            if pointerMode {
+                                GHButton("D-pad") { pointerMode = false }
+                            } else {
+                                GHButton("Pointer") { pointerMode = true }
+                            }
+                        }
+                        .transaction { $0.animation = nil }
+                    }
                 }
                 .padding(.top, 8)
                 playback.padding(.top, 8)
@@ -170,11 +235,40 @@ extension RemoteTab {
         }
         // A key held down stops repeating as soon as it can no longer be pressed.
         .onChange(of: buttonsOff) { _, off in if off { stopRepeating() } }
+        .onChange(of: pointerMode) { _, active in if !active { pointerController?.close() } }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active && pointerMode { openPointer() }
+            else { pointerController?.close() }
+        }
+    }
+
+    private var pointerPad: some View {
+        ZStack {
+            if let pointerController { PointerPad(controller: pointerController) }
+            Text("Slide to move · Tap to click\nUse two fingers to scroll")
+                .font(.manrope(points: 13))
+                .foregroundStyle(palette.label)
+                .multilineTextAlignment(.center)
+                .allowsHitTesting(false)
+        }
+        .frame(height: 220)
+        .background(palette.key)
+        .overlay(Rectangle().strokeBorder(palette.line, lineWidth: 1))
+        .onAppear { openPointer() }
+        .onDisappear { pointerController?.close() }
+    }
+
+    private func openPointer() {
+        if pointerController == nil, let client = model.client {
+            pointerController = PointerController(client: client, updatesPerSecond: session.caps?.pointerRate ?? 120)
+        }
+        pointerController?.open()
     }
 
     private func stopRepeating() {
         volumeDown.stop()
         volumeUp.stop()
+        pointerController?.close()
     }
 
     /// Up to five sources share the row, their names cut to a word; more scroll, at the width five
