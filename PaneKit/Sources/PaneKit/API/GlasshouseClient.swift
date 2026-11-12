@@ -70,6 +70,20 @@ public struct GlasshouseClient: GlasshouseAPI {
         return c.url
     }
 
+    /// A pointer channel to this TV only. The bearer token stays out of its URL.
+    public func pointerTask() throws(APIError) -> URLSessionWebSocketTask {
+        guard let httpURL = try? request("/api/pointer").url,
+              var components = URLComponents(url: httpURL, resolvingAgainstBaseURL: false) else {
+            throw .unreachable
+        }
+        components.scheme = "ws"
+        guard let url = components.url else { throw .unreachable }
+        var req = URLRequest(url: url)
+        req.setValue(language, forHTTPHeaderField: "X-Glasshouse-Lang")
+        if let token = endpoint.token { req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization") }
+        return session.webSocketTask(with: req)
+    }
+
     public func get<T: Decodable & Sendable>(_ path: String, as: T.Type) async throws(APIError) -> T {
         let data = try await perform(try request(path))
         do {
