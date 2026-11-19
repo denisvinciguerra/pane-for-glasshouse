@@ -47,7 +47,7 @@ struct PaneApp: App {
         }
         #if DEBUG
         // Screenshots without clicking the menu bar: -PaneTheme dark|light|auto, -PaneTab remote|…,
-        // -PaneOpenOnLaunch YES, and with it -PaneKeys show; -PaneDemoPins YES (six pins, and the global
+        // -PaneOpenOnLaunch YES, and with it -PaneKeys show; -PanePointer YES (Remote shows the pointer's pad); -PaneDemoPins YES (six pins, and the global
         // shortcuts ⌃⌥M on Mute and ⌘Y on Netflix in place of the real ones) and
         // -PaneEditAction demo (the editor on two steps), both on throwaway actions;
         // -PaneOpenPreferences general|tv|keys|pinned|about (the preferences window on that pane);

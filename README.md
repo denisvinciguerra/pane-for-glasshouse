@@ -35,7 +35,7 @@ On the Mac:
 <table>
   <tr>
     <td align="center" valign="top"><img src="docs/screenshots/keys-dark.png" width="328" alt="Remote tab with the keyboard keys and global shortcuts shown"><br><sub>Keys and global shortcuts, set from the bottom bar</sub></td>
-    <td align="center" valign="top"><img src="docs/screenshots/remote-light.png" width="328" alt="Remote tab, light theme"><br><sub>Light theme</sub></td>
+    <td align="center" valign="top"><img src="docs/screenshots/pointer-light.png" width="328" alt="Remote tab in light theme, with the pointer's trackpad in place of the cross"><br><sub>Pointer trackpad, light theme</sub></td>
   </tr>
   <tr>
     <td align="center" valign="top"><img src="docs/screenshots/picture-dark.png" width="328" alt="Picture tab"><br><sub>Picture settings, as the TV sends them</sub></td>

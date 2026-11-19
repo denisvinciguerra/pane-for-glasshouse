@@ -10,7 +10,7 @@ struct RemoteTab: View {
     let model: AppModel
     let session: TVSession
     @Environment(\.keyboard) private var keyboard
-    @State private var pointerMode = false
+    @State private var pointerMode = Self.startsInPointer
     @State private var pointerController: PointerController?
     @Environment(\.palette) private var palette
     #if os(iOS)
@@ -21,6 +21,15 @@ struct RemoteTab: View {
     #endif
 
     private static let gap: CGFloat = 6
+
+    /// Screenshots (-PanePointer YES): the pad in place of the cross, where the TV offers it.
+    private static var startsInPointer: Bool {
+        #if DEBUG
+        UserDefaults.standard.bool(forKey: "PanePointer")
+        #else
+        false
+        #endif
+    }
 
     var body: some View {
         let stats = session.stats
