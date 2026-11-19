@@ -31,8 +31,8 @@ struct RemoteTab: View {
         VStack(alignment: .leading, spacing: 14) {
             Group {
                 section("Source") { sourceGrid(stats.map(sources(from:)) ?? []) }
-                section(pointerMode ? "Pointer" : "D-pad") {
-                    if pointerMode {
+                section(showsPointer ? "Pointer" : "D-pad") {
+                    if showsPointer {
                         VStack(spacing: Self.gap) {
                             pointerMacPad
                             navigation
@@ -59,6 +59,21 @@ struct RemoteTab: View {
 
     private func click(_ id: ButtonID) {
         keyboard?.buttonClicked(id)
+    }
+
+    // MARK: Pointer
+
+    /// The pad in place of the cross: chosen, and offered by this TV's Glasshouse.
+    private var showsPointer: Bool { pointerMode && session.caps?.pointer == true }
+
+    /// Opens the pointer to the TV shown, in place of one opened to another TV or token.
+    private func openPointer() {
+        guard let client = model.client else { return }
+        if pointerController?.endpoint != client.endpoint {
+            pointerController?.close()
+            pointerController = PointerController(client: client, updatesPerSecond: session.caps?.pointerRate ?? 120)
+        }
+        pointerController?.open()
     }
 
     // MARK: Source
@@ -168,8 +183,11 @@ struct RemoteTab: View {
 extension RemoteTab {
     private var pointerMacPad: some View {
         ZStack {
-            if let pointerController { PointerMacPad(controller: pointerController) }
-            Text("Drag to move · Click to select\nUse the wheel or two fingers to scroll")
+            // A new controller (another TV) needs a new view: the old one keeps its controller.
+            if let pointerController {
+                PointerMacPad(controller: pointerController).id(ObjectIdentifier(pointerController))
+            }
+            Text("Click and drag to move\nClick to select\nScroll with the wheel or two fingers")
                 .font(.manrope(13))
                 .foregroundStyle(palette.label)
                 .multilineTextAlignment(.center)
@@ -180,13 +198,7 @@ extension RemoteTab {
         .overlay(Rectangle().strokeBorder(palette.line, lineWidth: 1))
         .onAppear { openPointer() }
         .onDisappear { pointerController?.close() }
-    }
-
-    private func openPointer() {
-        if pointerController == nil, let client = model.client {
-            pointerController = PointerController(client: client, updatesPerSecond: session.caps?.pointerRate ?? 120)
-        }
-        pointerController?.open()
+        .onChange(of: model.client?.endpoint) { openPointer() }
     }
 }
 #endif
@@ -207,7 +219,7 @@ extension RemoteTab {
             PinnedSection(model: model, session: session, controlsOff: controlsOff)
                 .padding(.top, 16)
             Group {
-                if pointerMode && session.caps?.pointer == true {
+                if showsPointer {
                     pointerPad.padding(.top, 16)
                 } else {
                     phonePad.padding(.top, 16)
@@ -234,17 +246,26 @@ extension RemoteTab {
             .disabled(buttonsOff)
         }
         // A key held down stops repeating as soon as it can no longer be pressed.
-        .onChange(of: buttonsOff) { _, off in if off { stopRepeating() } }
-        .onChange(of: pointerMode) { _, active in if !active { pointerController?.close() } }
+        .onChange(of: buttonsOff) { _, off in
+            if off {
+                stopRepeating()
+                pointerController?.close()
+            } else if showsPointer {
+                openPointer()
+            }
+        }
         .onChange(of: scenePhase) { _, phase in
-            if phase == .active && pointerMode { openPointer() }
+            if phase == .active && showsPointer && !buttonsOff { openPointer() }
             else { pointerController?.close() }
         }
     }
 
     private var pointerPad: some View {
         ZStack {
-            if let pointerController { PointerPad(controller: pointerController) }
+            // A new controller (another TV) needs a new view: the old one keeps its controller.
+            if let pointerController {
+                PointerPad(controller: pointerController).id(ObjectIdentifier(pointerController))
+            }
             Text("Slide to move · Tap to click\nUse two fingers to scroll")
                 .font(.manrope(points: 13))
                 .foregroundStyle(palette.label)
@@ -256,19 +277,12 @@ extension RemoteTab {
         .overlay(Rectangle().strokeBorder(palette.line, lineWidth: 1))
         .onAppear { openPointer() }
         .onDisappear { pointerController?.close() }
-    }
-
-    private func openPointer() {
-        if pointerController == nil, let client = model.client {
-            pointerController = PointerController(client: client, updatesPerSecond: session.caps?.pointerRate ?? 120)
-        }
-        pointerController?.open()
+        .onChange(of: model.client?.endpoint) { openPointer() }
     }
 
     private func stopRepeating() {
         volumeDown.stop()
         volumeUp.stop()
-        pointerController?.close()
     }
 
     /// Up to five sources share the row, their names cut to a word; more scroll, at the width five

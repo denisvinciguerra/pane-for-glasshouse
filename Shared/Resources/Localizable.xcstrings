@@ -1,22 +1,6 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "Drag to move · Click to select\nUse the wheel or two fingers to scroll" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Drag to move · Click to select\nUse the wheel or two fingers to scroll"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Glissez pour déplacer · Cliquez pour sélectionner\nUtilisez la molette ou deux doigts pour défiler"
-          }
-        }
-      }
-    },
     "Pointer" : {
       "localizations" : {
         "en" : {
@@ -4077,6 +4061,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Glisse un épinglé pour le déplacer, touche-le pour le modifier."
+          }
+        }
+      }
+    },
+    "Click and drag to move\nClick to select\nScroll with the wheel or two fingers" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Click and drag to move\nClick to select\nScroll with the wheel or two fingers"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cliquez-glissez pour déplacer\nCliquez pour sélectionner\nMolette ou deux doigts pour défiler"
           }
         }
       }

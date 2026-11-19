@@ -1,5 +1,4 @@
 import XCTest
-import os
 @testable import PaneKit
 
 @MainActor
@@ -14,19 +13,15 @@ final class PointerControllerTests: XCTestCase {
     }
 
     func testBatchesMovementBeforeClickAndScroll() async {
-        let batches = OSAllocatedUnfairLock(initialState: [PointerBatch]())
-        let done = expectation(description: "three batches")
-        let controller = PointerController(updatesPerSecond: 120, sleep: { _ in }, sender: { batch in
-            batches.withLock { $0.append(batch) }
-            if batches.withLock({ $0.count }) == 3 { done.fulfill() }
-        })
+        let channel = FakePointerChannel(expecting: 3)
+        let controller = PointerController(updatesPerSecond: 120, sleep: { _ in }, connect: { channel })
         controller.open()
         controller.move(dx: 4, dy: -2)
         controller.move(dx: 3, dy: 1)
         controller.click()
         controller.scroll(dx: 0, dy: 2)
-        await fulfillment(of: [done], timeout: 1)
-        XCTAssertEqual(batches.withLock { $0 }, [
+        await fulfillment(of: [channel.done], timeout: 1)
+        XCTAssertEqual(channel.batches, [
             PointerBatch(move: [PointerDelta(dx: 4, dy: -2), PointerDelta(dx: 3, dy: 1)]),
             PointerBatch(click: true),
             PointerBatch(scroll: PointerDelta(dx: 0, dy: 2)),
@@ -35,26 +30,121 @@ final class PointerControllerTests: XCTestCase {
     }
 
     func testReopensAfterBackgroundClose() async {
-        let sent = expectation(description: "sent after reopening")
-        let controller = PointerController(updatesPerSecond: 120, sleep: { _ in }, sender: { batch in
-            XCTAssertEqual(batch, PointerBatch(click: true))
-            sent.fulfill()
-        })
+        let first = FakePointerChannel(expecting: 1)
+        let second = FakePointerChannel(expecting: 1)
+        var channels = [first, second]
+        let controller = PointerController(updatesPerSecond: 120, sleep: { _ in },
+                                           connect: { channels.removeFirst() })
         controller.open()
         controller.close()
+        XCTAssertTrue(first.closed)
         controller.open()
         controller.click()
-        await fulfillment(of: [sent], timeout: 1)
+        await fulfillment(of: [second.done], timeout: 1)
+        XCTAssertEqual(second.batches, [PointerBatch(click: true)])
         controller.close()
     }
 
     func testCloseDropsPendingMovement() async {
-        let controller = PointerController(updatesPerSecond: 120, sleep: parked, sender: { _ in
-            XCTFail("a closed controller sent an event")
-        })
+        let channel = FakePointerChannel(expecting: 0)
+        let controller = PointerController(updatesPerSecond: 120, sleep: parked, connect: { channel })
         controller.open()
         controller.move(dx: 1, dy: 1)
         controller.close()
         controller.click()
+        XCTAssertEqual(channel.batches, [])
+    }
+
+    /// A gesture made while closed (the pins' edit, controls off) is not sent once it reopens.
+    func testEventsWhileClosedAreNotReplayed() async {
+        let channel = FakePointerChannel(expecting: 1)
+        let controller = PointerController(updatesPerSecond: 120, sleep: { _ in }, connect: { channel })
+        controller.click()
+        controller.move(dx: 9, dy: 9)
+        controller.open()
+        controller.scroll(dx: 0, dy: 1)
+        await fulfillment(of: [channel.done], timeout: 1)
+        XCTAssertEqual(channel.batches, [PointerBatch(scroll: PointerDelta(dx: 0, dy: 1))])
+        controller.close()
+    }
+
+    /// Glasshouse restarted: the send fails, the batch goes again on a new connection.
+    func testFailedSendReconnectsAndResends() async {
+        let broken = FakePointerChannel(expecting: 0)
+        broken.failsSends = true
+        let fresh = FakePointerChannel(expecting: 1)
+        var channels = [broken, fresh]
+        let controller = PointerController(updatesPerSecond: 120, sleep: { _ in },
+                                           connect: { channels.removeFirst() })
+        controller.open()
+        controller.click()
+        await fulfillment(of: [fresh.done], timeout: 1)
+        XCTAssertTrue(broken.closed)
+        XCTAssertEqual(fresh.batches, [PointerBatch(click: true)])
+        controller.close()
+    }
+
+    /// A connection the server closed is replaced before the next batch, not written to.
+    func testClosedChannelIsReplacedBeforeSending() async {
+        let first = FakePointerChannel(expecting: 1)
+        let second = FakePointerChannel(expecting: 1)
+        var channels = [first, second]
+        let controller = PointerController(updatesPerSecond: 120, sleep: { _ in },
+                                           connect: { channels.removeFirst() })
+        controller.open()
+        controller.click()
+        await fulfillment(of: [first.done], timeout: 1)
+        first.isOpen = false
+        controller.click()
+        await fulfillment(of: [second.done], timeout: 1)
+        XCTAssertEqual(first.batches.count, 1)
+        XCTAssertEqual(second.batches, [PointerBatch(click: true)])
+        controller.close()
+    }
+
+    /// Glasshouse refuses a batch of more than 120 moves whole.
+    func testSplitsMovesAtTheServerLimit() async {
+        let channel = FakePointerChannel(expecting: 2)
+        let controller = PointerController(updatesPerSecond: 120, sleep: { _ in }, connect: { channel })
+        controller.open()
+        for _ in 0..<130 { controller.move(dx: 1, dy: 0) }
+        await fulfillment(of: [channel.done], timeout: 1)
+        XCTAssertEqual(channel.batches.map { $0.move?.count }, [120, 10])
+        controller.close()
+    }
+
+    func testZeroRateStillSends() async {
+        let channel = FakePointerChannel(expecting: 1)
+        let controller = PointerController(updatesPerSecond: 0, sleep: { _ in }, connect: { channel })
+        controller.open()
+        controller.move(dx: 1, dy: 1)
+        await fulfillment(of: [channel.done], timeout: 1)
+        controller.close()
+    }
+}
+
+/// Records the batches it carries; `failsSends` makes every send throw.
+@MainActor private final class FakePointerChannel: PointerChannel {
+    let done: XCTestExpectation
+    var isOpen = true
+    var failsSends = false
+    private(set) var closed = false
+    private(set) var batches: [PointerBatch] = []
+
+    init(expecting count: Int) {
+        done = XCTestExpectation(description: "\(count) batches")
+        done.expectedFulfillmentCount = max(count, 1)
+        done.isInverted = count == 0
+    }
+
+    func send(_ text: String) async throws {
+        if failsSends { throw URLError(.networkConnectionLost) }
+        batches.append(try JSONDecoder().decode(PointerBatch.self, from: Data(text.utf8)))
+        done.fulfill()
+    }
+
+    func close() {
+        closed = true
+        isOpen = false
     }
 }

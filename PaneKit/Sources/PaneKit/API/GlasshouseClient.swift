@@ -30,7 +30,7 @@ public protocol GlasshouseAPI: Sendable {
 }
 
 public struct GlasshouseClient: GlasshouseAPI {
-    private let endpoint: Endpoint
+    public let endpoint: Endpoint
     private let session: URLSession
     private let language: String
     private let timeout: TimeInterval

@@ -4,6 +4,7 @@ All notable changes to Pane for Glasshouse. Versions follow [Semantic Versioning
 
 ## Unreleased
 
+- Pointer: when the TV's Glasshouse offers it (0.146 or later, Pointer input turned on in Server › Experimental features), the Remote's Pointer key swaps the cross for a trackpad. On the Mac, click and drag to move, click to select, scroll with the wheel or two fingers; on iPhone and iPad, slide to move, tap to click, two fingers to scroll. Contributed by Kirill Klenovich ([@clima365](https://github.com/clima365)).
 - Mac: the search for TVs no longer reports local network access as blocked only because the SSDP search was refused while the subnet probes went through.
 
 ## 1.2.0
