@@ -11,7 +11,7 @@ A remote for an LG webOS TV running [Glasshouse](https://github.com/rorygallaghe
 - Settings are drawn from what the server sends, so a setting added on the server appears without updating the app.
 - Pinned items: a setting or a sequence of actions on the Remote tab. A pin that launches an app can show the app's icon. Triggered while the TV is off, it turns the TV on first.
 - Power from any state: on, Active Standby and LG's Always Ready screen. On the Mac, also Wake-on-LAN for a TV in deep standby ([not yet on iPhone and iPad](#iphone-and-ipad)).
-- Pointer: a trackpad in place of the cross on the Remote tab, to move the TV's cursor, click and scroll. It needs Glasshouse 0.146 or later with Pointer input turned on (Server › Experimental features).
+- Pointer: control the TV's cursor like a mouse, from a pad in place of the cross on the Remote tab: click and drag on the Mac, slide a finger on iPhone and iPad; click and scroll too. It needs Glasshouse 0.146 or later with Pointer input turned on (Server › Experimental features).
 - Several TVs, dark and light themes, English and French.
 
 On the Mac:
