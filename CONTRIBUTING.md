@@ -39,7 +39,7 @@ Review comments follow [Conventional Comments](https://conventionalcomments.org/
   - in `PaneKit`, `String(localized:bundle: .module)`, catalogued in `PaneKit/Sources/PaneKit/Resources/Localizable.xcstrings`.
 
   If you don't speak French, leave the French string empty and say so in the pull request: a maintainer fills it in.
-- **The visual style** is square corners, 1 px hairlines, Manrope, small uppercase section labels. No rounded pills, gradients or emoji.
+- **The visual style** is rounded corners, 1 px hairlines, Manrope for labels and commands, light Outfit for names and numbers, small uppercase section labels. No gradients or emoji.
 
 ## Building and running tests
 

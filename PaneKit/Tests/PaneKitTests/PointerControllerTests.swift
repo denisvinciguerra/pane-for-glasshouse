@@ -12,6 +12,24 @@ final class PointerControllerTests: XCTestCase {
         XCTAssertEqual(enabled.pointerRate, 240)
     }
 
+    func testOfflineAcceptsEverythingWithoutError() async {
+        let c = PointerController.offline(updatesPerSecond: 120)
+        var errors = 0
+        c.onError = { errors += 1 }
+        c.open(); c.move(dx: 5, dy: -3); c.click(); c.scroll(dx: 0, dy: 2)
+        try? await Task.sleep(for: .milliseconds(100))
+        c.close(); c.open(); c.move(dx: 1, dy: 1)
+        try? await Task.sleep(for: .milliseconds(100))
+        XCTAssertEqual(errors, 0)
+        XCTAssertNil(c.endpoint)
+    }
+
+    func testOfflineIsReplacedForARealTV() {
+        let c = PointerController.offline(updatesPerSecond: 120)
+        XCTAssertFalse(c.needsReplacement(for: nil))
+        XCTAssertTrue(c.needsReplacement(for: Endpoint(host: "192.0.2.1", port: 8080)))
+    }
+
     func testBatchesMovementBeforeClickAndScroll() async {
         let channel = FakePointerChannel(expecting: 3)
         let controller = PointerController(updatesPerSecond: 120, sleep: { _ in }, connect: { channel })

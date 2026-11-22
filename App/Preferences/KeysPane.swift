@@ -18,6 +18,7 @@ struct KeysPane: View {
     /// The action open in the editor's sheet: a new one is pinned when saved.
     @State private var editing: CustomAction?
     @Environment(\.palette) private var palette
+    @Environment(\.keyShape) private var keyShape
 
     private static let recorderWidth: CGFloat = 86
 
@@ -189,7 +190,7 @@ struct KeysPane: View {
         .buttonStyle(.plain)
         .menuIndicator(.hidden)
         // The edge is drawn outside the menu: the menu styles replace a label's own chrome.
-        .overlay(Rectangle().strokeBorder(palette.global.opacity(0.5), style: StrokeStyle(lineWidth: 1, dash: [3, 2]))
+        .overlay(keyShape.strokeInside(palette.global.opacity(0.5), style: StrokeStyle(lineWidth: 1, dash: [3, 2]))
             .allowsHitTesting(false))
         .disabled(available.isEmpty)
     }
@@ -301,7 +302,9 @@ struct KeysPane: View {
                 ForEach(model.actions.actions(for: tv)) { action in
                     PreferencesRow {
                         HStack(spacing: 10) {
+                            // A pin's name, in Outfit as its key shows it.
                             Text(verbatim: action.title)
+                                .font(.outfit(13.5))
                                 .lineLimit(1)
                                 .truncationMode(.tail)
                                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -437,7 +440,7 @@ private extension View {
             .foregroundStyle(palette.accent)
             .padding(.horizontal, 8)
             .padding(.vertical, 6)
-            .background(palette.accent.opacity(0.08))
+            .background(palette.accent.opacity(0.08), in: RoundedRectangle(cornerRadius: Metrics.keyRadius))
             .padding(.bottom, 8)
     }
 }

@@ -92,13 +92,13 @@ struct SettingsTab: View {
                         // One line, shrunk as far as needed to fit (« HDR Cinema Bright » on a 390 pt
                         // iPhone): mockups/2026-11-03-app-preview/picture-title.html, option A.
                         Text(verbatim: label)
-                            .font(.manrope(points: 32, .light))
+                            .font(.outfit(points: 36, .thin))
                             .pinMenu(session.canControl ? { model.pinPictureMode(value, label: label) } : nil)
                             .lineLimit(1)
                             .minimumScaleFactor(0.55)
                         #else
                         Text(verbatim: label)
-                            .font(.manrope(24, .light))
+                            .font(.outfit(28, .thin))
                             .lineLimit(1)
                             .minimumScaleFactor(0.7)
                         PinButton(visible: hoveringMode) { model.pinPictureMode(value, label: label) }
@@ -112,9 +112,10 @@ struct SettingsTab: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     ChoiceMenu(value: value, choices: choices, title: String(localized: "Mode")) { send("pictureMode", .string($0)) }
                         .accessibilityIdentifier("picture.mode")
-                        #if os(iOS)
-                        // At its own width: its frame would otherwise take up to 210 pt from the title.
+                        // At its own width: its frame would otherwise take up to 210 pt (150 on the
+                        // Mac) from the title, and cut « HDR Game » short.
                         .fixedSize()
+                        #if os(iOS)
                         .disabled(!mode.active || !session.canControl)
                         #else
                         .disabled(!mode.active)
@@ -141,11 +142,14 @@ struct SettingsTab: View {
                     if let title = group.title {
                         Text(verbatim: title)
                             #if os(iOS)
-                            .font(.manrope(points: 16, .medium))
+                            .font(.outfit(points: 22))
                             #else
-                            .font(.manrope(13))
+                            .font(.outfit(17))
                             #endif
-                            .padding(.bottom, 3)
+                            .padding(.top, 6)
+                            .padding(.bottom, 6)
+                        // The group's rule, under its title.
+                        Rectangle().fill(palette.fg.opacity(0.25)).frame(height: 1).padding(.bottom, 3)
                     }
                     ForEach(group.rows) { row in
                         SettingRowView(row: row, locked: !session.canControl) { send(row.id, $0) } onPin: { model.pin(row: row) }

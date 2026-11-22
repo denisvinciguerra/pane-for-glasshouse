@@ -2,8 +2,8 @@ import PaneKit
 import SwiftUI
 import UIKit
 
-/// The iPhone's screen, and the iPad's when it is narrow: five tabs at the bottom (Remote, Picture,
-/// Audio, Game when the TV offers it, More with HDMI and Stats), the welcome screen without a TV.
+/// The iPhone's screen, and the iPad's when it is narrow: five tabs at the bottom (Remote, Apps,
+/// Picture, Audio, More with Game when the TV offers it, HDMI and Stats), the welcome screen without a TV.
 /// Wide enough, the two columns of `WideLayout` instead, chosen by the room the window has (never
 /// by the device), again at each rotation, Split View or fold. What must outlive the switch lives
 /// in the models (`selectedTab`, `editingAction`, `morePage`) or here, above both layouts.
@@ -27,9 +27,14 @@ struct RootView: View {
         _keyboard = State(initialValue: KeyboardController(model: model.app, layout: LearnedKeyboardLayout()))
     }
 
+    /// Settings, the TV finder or the action editor is open over the remote.
+    private var sheetOverRemote: Bool {
+        showsSettings || finding != nil || model.app.editingAction != nil
+    }
+
     /// The iPad's keyboard works the remote while Pane is in front and no sheet is over it.
     private var keysActive: Bool {
-        scenePhase == .active && !showsSettings && finding == nil && model.app.editingAction == nil
+        scenePhase == .active && !sheetOverRemote
     }
 
     var body: some View {
@@ -56,7 +61,7 @@ struct RootView: View {
             if let tabs, !tabs.contains(app.selectedTab) { app.selectedTab = .remote }
         }
         .onChange(of: app.selectedTab) { _, tab in
-            if tab == .hdmi || tab == .stats { model.morePage = tab }
+            if MoreTab.pages.contains(tab) { model.morePage = tab }
         }
         .sensoryFeedback(Haptics.tap, trigger: app.commandsSent)
         .modifier(PinsFeedback(app: app))
@@ -66,6 +71,8 @@ struct RootView: View {
         .tint(palette.fg)
         .environment(\.palette, palette)
         .environment(\.keyboard, keyboard)
+        .environment(\.hardwareKeyboard, hardware)
+        .environment(\.sheetOverRemote, sheetOverRemote)
         // Above the switch of layouts: the keys go on working through a rotation.
         .background {
             if Self.isPad { HardwareKeys(keyboard: keyboard, hardware: hardware, active: keysActive, claims: keyClaims) }
@@ -85,14 +92,23 @@ struct RootView: View {
         let available = session.availableTabs
         let more = MoreTab.pages.filter(available.contains)
         return TabView(selection: selection) {
-            // Under the tab bar, only as much room as the remote needs to fit the screen.
-            TabPage(session: session, bottom: 4) {
+            // Under the tab bar, only as much room as the remote needs to fit the screen. On a phone,
+            // a tall screen's spare room goes around the ring (RemoteTab), not under the volume.
+            TabPage(session: session, bottom: 4, fillsHeight: sizeClass == .compact) {
                 RemoteScreen(model: model, session: session,
                              openSettings: { showsSettings = true }, find: { finding = $0 })
             }
             .tabItem { Label("tab.remote", systemImage: "av.remote") }
             .tag(MobileTab.remote)
-            ForEach([SettingsTab.Kind.picture, .audio, .game], id: \.self) { kind in
+            if available.contains(.apps) {
+                TabPage(session: session) {
+                    PageTitle(PaneTab.apps.mobileTitle)
+                    AppsTab(model: model.app, session: session)
+                }
+                .tabItem { Label("Apps", systemImage: "square.grid.2x2") }
+                .tag(MobileTab.apps)
+            }
+            ForEach([SettingsTab.Kind.picture, .audio], id: \.self) { kind in
                 if available.contains(kind.tab) {
                     TabPage(session: session) {
                         // Picture's mode, large, is its title.
@@ -114,7 +130,7 @@ struct RootView: View {
         }
     }
 
-    /// The tab bar's choice, as `selectedTab`: More stands for HDMI and Stats.
+    /// The tab bar's choice, as `selectedTab`: More stands for Game, HDMI and Stats.
     private var selection: Binding<MobileTab> {
         let app = model.app
         return Binding {
@@ -122,11 +138,11 @@ struct RootView: View {
         } set: { tab in
             switch tab {
             case .remote: app.selectedTab = .remote
+            case .apps: app.selectedTab = .apps
             case .picture: app.selectedTab = .picture
             case .audio: app.selectedTab = .audio
-            case .game: app.selectedTab = .game
             case .more:
-                if app.selectedTab != .hdmi && app.selectedTab != .stats {
+                if !MoreTab.pages.contains(app.selectedTab) {
                     let pages = MoreTab.pages.filter { app.session?.availableTabs.contains($0) ?? true }
                     app.selectedTab = pages.contains(model.morePage) ? model.morePage : pages.first ?? .hdmi
                 }
@@ -178,15 +194,15 @@ private struct PinsShown: Equatable {
 
 /// The tab bar's tabs.
 private enum MobileTab: Hashable {
-    case remote, picture, audio, game, more
+    case remote, apps, picture, audio, more
 
     init(_ tab: PaneTab) {
         switch tab {
         case .remote: self = .remote
+        case .apps: self = .apps
         case .picture: self = .picture
         case .audio: self = .audio
-        case .game: self = .game
-        case .hdmi, .stats: self = .more
+        case .game, .hdmi, .stats: self = .more
         }
     }
 }
@@ -197,15 +213,20 @@ private struct TabPage<Content: View>: View {
     let session: TVSession
     /// The room under the content.
     var bottom: CGFloat = 28
+    /// The content at least as tall as the page, for its spacers to share the spare room.
+    var fillsHeight = false
     @ViewBuilder let content: Content
     @Environment(\.palette) private var palette
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 0) { content }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, Metrics.gutter)
-                .padding(.bottom, bottom)
+        GeometryReader { proxy in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) { content }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, Metrics.gutter)
+                    .padding(.bottom, bottom)
+                    .frame(minHeight: fillsHeight ? proxy.size.height : nil, alignment: .top)
+            }
         }
         .scrollBounceBehavior(.basedOnSize)
         .scrollDismissesKeyboard(.interactively)
@@ -231,7 +252,7 @@ private struct UnderStatusBar: ViewModifier {
     }
 }
 
-/// A tab's title, large and light, like Picture's mode.
+/// A tab's title, large and thin, like Picture's mode.
 struct PageTitle: View {
     let title: LocalizedStringKey
 
@@ -239,7 +260,7 @@ struct PageTitle: View {
 
     var body: some View {
         Text(title)
-            .font(.manrope(points: 32, .light))
+            .font(.outfit(points: 36, .thin))
             .frame(height: 56, alignment: .leading)
             .padding(.top, 14)
             .padding(.bottom, 8)
@@ -247,10 +268,11 @@ struct PageTitle: View {
     }
 }
 
-/// The session's passing message, a few seconds above the tab bar, in a thin frame.
+/// The session's passing message, a few seconds above the tab bar, in a thin frame with a key's corners.
 struct PassingMessage: View {
     let session: TVSession
     @Environment(\.palette) private var palette
+    @Environment(\.keyShape) private var keyShape
 
     var body: some View {
         Group {
@@ -260,8 +282,8 @@ struct PassingMessage: View {
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 14)
                     .padding(.vertical, 10)
-                    .background(palette.key == .clear ? palette.bg : palette.key)
-                    .overlay(Rectangle().strokeBorder(palette.line, lineWidth: 1))
+                    .background(palette.key == .clear ? palette.bg : palette.key, in: keyShape)
+                    .overlay(keyShape.strokeInside(palette.line, style: StrokeStyle(lineWidth: 1)))
                     .padding(.horizontal, Metrics.gutter)
                     .padding(.bottom, 12)
                     .transition(.opacity)

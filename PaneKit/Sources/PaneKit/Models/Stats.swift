@@ -128,6 +128,11 @@ public struct Stats: Decodable, Sendable {
     public let uptime: Double?; public let oled: Oled?; public let sleepTimer: String?
     public let apps: [App]?
 
+    /// Whether this app is on screen. Glasshouse gives `app` as the short id, without `com.webos.app.`.
+    public func isForeground(appID: String) -> Bool {
+        appId == appID || app == appID || app.map { "com.webos.app." + $0 == appID } ?? false
+    }
+
     enum CodingKeys: String, CodingKey {
         case tvwebVersion, device, powerState, volume, muted, sound, app, signal, inputs, mac, wakeOnLan
         case load, cores, mem, swap, net, wifi, ssid, temp, uptime, oled, sleepTimer, apps

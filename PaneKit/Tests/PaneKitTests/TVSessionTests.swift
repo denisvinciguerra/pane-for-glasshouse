@@ -374,7 +374,7 @@ final class TVSessionTests: XCTestCase {
         await api.serve("/api/picture", Data(#"{"available":false}"#.utf8))
         let s = session(api)
         await s.refresh(.picture)
-        XCTAssertEqual(s.availableTabs, [.remote, .audio, .game, .hdmi, .stats])
+        XCTAssertEqual(s.availableTabs, [.remote, .apps, .audio, .game, .hdmi, .stats])
     }
 
     func testNotFoundHidesTabAndLaterSuccessRestoresIt() async {
@@ -382,7 +382,7 @@ final class TVSessionTests: XCTestCase {
         await api.fail("/api/game", .http(404))
         let s = session(api)
         await s.refresh(.game)
-        XCTAssertEqual(s.availableTabs, [.remote, .picture, .audio, .hdmi, .stats])
+        XCTAssertEqual(s.availableTabs, [.remote, .apps, .picture, .audio, .hdmi, .stats])
         await api.serve("/api/game", Fixture.data("game"))
         await s.refresh(.game)
         XCTAssertEqual(s.availableTabs, PaneTab.allCases)
@@ -394,7 +394,7 @@ final class TVSessionTests: XCTestCase {
         await api.fail("/api/audio?with=settings", .http(404))
         let s = session(api)
         await s.loadCapsAndTabs()
-        XCTAssertEqual(s.availableTabs, [.remote, .picture, .hdmi, .stats])
+        XCTAssertEqual(s.availableTabs, [.remote, .apps, .picture, .hdmi, .stats])
         await api.serve("/api/game", Fixture.data("game"))
         await api.serve("/api/audio?with=settings", Fixture.data("audio"))
         await s.loadCapsAndTabs()
@@ -406,7 +406,7 @@ final class TVSessionTests: XCTestCase {
         await api.fail("/api/hdmi", .http(404))
         let s = session(api)
         await s.refresh(.hdmi)
-        XCTAssertEqual(s.availableTabs, [.remote, .picture, .audio, .game, .stats])
+        XCTAssertEqual(s.availableTabs, [.remote, .apps, .picture, .audio, .game, .stats])
         await api.serve("/api/hdmi", Fixture.data("hdmi"))
         await s.refresh(.hdmi)
         XCTAssertEqual(s.availableTabs, PaneTab.allCases)
@@ -425,6 +425,34 @@ final class TVSessionTests: XCTestCase {
         XCTAssertEqual(s.availableTabs, PaneTab.allCases, "the hidden tab came back")
         hdmiReads = await api.paths.filter { $0 == "/api/hdmi" }.count
         XCTAssertEqual(hdmiReads, 2)
+    }
+
+    func testStatsWithoutAppsHidesAppsTab() async {
+        let api = FakeAPI()
+        await api.serve("/api/stats", Data(#"{"tvwebVersion":"0.157.0"}"#.utf8))
+        let s = session(api)
+        await s.refreshStats()
+        XCTAssertFalse(s.availableTabs.contains(.apps))
+        await api.serve("/api/stats", Fixture.data("stats"))
+        await s.refreshStats()
+        XCTAssertEqual(s.availableTabs, PaneTab.allCases)
+    }
+
+    func testUnreachableKeepsAppsTab() async {
+        let api = FakeAPI()
+        let s = session(api)
+        await s.refreshStats()
+        await api.fail("/api/stats", .unreachable)
+        await s.refreshStats()
+        XCTAssertTrue(s.availableTabs.contains(.apps))
+    }
+
+    func testRefreshAppsReadsStats() async {
+        let api = FakeAPI()
+        let s = session(api)
+        await s.refresh(.apps)
+        let paths = await api.paths
+        XCTAssertEqual(paths, ["/api/stats"])
     }
 
     func testNetworkFailureKeepsTab() async {

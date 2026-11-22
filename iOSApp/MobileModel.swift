@@ -13,9 +13,9 @@ import SwiftUI
         didSet { defaults.set(remoteOnLeft, forKey: Self.remoteOnLeftKey) }
     }
 
-    /// The More tab's last page, HDMI or Stats, to open it on again: kept here so that no layout
+    /// The More tab's last page, Game, HDMI or Stats, to open it on again: kept here so that no layout
     /// holds tab state of its own.
-    var morePage: PaneTab = .hdmi
+    var morePage: PaneTab = MoreTab.pages[0]
 
     private static let remoteOnLeftKey = "remoteOnLeft"
 

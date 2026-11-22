@@ -19,6 +19,12 @@ import Carbon.HIToolbox
     /// Remote's pins are being edited (Edit, next to Pinned): the keys send nothing, Esc ends it.
     private(set) var pinsEditing = false
 
+    /// The pointer's pad takes typing: the keys and ⌥ go to the text (relays `KeyModeState.typing`).
+    var typing: Bool {
+        get { state.typing }
+        set { state.typing = newValue }
+    }
+
     @ObservationIgnored private let model: AppModel
     #if os(macOS)
     @ObservationIgnored private weak var window: NSWindow?
@@ -94,7 +100,23 @@ import Carbon.HIToolbox
                            modifiers: KeyModifiers(flags), isRepeat: event.isARepeat)
         return handle(key, textInputActive: window.firstResponder is NSText)
     }
+
+    /// `pressUntyped(_:)` for a key event of the Mac.
+    func pressUntyped(_ event: NSEvent) -> Bool {
+        guard event.type == .keyDown else { return false }
+        return pressUntyped(KeyEvent(keyCode: event.keyCode, characters: event.charactersIgnoringModifiers,
+                                     modifiers: KeyModifiers(event.modifierFlags.intersection(.deviceIndependentFlagsMask))))
+    }
     #endif
+
+    /// A key the pointer's pad has no use for (Esc with nothing typed): the button it is assigned to,
+    /// as before the pad took the keys. False when none has it. The pad deals with the repeats.
+    func pressUntyped(_ key: KeyEvent) -> Bool {
+        guard model.session != nil, model.editingAction == nil, !pinsListOpen, !pinsEditing else { return false }
+        guard let id = model.assignments.button(for: key) else { return false }
+        model.press(id)
+        return true
+    }
 
     /// A key pressed: whether it is consumed.
     func handle(_ key: KeyEvent, textInputActive: Bool) -> Bool {
@@ -171,7 +193,7 @@ import Carbon.HIToolbox
     /// A right-click (or ⌃-click) on a button that can carry a key chooses it in the keys shown, the
     /// TV off too; no menu. The button is found by the `KeyArea` under it, the other clicks pass.
     private func rightClicked(_ event: NSEvent, control: Bool) -> Bool {
-        guard event.type == .rightMouseDown || control, !pinsListOpen, !pinsEditing, model.session != nil, model.editingAction == nil,
+        guard event.type == .rightMouseDown || control, !state.typing, !pinsListOpen, !pinsEditing, model.session != nil, model.editingAction == nil,
               let root = window?.contentView, let id = KeyArea.button(at: event.locationInWindow, in: root)
         else { return false }
         state.select(id)

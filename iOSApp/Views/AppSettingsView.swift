@@ -151,11 +151,11 @@ private struct MaintenanceSection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             SectionLabel("Panel maintenance")
-            SettingsNote("Turn on the TV even during panel maintenance").padding(.bottom, 8)
-            HStack(spacing: 6) {
-                GHButton("maintenance.on", selected: model.powersOnDuringMaintenance) { model.powersOnDuringMaintenance = true }
-                GHButton("maintenance.off", selected: !model.powersOnDuringMaintenance) { model.powersOnDuringMaintenance = false }
+            Toggle(isOn: Binding(get: { model.powersOnDuringMaintenance },
+                                 set: { model.powersOnDuringMaintenance = $0 })) {
+                SettingsNote("Turn on the TV even during panel maintenance")
             }
+            .toggleStyle(PaneSwitchStyle(drawsLabel: true))
             SettingsNote("Triggering an action then interrupts the maintenance.").padding(.top, 8)
         }
     }
@@ -170,6 +170,7 @@ private struct AboutSection: View {
     private static let license = URL(string: "https://github.com/denisvinciguerra/pane-for-glasshouse/blob/main/LICENSE")!
     private static let glasshouse = URL(string: "https://github.com/rorygallagher2024/glasshouse")!
     private static let manrope = URL(string: "https://github.com/googlefonts/manrope")!
+    private static let outfit = URL(string: "https://github.com/Outfitio/Outfit-Fonts")!
 
     var body: some View {
         let info = Bundle.main.infoDictionary
@@ -197,6 +198,7 @@ private struct AboutSection: View {
             VStack(alignment: .leading, spacing: 0) {
                 credit("Glasshouse", by: "by Rory Gallagher", license: "MIT", url: Self.glasshouse)
                 credit("Manrope", by: "by Mikhail Sharanda", license: "OFL", url: Self.manrope)
+                credit("Outfit", by: "by Rodrigo Fuenzalida", license: "OFL", url: Self.outfit)
             }
             .padding(.top, 6)
             Text(verbatim: "© 2026 Denis Vinciguerra")
@@ -214,7 +216,7 @@ private struct AboutSection: View {
                 Text(verbatim: name).foregroundStyle(palette.fg)
                 Text(author)
                 Spacer(minLength: 0)
-                Text(verbatim: "\(license) ↗")
+                Text(verbatim: "\(license) ↗\u{FE0E}")
             }
             .frame(minHeight: 44)
         }

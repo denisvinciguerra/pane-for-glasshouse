@@ -10,7 +10,7 @@ struct WelcomeView: View {
         VStack(alignment: .leading, spacing: 0) {
             SectionLabel("Welcome")
             Text(headline)
-                .font(.manrope(19, .light))
+                .font(.outfit(23, .thin))
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.bottom, 10)
             Text(explanation)

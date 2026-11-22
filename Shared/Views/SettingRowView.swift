@@ -6,7 +6,7 @@ import SwiftUI
 /// inside a disabled view, is greyed to 35 %. An unsupported row draws nothing. With `onPin`, a
 /// "PIN" shows after the title while the pointer is over the row. On iOS, rows for a finger
 /// (mockups/2026-11-02-ios/iphone-compact.html, Image): a slider takes the row's width under its
-/// title, in a 48 pt band; menus and toggles stand in 64 pt rows.
+/// title, in a 48 pt band; menus and switches stand in 64 pt rows.
 struct SettingRowView: View {
     let row: SettingRow
     /// iOS: the TV can't be controlled. The controls go grey and inert, but the ⓘ stays live, which
@@ -59,7 +59,7 @@ struct SettingRowView: View {
     @ViewBuilder private var control: some View {
         switch row.kind {
         case .toggle(let on):
-            ToggleButton(on: on) { onChange(.bool(!on)) }
+            ToggleButton(title: row.title, on: on) { onChange(.bool(!on)) }
         case .choice(let value, let choices):
             ChoiceMenu(value: value, choices: choices, title: nil) { onChange(.string($0)) }
         case .number(let value, let min, let max):
@@ -81,6 +81,7 @@ struct PinButton: View {
     let action: () -> Void
     @Environment(\.palette) private var palette
     @Environment(\.isEnabled) private var isEnabled
+    @Environment(\.keyShape) private var shape
 
     var body: some View {
         let shown = visible && isEnabled
@@ -91,8 +92,8 @@ struct PinButton: View {
                 .lineLimit(1)
                 .fixedSize()
                 .padding(.horizontal, 3)
-                .overlay(Rectangle().strokeBorder(palette.line, lineWidth: 1))
-                .contentShape(Rectangle())
+                .overlay(shape.strokeInside(palette.line, style: StrokeStyle(lineWidth: 1)))
+                .contentShape(shape)
         }
         .buttonStyle(.plain)
         .foregroundStyle(palette.fg)
@@ -103,40 +104,21 @@ struct PinButton: View {
     }
 }
 
-/// ON or OFF in a ruled box; the edge and the text are in the active colour when on.
+/// A row's on/off: a `PaneSwitchStyle` switch. The title is beside it, so the `Toggle`'s own label
+/// is only for VoiceOver. A change sends the opposite of what the TV last said (the switch follows
+/// the TV's state, not its own).
 private struct ToggleButton: View {
+    let title: String
     let on: Bool
     let action: () -> Void
-    @Environment(\.palette) private var palette
 
     var body: some View {
-        Button(action: action) {
-            #if os(iOS)
-            Text(verbatim: on ? "ON" : "OFF")
-                .lineLimit(1)
-                .tracking(1.2)
-                .font(.manrope(points: 12, .medium))
-                .foregroundStyle(on ? palette.on : palette.fg)
-                .frame(width: 68, height: 44)
-                .background(palette.key)
-                .overlay(Rectangle().strokeBorder(on ? palette.on : palette.line, lineWidth: 1))
-                .contentShape(Rectangle())
-            #else
-            Text(verbatim: on ? "ON" : "OFF")
-                .lineLimit(1)
-                .tracking(1)
-                .font(.manrope(9.5))
-                .foregroundStyle(on ? palette.on : palette.fg)
-                .frame(width: 44, height: SettingMetrics.controlHeight)
-                .overlay(Rectangle().strokeBorder(on ? palette.on : palette.line, lineWidth: 1))
-                .contentShape(Rectangle())
-            #endif
-        }
-        .buttonStyle(.plain)
+        Toggle(isOn: Binding(get: { on }, set: { _ in action() })) { Text(verbatim: title) }
+            .toggleStyle(PaneSwitchStyle())
     }
 }
 
-/// A menu of the server's choices, in a ruled box with a ▾. With a `title`, the box shows it
+/// A menu of the server's choices, in a box of the key's shape with a chevron. With a `title`, the box shows it
 /// instead of the current choice (the picture mode's menu, whose current choice is shown large).
 struct ChoiceMenu: View {
     let value: String
@@ -144,6 +126,7 @@ struct ChoiceMenu: View {
     let title: String?
     let onSelect: (String) -> Void
     @Environment(\.palette) private var palette
+    @Environment(\.keyShape) private var shape
 
     var body: some View {
         Menu {
@@ -162,26 +145,26 @@ struct ChoiceMenu: View {
                 Text(verbatim: title ?? choices.first { $0.value == value }?.label ?? value)
                     .lineLimit(1)
                     .truncationMode(.tail)
-                Text(verbatim: "▾").font(.manrope(points: 10))
+                KeyIconView(.down, size: 12)
             }
-            .font(.manrope(points: 14))
+            .font(.outfit(points: 16))
             .foregroundStyle(palette.fg)
             .padding(.horizontal, 14)
             .frame(height: 44)
-            .background(palette.key)
-            .contentShape(Rectangle())
+            .background(palette.key, in: shape)
+            .contentShape(shape)
             #else
             HStack(spacing: 6) {
                 Text(verbatim: title ?? choices.first { $0.value == value }?.label ?? value)
                     .lineLimit(1)
                     .truncationMode(.tail)
-                Text(verbatim: "▾").font(.manrope(8))
+                KeyIconView(.down, size: 10)
             }
-            .font(.manrope(10.5))
+            .font(.outfit(12.5))
             .foregroundStyle(palette.fg)
             .padding(.horizontal, 8)
             .frame(height: SettingMetrics.controlHeight)
-            .contentShape(Rectangle())
+            .contentShape(shape)
             #endif
         }
         .menuStyle(.button)
@@ -189,7 +172,7 @@ struct ChoiceMenu: View {
         .menuIndicator(.hidden)
         .fixedSize()
         // The edge is drawn outside the menu: the menu styles replace a label's own chrome.
-        .overlay(Rectangle().strokeBorder(palette.line, lineWidth: 1).allowsHitTesting(false))
+        .overlay(shape.strokeInside(palette.line, style: StrokeStyle(lineWidth: 1)).allowsHitTesting(false))
         #if os(iOS)
         .frame(maxWidth: 210, alignment: .trailing)
         #else
@@ -198,9 +181,9 @@ struct ChoiceMenu: View {
     }
 }
 
-/// A 96 pt slider and its value: a hairline track, the filled part in the foreground, a square
-/// thumb. While dragging it shows the dragged value; the setting is sent once, on release,
-/// rounded to a whole step. A click on the track jumps there.
+/// A 96 pt slider and its value: a 2 pt rail, the filled part in the foreground, a round thumb.
+/// While dragging it shows the dragged value; the setting is sent once, on release, rounded to a
+/// whole step. A click on the track jumps there.
 private struct NumberSlider: View {
     let row: SettingRow
     let value: Double
@@ -210,7 +193,7 @@ private struct NumberSlider: View {
     @Environment(\.palette) private var palette
 
     private static let width: CGFloat = 96
-    private static let thumb = CGSize(width: 8, height: 12)
+    private static let thumb = CGSize(width: 14, height: 14)
 
     var body: some View {
         let shown = (dragged ?? value).rounded()
@@ -219,9 +202,9 @@ private struct NumberSlider: View {
         let x = span > 0 ? CGFloat((shown - range.lowerBound) / span) * travel : 0
         HStack(spacing: 8) {
             ZStack(alignment: .leading) {
-                Rectangle().fill(palette.line).frame(height: 1)
-                Rectangle().fill(palette.fg).frame(width: x + Self.thumb.width / 2, height: 1)
-                Rectangle().fill(palette.fg).frame(width: Self.thumb.width, height: Self.thumb.height).offset(x: x)
+                Capsule().fill(palette.fg.opacity(0.30)).frame(height: 2)
+                Capsule().fill(palette.fg).frame(width: x + Self.thumb.width / 2, height: 2)
+                Circle().fill(palette.fg).frame(width: Self.thumb.width, height: Self.thumb.height).offset(x: x)
             }
             .frame(width: Self.width, height: SettingMetrics.controlHeight)
             .contentShape(Rectangle())
@@ -235,7 +218,7 @@ private struct NumberSlider: View {
                     }
             )
             Text(verbatim: RowLayout.valueText(row, value: shown))
-                .font(.manrope(11, .light))
+                .font(.outfit(11, .light))
                 .monospacedDigit()
                 .frame(width: 30, alignment: .trailing)
         }
@@ -345,11 +328,11 @@ struct DescInfoButton: View {
     }
 }
 
-/// A slider for a finger: the title and the value over a hairline track as wide as the row, the
-/// filled part in the foreground (from the middle when the range goes below zero), a 14 × 26 pt
-/// thumb, in a 48 pt band. It follows a sideways drag only, so that a drag down the page scrolls
-/// it; a touch on the track jumps there. The setting is sent once, on release, rounded to a whole
-/// step.
+/// A slider for a finger: the title and the value over a 2 pt rail as wide as the row, the filled
+/// part in the foreground (from the middle when the range goes below zero), a 22 pt round thumb
+/// (white with a shadow and a fine edge in the light theme), in a 48 pt band. It follows a sideways
+/// drag only, so that a drag down the page scrolls it; a touch on the track jumps there. The
+/// setting is sent once, on release, rounded to a whole step.
 private struct WideSlider: View {
     let row: SettingRow
     let value: Double
@@ -369,8 +352,9 @@ private struct WideSlider: View {
     @GestureState private var touching = false
     @Environment(\.palette) private var palette
     @Environment(\.isEnabled) private var isEnabled
+    @Environment(\.colorScheme) private var colorScheme
 
-    private static let thumb = CGSize(width: 14, height: 26)
+    private static let thumb = CGSize(width: 22, height: 22)
     private static let band: CGFloat = 48
 
     var body: some View {
@@ -381,7 +365,7 @@ private struct WideSlider: View {
                     Text(verbatim: row.title).font(.manrope(points: 15.5)).lineLimit(1)
                     Spacer(minLength: 8)
                     Text(verbatim: RowLayout.valueText(row, value: shown))
-                        .font(.manrope(points: 17, .light))
+                        .font(.outfit(points: 17, .light))
                         .monospacedDigit()
                 }
                 .opacity(dimmed ? 0.35 : 1)
@@ -413,12 +397,12 @@ private struct WideSlider: View {
         let from = signed ? min(x, middle) : 0
         let to = signed ? max(x, middle) : x
         return ZStack(alignment: .topLeading) {
-            Rectangle().fill(palette.line).frame(width: width, height: 1).offset(y: Self.band / 2)
+            Capsule().fill(palette.fg.opacity(0.30)).frame(width: width, height: 2).offset(y: Self.band / 2 - 1)
             if signed {
-                Rectangle().fill(palette.line).frame(width: 1, height: 13).offset(x: middle, y: Self.band / 2 - 6)
+                Rectangle().fill(palette.frame).frame(width: 1, height: 13).offset(x: middle, y: Self.band / 2 - 6)
             }
-            Rectangle().fill(palette.fg).frame(width: max(to - from, 0), height: 2).offset(x: from, y: Self.band / 2 - 0.5)
-            Rectangle().fill(palette.fg).frame(width: Self.thumb.width, height: Self.thumb.height)
+            Capsule().fill(palette.fg).frame(width: max(to - from, 0), height: 2).offset(x: from, y: Self.band / 2 - 1)
+            thumb
                 .offset(x: x - Self.thumb.width / 2, y: (Self.band - Self.thumb.height) / 2)
         }
         .frame(width: width, height: Self.band, alignment: .topLeading)
@@ -463,6 +447,18 @@ private struct WideSlider: View {
             }
             let next = min(max(value.rounded() + step, range.lowerBound), range.upperBound)
             if next != value { onRelease(next) }
+        }
+    }
+
+    /// The round thumb: the foreground; in the light theme white, with a soft shadow and a 0.5 pt edge.
+    @ViewBuilder private var thumb: some View {
+        if colorScheme == .light {
+            Circle().fill(.white)
+                .overlay(Circle().strokeBorder(.black.opacity(0.18), lineWidth: 0.5))
+                .shadow(color: .black.opacity(0.20), radius: 1.5)
+                .frame(width: Self.thumb.width, height: Self.thumb.height)
+        } else {
+            Circle().fill(palette.fg).frame(width: Self.thumb.width, height: Self.thumb.height)
         }
     }
 

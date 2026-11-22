@@ -8,6 +8,7 @@ import UIKit
 /// when the app comes back to the foreground: `AppModel.foregroundReturns`).
 struct LocalNetworkBlockedView: View {
     @Environment(\.palette) private var palette
+    @Environment(\.keyShape) private var keyShape
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -35,14 +36,14 @@ struct LocalNetworkBlockedView: View {
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
                     .frame(maxWidth: .infinity, minHeight: max(30, Metrics.minTouch), maxHeight: max(30, Metrics.minTouch))
-                    .contentShape(Rectangle())
+                    .contentShape(keyShape)
             }
             .buttonStyle(AmberButtonStyle())
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(palette.accent.opacity(0.08))
-        .overlay(Rectangle().strokeBorder(palette.accent.opacity(0.3), lineWidth: 1))
+        .background(palette.accent.opacity(0.08), in: keyShape)
+        .overlay(keyShape.strokeInside(palette.accent.opacity(0.3), style: StrokeStyle(lineWidth: 1)))
     }
 
     #if os(macOS)
@@ -61,13 +62,15 @@ struct LocalNetworkBlockedView: View {
     #endif
 }
 
+/// The panel's button: a key's shape, ruled in amber.
 private struct AmberButtonStyle: ButtonStyle {
     @Environment(\.palette) private var palette
+    @Environment(\.keyShape) private var keyShape
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .foregroundStyle(palette.accent)
-            .background(palette.accent.opacity(configuration.isPressed ? 0.12 : 0))
-            .overlay(Rectangle().strokeBorder(palette.accent, lineWidth: 1))
+            .background(palette.accent.opacity(configuration.isPressed ? 0.12 : 0), in: keyShape)
+            .overlay(keyShape.strokeInside(palette.accent, style: StrokeStyle(lineWidth: 1)))
     }
 }

@@ -16,6 +16,7 @@ struct KeysList: View {
     @State private var conflict: PendingKey?
     @State private var replacing: PendingReplacement?
     @Environment(\.palette) private var palette
+    @Environment(\.keyShape) private var keyShape
 
     private static let recorderWidth: CGFloat = 96
 
@@ -102,7 +103,7 @@ struct KeysList: View {
     private func row(_ id: ButtonID, roles: [KeySlot.Role]) -> some View {
         PreferencesRow {
             HStack(spacing: 10) {
-                Text(verbatim: title(of: id))
+                rowTitle(id)
                     .lineLimit(1)
                     .truncationMode(.tail)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -114,7 +115,13 @@ struct KeysList: View {
         }
     }
 
-    /// A key in a ruled box, dashed without one, amber with « ? » while it waits.
+    /// A row's title; an action's is a pin's name, in Outfit as its key shows it.
+    @ViewBuilder private func rowTitle(_ id: ButtonID) -> some View {
+        let text = Text(verbatim: title(of: id))
+        if id.actionID != nil { text.font(.outfit(13.5)) } else { text }
+    }
+
+    /// A key in a box with a key's corners, dashed without one, amber with « ? » while it waits.
     private func recorder(_ slot: Slot) -> some View {
         let keys = model.assignments.slots[slot.id]
         let binding = slot.role == .primary ? keys?.primary : keys?.alternate
@@ -130,9 +137,9 @@ struct KeysList: View {
                 .minimumScaleFactor(0.7)
                 .foregroundStyle(waiting ? palette.accent : label == nil ? palette.label : palette.fg)
                 .frame(maxWidth: .infinity, minHeight: 36, maxHeight: 36)
-                .background(waiting ? palette.accent.opacity(0.08) : .clear)
-                .overlay(Rectangle().strokeBorder(waiting ? palette.accent : palette.line,
-                                                  style: StrokeStyle(lineWidth: 1, dash: label == nil && !waiting ? [2, 2] : [])))
+                .background(waiting ? palette.accent.opacity(0.08) : .clear, in: keyShape)
+                .overlay(keyShape.strokeInside(waiting ? palette.accent : palette.line,
+                                               style: StrokeStyle(lineWidth: 1, dash: label == nil && !waiting ? [2, 2] : [])))
                 .frame(minHeight: Metrics.minTouch)
                 .contentShape(Rectangle())
         }
@@ -240,7 +247,7 @@ private extension View {
             .foregroundStyle(palette.accent)
             .frame(minHeight: Metrics.minTouch)
             .padding(.horizontal, 10)
-            .background(palette.accent.opacity(0.08))
+            .background(palette.accent.opacity(0.08), in: RoundedRectangle(cornerRadius: Metrics.keyRadius))
             .padding(.bottom, 8)
     }
 }

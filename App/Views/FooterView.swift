@@ -17,7 +17,7 @@ struct FooterView: View {
                 Task { await session.togglePower() }
             } label: {
                 HStack(spacing: 5) {
-                    Image(systemName: "power").font(.system(size: 9, weight: .medium))
+                    KeyIconView(.power, size: 14)
                     Text("Power")
                 }
                 .contentShape(Rectangle())
@@ -71,8 +71,8 @@ struct FooterView: View {
     }
 }
 
-/// Shows the keys, hides them. Boxed while they show, amber while a key is set, blue while a global
-/// shortcut is.
+/// Shows the keys, hides them. Boxed while they show (a key's corners, at half its height), amber
+/// while a key is set, blue while a global shortcut is.
 private struct KeyboardIcon: View {
     @Environment(\.keyboard) private var keyboard
     @Environment(\.palette) private var palette
@@ -88,10 +88,12 @@ private struct KeyboardIcon: View {
                 .foregroundStyle(color)
                 .padding(.horizontal, 5)
                 .padding(.vertical, 2)
-                .overlay(Rectangle().strokeBorder(edge, lineWidth: 1))
+                .overlay(RoundedRectangle(cornerRadius: Metrics.keyRadius / 2).strokeBorder(edge, lineWidth: 1))
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        // The pad takes the keys in Pointer mode: the icon would do nothing.
+        .disabled(keyboard?.typing == true)
         .help(Text("Keys"))
         .accessibilityLabel(Text("Keys"))
     }

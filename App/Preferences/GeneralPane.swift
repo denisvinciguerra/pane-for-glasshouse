@@ -79,10 +79,11 @@ struct GeneralPane: View {
     private var login: some View {
         let enabled = loginStatus == .enabled
         return VStack(alignment: .leading, spacing: 0) {
-            SectionLabel("Open at login")
-            HStack(spacing: 6) {
-                GHButton("login.on", selected: enabled, height: 30) { setLogin(true) }
-                GHButton("login.off", selected: !enabled, height: 30) { setLogin(false) }
+            SectionLabel("Open at login") {
+                Toggle(isOn: Binding(get: { enabled }, set: { setLogin($0) })) { Text("Open at login") }
+                    .toggleStyle(PaneSwitchStyle())
+                    // Centred on the title's capitals, not standing on its baseline.
+                    .alignmentGuide(.firstTextBaseline) { $0[VerticalAlignment.center] + Metrics.labelSize * 0.36 }
             }
             if loginStatus == .requiresApproval {
                 line("Allow Pane in System Settings › General › Login Items.")
@@ -112,18 +113,14 @@ struct GeneralPane: View {
     private var maintenance: some View {
         VStack(alignment: .leading, spacing: 0) {
             SectionLabel("Panel maintenance")
-            HStack(spacing: 12) {
+            Toggle(isOn: Binding(get: { model.powersOnDuringMaintenance },
+                                 set: { model.powersOnDuringMaintenance = $0 })) {
                 Text("Turn on the TV even during panel maintenance")
                     .font(.manrope(10.5))
                     .foregroundStyle(palette.label)
                     .lineLimit(2)
-                Spacer(minLength: 0)
-                HStack(spacing: 6) {
-                    GHButton("maintenance.on", selected: model.powersOnDuringMaintenance, height: 30) { model.powersOnDuringMaintenance = true }
-                    GHButton("maintenance.off", selected: !model.powersOnDuringMaintenance, height: 30) { model.powersOnDuringMaintenance = false }
-                }
-                .frame(width: 160)
             }
+            .toggleStyle(PaneSwitchStyle(drawsLabel: true))
             line("Triggering an action then interrupts the maintenance.")
         }
     }
@@ -167,18 +164,14 @@ struct GeneralPane: View {
         let build = info?["CFBundleVersion"] as? String ?? "?"
         return VStack(alignment: .leading, spacing: 0) {
             SectionLabel("Updates")
-            HStack(spacing: 12) {
+            Toggle(isOn: Binding(get: { updates.automaticallyChecks },
+                                 set: { updates.automaticallyChecks = $0 })) {
                 Text("Check automatically")
                     .font(.manrope(10.5))
                     .foregroundStyle(palette.label)
                     .lineLimit(1)
-                Spacer(minLength: 0)
-                HStack(spacing: 6) {
-                    GHButton("updates.on", selected: updates.automaticallyChecks, height: 30) { updates.automaticallyChecks = true }
-                    GHButton("updates.off", selected: !updates.automaticallyChecks, height: 30) { updates.automaticallyChecks = false }
-                }
-                .frame(width: 160)
             }
+            .toggleStyle(PaneSwitchStyle(drawsLabel: true))
             HStack(spacing: 12) {
                 Text("Version \(short) (\(build))")
                     .font(.manrope(10.5))

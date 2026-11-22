@@ -52,6 +52,13 @@ struct PointerBatch: Codable, Equatable, Sendable {
     }
 }
 
+/// The demo's channel: open for good, it takes every batch and sends it nowhere.
+@MainActor private final class OfflinePointerChannel: PointerChannel {
+    var isOpen: Bool { true }
+    func send(_ text: String) async throws {}
+    func close() {}
+}
+
 /// One dashboard pointer channel. Movement is batched at the server's advertised rate; taps and
 /// scrolls stay behind the movement already queued. Closed, it drops what it is given, and a
 /// connection that broke is replaced on the next batch. Nothing is retained after close().
@@ -75,6 +82,19 @@ struct PointerBatch: Codable, Equatable, Sendable {
         self.init(updatesPerSecond: updatesPerSecond, endpoint: client.endpoint,
                   sleep: { try? await Task.sleep(for: $0) },
                   connect: { WebSocketPointerChannel(task: try client.pointerTask()) })
+    }
+
+    /// A controller with no TV behind it (the demo): its gestures go nowhere and never fail.
+    public static func offline(updatesPerSecond: Int) -> PointerController {
+        PointerController(updatesPerSecond: updatesPerSecond, endpoint: nil,
+                          sleep: { try? await Task.sleep(for: $0) },
+                          connect: { OfflinePointerChannel() })
+    }
+
+    /// True when this controller does not aim at `endpoint`: an offline one facing a real client,
+    /// or one opened to another TV.
+    public func needsReplacement(for endpoint: Endpoint?) -> Bool {
+        self.endpoint != endpoint
     }
 
     init(updatesPerSecond: Int, endpoint: Endpoint? = nil, sleep: @escaping @Sendable (Duration) async -> Void,

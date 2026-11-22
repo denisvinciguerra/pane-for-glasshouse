@@ -5,14 +5,24 @@ import SwiftUI
 /// keyboard controller and can carry a key; all but the pins' "+" are off when the TV can't be
 /// controlled, unless the keys show: a click then chooses the button and sends nothing. On iOS, the
 /// whole remote on one screen (mockups/2026-11-02-ios/iphone-compact.html, B1): the sources on one
-/// row, the pins on one row, the cross, the navigation and playback rows, then the volume's.
+/// row, the pins on one row, the ring d-pad, the navigation and playback rows, then the volume's.
 struct RemoteTab: View {
     let model: AppModel
     let session: TVSession
     @Environment(\.keyboard) private var keyboard
     @State private var pointerMode = Self.startsInPointer
     @State private var pointerController: PointerController?
+    /// What is typed in the pointer's pad, for this TV.
+    @State private var typing: TextTyping?
     @Environment(\.palette) private var palette
+    @Environment(\.keyShape) private var keyShape
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    #if os(macOS)
+    /// How the Mac pad moves the TV's pointer: the stored `PointerMoveGesture`.
+    @AppStorage(PointerMoveGesture.defaultsKey) private var storedGesture = ""
+    /// A gesture is under way: the Mac cursor is frozen and the mouse drives the TV's pointer.
+    @State private var pointerDriving = false
+    #endif
     #if os(iOS)
     /// − and + held down repeat, each on its own.
     @State private var volumeDown = KeyRepeater()
@@ -22,7 +32,7 @@ struct RemoteTab: View {
 
     private static let gap: CGFloat = 6
 
-    /// Screenshots (-PanePointer YES): the pad in place of the cross, where the TV offers it.
+    /// Screenshots (-PanePointer YES): the pad in place of the ring, where the TV offers it.
     private static var startsInPointer: Bool {
         #if DEBUG
         UserDefaults.standard.bool(forKey: "PanePointer")
@@ -40,14 +50,7 @@ struct RemoteTab: View {
         VStack(alignment: .leading, spacing: 14) {
             Group {
                 section("Source") { sourceGrid(stats.map(sources(from:)) ?? []) }
-                section(showsPointer ? "Pointer" : "D-pad") {
-                    if showsPointer {
-                        VStack(spacing: Self.gap) {
-                            pointerMacPad
-                            navigation
-                        }
-                    } else { dpad }
-                }
+                pointerOrDpad(controlsOff: controlsOff)
                 section("Playback") { playback }
                 section("Volume", trailing: stats?.sound?.output ?? stats?.audioOutput) { volume(stats) }
             }
@@ -66,23 +69,76 @@ struct RemoteTab: View {
         }
     }
 
+    #if os(macOS)
+    /// The ring, or the pad with the gesture picker on its title.
+    @ViewBuilder
+    private func pointerOrDpad(controlsOff: Bool) -> some View {
+        if showsPointer {
+            VStack(alignment: .leading, spacing: 0) {
+                SectionLabel("Pointer") { PointerGesturePicker(selection: gestureBinding) }
+                VStack(spacing: Self.gap) {
+                    pointerMacPad(controlsOff: controlsOff)
+                    navigation
+                }
+            }
+        } else {
+            section("D-pad") { dpad }
+        }
+    }
+
+    private var gesture: PointerMoveGesture { PointerMoveGesture(stored: storedGesture.isEmpty ? nil : storedGesture) }
+
+    private var gestureBinding: Binding<PointerMoveGesture> {
+        Binding(get: { gesture }, set: { storedGesture = $0.rawValue })
+    }
+    #endif
+
     private func click(_ id: ButtonID) {
         keyboard?.buttonClicked(id)
     }
 
     // MARK: Pointer
 
-    /// The pad in place of the cross: chosen, and offered by this TV's Glasshouse.
+    /// The pad in place of the ring: chosen, and offered by this TV's Glasshouse.
     private var showsPointer: Bool { pointerMode && session.caps?.pointer == true }
 
     /// Opens the pointer to the TV shown, in place of one opened to another TV or token.
     private func openPointer() {
-        guard let client = model.client else { return }
-        if pointerController?.endpoint != client.endpoint {
-            pointerController?.close()
-            pointerController = PointerController(client: client, updatesPerSecond: session.caps?.pointerRate ?? 120)
+        let rate = session.caps?.pointerRate ?? 120
+        if let client = model.client {
+            if pointerController?.needsReplacement(for: client.endpoint) ?? true {
+                pointerController?.close()
+                pointerController = PointerController(client: client, updatesPerSecond: rate)
+            }
+        } else if model.isDemo {
+            // The demo has no TV: an offline pad, so that its gestures and keys still show.
+            if pointerController?.needsReplacement(for: nil) ?? true {
+                pointerController?.close()
+                pointerController = PointerController.offline(updatesPerSecond: rate)
+            }
+        } else {
+            return
         }
         pointerController?.open()
+    }
+
+    /// The pad takes the keys, for the TV shown: a new typing for another TV, the old text forgotten.
+    /// Not the keys while the pad can't send (iOS: the pins' edit, a TV out of reach). On iOS the keys
+    /// are the pad's only while its field holds them: `PointerSurface` follows the field itself, so that
+    /// a hardware keyboard presses the buttons again once the field is lowered.
+    private func openTyping(takesKeys: Bool = true) {
+        #if os(macOS)
+        keyboard?.typing = takesKeys
+        #endif
+        guard typing?.session !== session else { return }
+        typing?.forget()
+        typing = TextTyping(session: session, reducedMotion: reduceMotion)
+    }
+
+    /// The pad goes: the keys are the buttons' again, and the text is forgotten on Pane's side.
+    private func closeTyping() {
+        keyboard?.typing = false
+        typing?.forget()
     }
 
     // MARK: Source
@@ -91,14 +147,7 @@ struct RemoteTab: View {
         let columns = Array(repeating: GridItem(.flexible(), spacing: Self.gap), count: max(1, min(5, list.count)))
         return LazyVGrid(columns: columns, spacing: Self.gap) {
             ForEach(list) { source in
-                GHButton(selected: source.isActive, action: { click(.source(source.id)) }) {
-                    Text(verbatim: source.label)
-                        .font(.manrope(10))
-                        .textCase(.uppercase)
-                        .tracking(1)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.8)
-                }
+                GHButton(name: source.label, selected: source.isActive, action: { click(.source(source.id)) })
                 .help(Text(verbatim: source.label))
                 .keyed(.source(source.id))
             }
@@ -107,64 +156,114 @@ struct RemoteTab: View {
 
     // MARK: D-pad
 
+    #if os(macOS)
     private var dpad: some View {
         VStack(spacing: Self.gap) {
-            HStack(spacing: Self.gap) { gap; arrow(.up, "Up"); gap }
-            HStack(spacing: Self.gap) {
-                arrow(.left, "Left")
-                GHButton("OK", height: 50) { click(.rcu(.ok)) }.frame(width: 58).keyed(.rcu(.ok))
-                arrow(.right, "Right")
-            }
-            HStack(spacing: Self.gap) { gap; arrow(.down, "Down"); gap }
+            ring(diameter: Metrics.ringDiameter)
             navigation
         }
         .frame(maxWidth: .infinity)
     }
+    #endif
 
-    private var navigation: some View {
-        HStack(spacing: Self.gap) {
-            GHButton("Back") { click(.rcu(.back)) }.keyed(.rcu(.back))
-            GHButton("Home") { click(.rcu(.home)) }.keyed(.rcu(.home))
-            GHButton("Settings") { click(.rcu(.settings)) }.keyed(.rcu(.settings))
-            if session.caps?.pointer == true {
-                Group {
-                    if pointerMode {
-                        GHButton("D-pad") { pointerMode = false }
-                    } else {
-                        GHButton("Pointer") { pointerMode = true }
-                    }
-                }
-                .transaction { $0.animation = nil }
-            }
+    /// The ring d-pad, each of its parts a key in its own shape.
+    private func ring(diameter: CGFloat) -> some View {
+        DpadRingView(diameter: diameter) { part, shape, anchor in
+            ringKey(part, diameter: diameter)
+                // Outside every modifier of the key, `.keyed` among them, which all go by its shape.
+                .environment(\.keyShape, shape)
+                .environment(\.keyTileAnchor, anchor)
         }
     }
 
-    private var gap: some View { Color.clear.frame(width: 58, height: 50) }
-
-    private func arrow(_ key: RemoteKey, _ name: LocalizedStringKey) -> some View {
-        GHButton(height: 50, action: { click(.rcu(key)) }) {
-            // The button's colour: amber while it awaits its key.
-            Triangle(pointing: key).fill(.foreground).frame(width: 12, height: 12)
+    /// A part of the ring: its chevron at the middle of its quarter, or OK in Outfit; its name as
+    /// VoiceOver's label (OK says itself) and, on the Mac, as the help of a square around its
+    /// chevron, the identifier the app previews find it by (`remote.up`, `remote.ok`...), and its key.
+    private func ringKey(_ part: RingPart, diameter: CGFloat) -> some View {
+        let key = part.remoteKey
+        let ring = DpadRing(diameter: diameter)
+        let icon = ring.iconCenter(part)
+        return GHButton(height: diameter, outlined: false, action: { click(.rcu(key)) }) {
+            ZStack {
+                Group {
+                    if part == .ok {
+                        Text(verbatim: "OK").font(Self.okFont).tracking(Metrics.okSize * 0.04)
+                    } else {
+                        KeyIconView(KeyIcon(arrow: key), size: Metrics.ringArrowIcon)
+                    }
+                }
+                .position(icon)
+                #if os(macOS)
+                if let name = part.name { helpArea(ring).help(Text(name)).position(icon) }
+                #endif
+            }
+            .frame(width: diameter, height: diameter)
         }
-        .frame(width: 58)
-        .accessibilityLabel(Text(name))
+        .frame(width: diameter, height: diameter)
+        .accessibilityLabel(part.name.map { Text($0) } ?? Text(verbatim: "OK"))
+        .accessibilityHint(Text(verbatim: ""))
+        .accessibilityIdentifier("remote.\(key.rawValue)")
         .keyed(.rcu(key))
+    }
+
+    #if os(macOS)
+    /// Where a direction's help shows: a square around its chevron, inside its quarter. Each key's
+    /// frame is the whole ring's square, and AppKit shows help by rectangle: on the frames, the
+    /// topmost would show its name over all four. Nor can one help on the ring follow the part
+    /// under the pointer, as a tooltip already shown keeps its text while the pointer stays in its
+    /// rectangle. A square of 85 % of the ring's width, around the chevron, keeps clear of the
+    /// circles and of its neighbours; the diagonals show none.
+    private func helpArea(_ ring: DpadRing) -> some View {
+        let side = (ring.outerRadius - ring.okRadius) * 0.85
+        return Color.clear.frame(width: side, height: side).contentShape(Rectangle())
+    }
+    #endif
+
+    #if os(iOS)
+    private static let okFont = Font.outfit(points: Metrics.okSize)
+    #else
+    private static let okFont = Font.outfit(Metrics.okSize)
+    #endif
+
+    private var navigation: some View {
+        HStack(spacing: Self.gap) {
+            GHButton(action: { click(.rcu(.back)) }) { KeyIconView(.back) }
+                .keyName("Back").keyed(.rcu(.back))
+            GHButton(action: { click(.rcu(.home)) }) { KeyIconView(.home) }
+                .keyName("Home").keyed(.rcu(.home))
+            GHButton(action: { click(.rcu(.settings)) }) { KeyIconView(.settings) }
+                .keyName("Settings").keyed(.rcu(.settings))
+            if session.caps?.pointer == true {
+                // The key shows the mode it leads to.
+                Group {
+                    if pointerMode {
+                        GHButton(action: { pointerMode = false }) { KeyIconView(.dpad) }.keyName("D-pad")
+                            .accessibilityIdentifier("remote.pointerSwap")
+                    } else {
+                        GHButton(action: { pointerMode = true }) { KeyIconView(.pointer) }.keyName("Pointer")
+                            .accessibilityIdentifier("remote.pointerSwap")
+                    }
+                }
+                .transaction { $0.animation = nil }
+                .environment(\.palette, palette.swapKey)
+            }
+        }
     }
 
     // MARK: Playback
 
     private var playback: some View {
         HStack(spacing: Self.gap) {
-            media(.rewind, "backward.fill", "Rewind")
-            media(.playPause, "playpause.fill", "Play/Pause")
-            media(.stop, "stop.fill", "Stop")
-            media(.fastForward, "forward.fill", "Fast forward")
+            media(.rewind, .rewind, "Rewind")
+            media(.playPause, .playPause, "Play/Pause")
+            media(.stop, .stop, "Stop")
+            media(.fastForward, .fastForward, "Fast forward")
         }
     }
 
-    private func media(_ key: MediaKey, _ systemImage: String, _ name: LocalizedStringKey) -> some View {
-        GHButton(nil, systemImage: systemImage) { click(.media(key)) }
-            .accessibilityLabel(Text(name))
+    private func media(_ key: MediaKey, _ icon: KeyIcon, _ name: LocalizedStringKey) -> some View {
+        GHButton(action: { click(.media(key)) }) { KeyIconView(icon) }
+            .keyName(name)
             .keyed(.media(key))
     }
 
@@ -173,16 +272,18 @@ struct RemoteTab: View {
     private func volume(_ stats: Stats?) -> some View {
         let muted = stats?.muted ?? false
         return WeightedRow(weights: [1, 1.2, 1, 1.6], spacing: Self.gap) {
-            GHButton(action: { click(.volumeDown) }) { Text(verbatim: "−").font(.manrope(16, .light)) }
-                .accessibilityLabel(Text("Volume down"))
+            GHButton(action: { click(.volumeDown) }) { KeyIconView(.volumeDown) }
+                .keyName("Volume down")
                 .keyed(.volumeDown)
             Text(verbatim: stats?.volume.map(String.init) ?? "–")
-                .font(.manrope(15, .light))
+                .font(.outfit(20, .thin))
+                .monospacedDigit()
                 .frame(maxWidth: .infinity)
-            GHButton(action: { click(.volumeUp) }) { Text(verbatim: "+").font(.manrope(16, .light)) }
-                .accessibilityLabel(Text("Volume up"))
+            GHButton(action: { click(.volumeUp) }) { KeyIconView(.volumeUp) }
+                .keyName("Volume up")
                 .keyed(.volumeUp)
-            GHButton("Mute", selected: muted) { click(.mute) }.keyed(.mute)
+            GHButton(selected: muted, action: { click(.mute) }) { KeyIconView(.mute) }
+                .keyName("Mute").keyed(.mute)
         }
         .frame(height: 34)
     }
@@ -190,32 +291,97 @@ struct RemoteTab: View {
 
 #if os(macOS)
 extension RemoteTab {
-    private var pointerMacPad: some View {
-        ZStack {
-            // A new controller (another TV) needs a new view: the old one keeps its controller.
-            if let pointerController {
-                PointerMacPad(controller: pointerController).id(ObjectIdentifier(pointerController))
-            }
-            Text("Click and drag to move\nClick to select\nScroll with the wheel or two fingers")
-                .font(.manrope(13))
+    /// What to do to move the pointer, for the gesture picked.
+    @ViewBuilder
+    private var padHelp: some View {
+        switch gesture {
+        case .drag:
+            Text("Click and drag to move\nClick to select\nRight-click to go back\nScroll with the wheel or two fingers")
                 .foregroundStyle(palette.label)
-                .multilineTextAlignment(.center)
-                .allowsHitTesting(false)
+        case .option:
+            VStack(spacing: 0) {
+                optionHoldLine
+                Text("Click to select\nRight-click to go back\nScroll with the wheel or two fingers")
+            }
+            .foregroundStyle(palette.label)
         }
-        .frame(height: 3 * 50 + 2 * Self.gap)
-        .background(palette.key)
-        .overlay(Rectangle().strokeBorder(palette.line, lineWidth: 1))
-        .onAppear { openPointer() }
-        .onDisappear { pointerController?.close() }
+    }
+
+    /// "Hold ⌥ and move to point", the ⌥ in a small frame; the sentence's order is the language's.
+    /// VoiceOver reads it in one go, with the key's name.
+    private var optionHoldLine: some View {
+        let sentence = String(localized: "Hold %@ and move to point")
+        let parts = sentence.components(separatedBy: "%@")
+        return HStack(spacing: 0) {
+            Text(verbatim: parts.first ?? "")
+            Text(verbatim: "⌥")
+                .font(.manrope(11, .semibold))
+                .padding(.horizontal, 4)
+                .overlay(RoundedRectangle(cornerRadius: Metrics.smallRadius).strokeBorder(palette.frame, lineWidth: 1))
+                .padding(.horizontal, 1)
+            Text(verbatim: parts.dropFirst().joined())
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text(verbatim: sentence.replacingOccurrences(of: "%@", with: String(localized: "Option"))))
+    }
+
+    private func pointerMacPad(controlsOff: Bool) -> some View {
+        let active = !(controlsOff || keyboard?.pinsEditing == true)
+        return ZStack {
+            // A new controller or typing (another TV) needs a new view: the old one keeps its own.
+            if let pointerController, let typing {
+                PointerMacPad(controller: pointerController, typing: typing, gesture: gesture, active: active,
+                              drivingChanged: { pointerDriving = $0 })
+                    .id([ObjectIdentifier(pointerController), ObjectIdentifier(typing)])
+            }
+            VStack(spacing: 6) {
+                padHelp
+                Text("Type to write on the TV")
+                    .foregroundStyle(palette.fg.opacity(0.85))
+            }
+            .font(.manrope(13))
+            .multilineTextAlignment(.center)
+            .opacity(pointerDriving ? 0.35 : 1)
+            .allowsHitTesting(false)
+            // Over the help, which shows again once the letters are gone.
+            if let typing { TypingEchoView(typing: typing) }
+        }
+        // The ring's height: the popover keeps its size from one mode to the other.
+        .frame(height: Metrics.ringDiameter)
+        .background(palette.key, in: keyShape)
+        .overlay(keyShape.strokeInside(pointerDriving ? palette.fg : palette.line, style: StrokeStyle(lineWidth: 1)))
+        .overlay(alignment: .bottom) {
+            if pointerDriving {
+                Text("Moving the pointer")
+                    .sectionLabelStyle()
+                    .padding(.bottom, 7)
+                    .transition(.opacity)
+                    .allowsHitTesting(false)
+            }
+        }
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.2), value: pointerDriving)
+        .onAppear {
+            openPointer()
+            openTyping()
+        }
+        .onDisappear {
+            pointerDriving = false
+            pointerController?.close()
+            closeTyping()
+        }
         .onChange(of: model.client?.endpoint) { openPointer() }
+        .onChange(of: ObjectIdentifier(session)) { openTyping() }
+        // The TV's focus may have moved (Back, Home, a source, a pin, a global shortcut...).
+        .onChange(of: session.focusEpoch) { typing?.forget() }
+        .onChange(of: model.isOpen) { _, open in
+            if !open { typing?.forget() }
+        }
     }
 }
 #endif
 
 #if os(iOS)
 extension RemoteTab {
-    /// A key of the cross, at most: the cross narrows with the screen.
-    private static let padKey = CGSize(width: 104, height: 70)
     /// The volume's row: −, the value and the output, +, Mute.
     private static let volumeHeight: CGFloat = 56
 
@@ -228,29 +394,21 @@ extension RemoteTab {
             PinnedSection(model: model, session: session, controlsOff: controlsOff)
                 .padding(.top, 16)
             Group {
+                // A tall screen's spare room, half above the ring (or the pad), half under it
+                // (mockups/2026-11-22-espace-remote, A). Without any, the spacers take nothing.
+                Spacer(minLength: 0)
                 if showsPointer {
-                    pointerPad.padding(.top, 16)
+                    pointerPad(buttonsOff: buttonsOff).padding(.top, 16)
                 } else {
                     phonePad.padding(.top, 16)
                 }
-                HStack(spacing: Self.gap) {
-                    GHButton("Back") { click(.rcu(.back)) }.keyed(.rcu(.back))
-                    GHButton("Home") { click(.rcu(.home)) }.keyed(.rcu(.home))
-                    GHButton("Settings") { click(.rcu(.settings)) }.keyed(.rcu(.settings))
-                    if session.caps?.pointer == true {
-                        Group {
-                            if pointerMode {
-                                GHButton("D-pad") { pointerMode = false }
-                            } else {
-                                GHButton("Pointer") { pointerMode = true }
-                            }
-                        }
-                        .transaction { $0.animation = nil }
-                    }
-                }
-                .padding(.top, 8)
+                Spacer(minLength: 0)
+                navigation
+                    .padding(.top, 8)
                 playback.padding(.top, 8)
                 phoneVolume(stats).padding(.top, 12)
+                // Some of it, 12 pt at most, keeps the volume off the tab bar.
+                Spacer(minLength: 0).frame(maxHeight: 12)
             }
             .disabled(buttonsOff)
         }
@@ -259,34 +417,62 @@ extension RemoteTab {
             if off {
                 stopRepeating()
                 pointerController?.close()
+                closeTyping()
             } else if showsPointer {
                 openPointer()
+                openTyping()
             }
         }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active && showsPointer && !buttonsOff { openPointer() }
             else { pointerController?.close() }
+            // The pad lowers its keyboard itself; a moment away (Control Center) keeps the text.
+            if phase == .background { closeTyping() }
+            else if phase == .active && showsPointer && !buttonsOff { openTyping() }
         }
     }
 
-    private var pointerPad: some View {
+    private func pointerPad(buttonsOff: Bool) -> some View {
         ZStack {
-            // A new controller (another TV) needs a new view: the old one keeps its controller.
-            if let pointerController {
-                PointerPad(controller: pointerController).id(ObjectIdentifier(pointerController))
+            // Under the pad, whose letters cover it while they show.
+            VStack(spacing: 0) {
+                Text("Slide to move · Tap to click\nUse two fingers to scroll")
+                    .foregroundStyle(palette.label)
+                Text("Tap the keyboard to type on the TV")
+                    .foregroundStyle(palette.fg.opacity(0.85))
             }
-            Text("Slide to move · Tap to click\nUse two fingers to scroll")
-                .font(.manrope(points: 13))
-                .foregroundStyle(palette.label)
-                .multilineTextAlignment(.center)
-                .allowsHitTesting(false)
+            .font(.manrope(points: 13))
+            .multilineTextAlignment(.center)
+            .allowsHitTesting(false)
+            // Fills the pad and carries its id: the app previews read the pad's frame from it.
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .contentShape(.accessibility, Rectangle())
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(Text("Slide to move · Tap to click\nUse two fingers to scroll") + Text(verbatim: " ")
+                                + Text("Tap the keyboard to type on the TV"))
+            .accessibilityIdentifier("remote.pointerPad")
+            // A new controller or typing (another TV) needs a new view: the old one keeps its own.
+            if let pointerController, let typing {
+                PointerPad(controller: pointerController, typing: typing)
+                    .id([ObjectIdentifier(pointerController), ObjectIdentifier(typing)])
+            }
         }
-        .frame(height: 220)
-        .background(palette.key)
-        .overlay(Rectangle().strokeBorder(palette.line, lineWidth: 1))
-        .onAppear { openPointer() }
-        .onDisappear { pointerController?.close() }
+        // The ring's height: the screen keeps its height from one mode to the other.
+        .frame(height: Metrics.ringDiameter)
+        .background(palette.key, in: keyShape)
+        .overlay(keyShape.strokeInside(palette.line, style: StrokeStyle(lineWidth: 1)))
+        .onAppear {
+            openPointer()
+            openTyping(takesKeys: !buttonsOff)
+        }
+        .onDisappear {
+            pointerController?.close()
+            closeTyping()
+        }
         .onChange(of: model.client?.endpoint) { openPointer() }
+        .onChange(of: ObjectIdentifier(session)) { openTyping(takesKeys: !buttonsOff) }
+        // The TV's focus may have moved (Back, Home, a source, a pin...).
+        .onChange(of: session.focusEpoch) { typing?.forget() }
     }
 
     private func stopRepeating() {
@@ -314,14 +500,7 @@ extension RemoteTab {
     }
 
     private func sourceKey(_ source: Source) -> some View {
-        GHButton(selected: source.isActive, action: { click(.source(source.id)) }) {
-            Text(verbatim: Self.shortName(source.label))
-                .font(.manrope(10))
-                .textCase(.uppercase)
-                .tracking(Metrics.fontScale)
-                .lineLimit(1)
-                .minimumScaleFactor(0.7)
-        }
+        GHButton(name: Self.shortName(source.label), selected: source.isActive, action: { click(.source(source.id)) })
         .contextMenu {
             Button { click(.source(source.id)) } label: { Text(verbatim: source.label) }
         }
@@ -338,37 +517,16 @@ extension RemoteTab {
         return first.count > 8 ? String(first.prefix(7)) + "…" : first
     }
 
-    /// The cross, centred, its keys as wide as the screen allows up to `padKey`.
+    /// The ring, centred, as wide as the screen allows up to `Metrics.ringDiameter` (the iPad's
+    /// column too: its cross had the phone's size).
     private var phonePad: some View {
-        VStack(spacing: Self.gap) {
-            HStack(spacing: Self.gap) { padGap; padArrow(.up, "Up"); padGap }
-            HStack(spacing: Self.gap) {
-                padArrow(.left, "Left")
-                GHButton(height: Self.padKey.height, action: { click(.rcu(.ok)) }) {
-                    Text(verbatim: "OK").font(.manrope(points: 14)).tracking(0.84)
-                }
-                .frame(maxWidth: Self.padKey.width)
-                .accessibilityIdentifier("remote.ok")
-                .keyed(.rcu(.ok))
-                padArrow(.right, "Right")
+        Color.clear
+            .aspectRatio(1, contentMode: .fit)
+            .frame(maxWidth: Metrics.ringDiameter)
+            .overlay {
+                GeometryReader { proxy in ring(diameter: min(proxy.size.width, proxy.size.height)) }
             }
-            HStack(spacing: Self.gap) { padGap; padArrow(.down, "Down"); padGap }
-        }
-        .frame(maxWidth: .infinity)
-    }
-
-    private var padGap: some View {
-        Color.clear.frame(maxWidth: Self.padKey.width).frame(height: Self.padKey.height)
-    }
-
-    private func padArrow(_ key: RemoteKey, _ name: LocalizedStringKey) -> some View {
-        GHButton(height: Self.padKey.height, action: { click(.rcu(key)) }) {
-            Triangle(pointing: key).fill(.foreground).frame(width: 14, height: 14)
-        }
-        .frame(maxWidth: Self.padKey.width)
-        .accessibilityLabel(Text(name))
-        .accessibilityIdentifier("remote.\(key.rawValue)")
-        .keyed(.rcu(key))
+            .frame(maxWidth: .infinity)
     }
 
     /// − and + 78 pt wide, held down they repeat; between them the volume and the output; Mute
@@ -377,11 +535,11 @@ extension RemoteTab {
         let muted = stats?.muted ?? false
         let output = stats?.sound?.output ?? stats?.audioOutput
         return HStack(spacing: Self.gap) {
-            volumeKey(.volumeDown, "−", "Volume down", repeater: volumeDown)
+            volumeKey(.volumeDown, .volumeDown, "Volume down", repeater: volumeDown)
                 .accessibilityIdentifier("remote.volumeDown")
             VStack(spacing: 0) {
                 Text(verbatim: stats?.volume.map(String.init) ?? "–")
-                    .font(.manrope(points: 26, .light))
+                    .font(.outfit(points: 32, .thin))
                     .monospacedDigit()
                 if let output {
                     Text(verbatim: output)
@@ -395,9 +553,10 @@ extension RemoteTab {
             }
             .frame(maxWidth: .infinity)
             .accessibilityElement(children: .combine)
-            volumeKey(.volumeUp, "+", "Volume up", repeater: volumeUp)
+            volumeKey(.volumeUp, .volumeUp, "Volume up", repeater: volumeUp)
                 .accessibilityIdentifier("remote.volumeUp")
-            GHButton("Mute", selected: muted, height: Self.volumeHeight) { click(.mute) }
+            GHButton(selected: muted, height: Self.volumeHeight, action: { click(.mute) }) { KeyIconView(.mute) }
+                .keyName("Mute")
                 .frame(width: 84)
                 .accessibilityIdentifier("remote.mute")
                 .keyed(.mute)
@@ -407,14 +566,14 @@ extension RemoteTab {
         .onDisappear { stopRepeating() }
     }
 
-    private func volumeKey(_ id: ButtonID, _ face: String, _ name: LocalizedStringKey,
+    private func volumeKey(_ id: ButtonID, _ icon: KeyIcon, _ name: LocalizedStringKey,
                            repeater: KeyRepeater) -> some View {
         GHButton(height: Self.volumeHeight, action: { repeater.released { click(id) } }) {
-            Text(verbatim: face).font(.manrope(points: 24, .light))
+            KeyIconView(icon)
         }
         .onPressChange { pressed in repeater.pressChanged(pressed) { click(id) } }
         .frame(width: 78)
-        .accessibilityLabel(Text(name))
+        .keyName(name)
         .keyed(id)
     }
 }
@@ -464,6 +623,30 @@ extension RemoteTab {
 }
 #endif
 
+private extension RingPart {
+    /// The key the part sends.
+    var remoteKey: RemoteKey {
+        switch self {
+        case .up: .up
+        case .down: .down
+        case .left: .left
+        case .right: .right
+        case .ok: .ok
+        }
+    }
+
+    /// Its name, for its help and VoiceOver; none for OK, whose face says it.
+    var name: LocalizedStringKey? {
+        switch self {
+        case .up: "Up"
+        case .down: "Down"
+        case .left: "Left"
+        case .right: "Right"
+        case .ok: nil
+        }
+    }
+}
+
 /// Lays its children in one row, their widths in the ratio of `weights`, the gaps excluded.
 private struct WeightedRow: Layout {
     let weights: [CGFloat]
@@ -482,23 +665,5 @@ private struct WeightedRow: Layout {
                        proposal: ProposedViewSize(width: unit * weight, height: bounds.height))
             x += unit * weight + spacing
         }
-    }
-}
-
-private struct Triangle: Shape {
-    let pointing: RemoteKey
-
-    func path(in rect: CGRect) -> Path {
-        let (w, h) = (rect.width, rect.height)
-        var p = Path()
-        switch pointing {
-        case .up: p.addLines([CGPoint(x: w / 2, y: 0), CGPoint(x: w, y: h), CGPoint(x: 0, y: h)])
-        case .down: p.addLines([CGPoint(x: 0, y: 0), CGPoint(x: w, y: 0), CGPoint(x: w / 2, y: h)])
-        case .left: p.addLines([CGPoint(x: 0, y: h / 2), CGPoint(x: w, y: 0), CGPoint(x: w, y: h)])
-        case .right: p.addLines([CGPoint(x: w, y: h / 2), CGPoint(x: 0, y: 0), CGPoint(x: 0, y: h)])
-        default: break   // only the four arrows draw a triangle
-        }
-        p.closeSubpath()
-        return p
     }
 }

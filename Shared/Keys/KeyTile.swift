@@ -16,42 +16,60 @@ private struct Keyed: ViewModifier {
     let id: ButtonID
     @Environment(\.keyboard) private var keyboard
     @Environment(\.palette) private var palette
+    @Environment(\.keyShape) private var shape
+    @Environment(\.keyTileAnchor) private var anchor
 
     func body(content: Content) -> some View {
         let awaiting = keyboard?.state.mode == .capturing(id)
         let chosen = keyboard?.state.selected == id
         content
             .environment(\.palette, awaiting ? palette.awaitingKey : palette)
-            .background(awaiting ? palette.accent.opacity(0.08) : chosen ? palette.fg.opacity(0.08) : .clear)
-            // The button chosen in the keys shown: a white edge (amber while it awaits its key), drawn
-            // over its own, which a pin's coloured tile may not have.
+            .background(awaiting ? palette.accent.opacity(0.08) : chosen ? palette.fg.opacity(0.08) : .clear, in: shape)
+            // The button chosen in the keys shown: a white edge (amber while it awaits its key) in the
+            // key's shape, drawn over its own, which a pin's coloured tile may not have.
             .overlay {
                 if chosen {
-                    Rectangle().strokeBorder(awaiting ? palette.accent : palette.fg, lineWidth: 1)
+                    shape.strokeInside(awaiting ? palette.accent : palette.fg, style: StrokeStyle(lineWidth: 1))
                         .allowsHitTesting(false)
                 }
             }
-            // Its key in the top right corner and, in blue on its left, its global shortcut when it has
-            // one or awaits one: nothing sticks out under the button, onto the key of the one below.
-            .overlay(alignment: .topTrailing) {
-                if keyboard?.state.showsTiles == true {
-                    HStack(spacing: 2) {
-                        #if os(macOS)
-                        let awaitingGlobal = keyboard?.state.mode == .capturingGlobal(id)
-                        if let global = awaitingGlobal ? "?" : keyboard?.globalLabel(for: id) {
-                            KeyTile(text: global, fill: palette.global, ring: awaitingGlobal)
-                        }
-                        #endif
-                        KeyTile(text: awaiting ? "?" : keyboard?.label(for: id), amber: awaiting)
+            // Its key by the top right corner (or by the anchor given) and, in blue on its left, its
+            // global shortcut when it has one or awaits one: nothing sticks out under the button, onto
+            // the key of the one below.
+            .overlay(alignment: anchor == nil ? .topTrailing : .topLeading) {
+                placed(Group {
+                    if keyboard?.state.showsTiles == true {
+                        tiles(awaiting: awaiting)
+                            .allowsHitTesting(false)
+                            .accessibilityHidden(true)
                     }
-                    .offset(x: 5, y: -6)
-                    .allowsHitTesting(false)
-                    .accessibilityHidden(true)
-                }
+                })
             }
             #if os(macOS)
-            .background(KeyAreaView(id: id).allowsHitTesting(false).accessibilityHidden(true))
+            .background(KeyAreaView(id: id, shape: shape).allowsHitTesting(false).accessibilityHidden(true))
             #endif
+    }
+
+    private func tiles(awaiting: Bool) -> some View {
+        HStack(spacing: 2) {
+            #if os(macOS)
+            let awaitingGlobal = keyboard?.state.mode == .capturingGlobal(id)
+            if let global = awaitingGlobal ? "?" : keyboard?.globalLabel(for: id) {
+                KeyTile(text: global, fill: palette.global, ring: awaitingGlobal)
+            }
+            #endif
+            KeyTile(text: awaiting ? "?" : keyboard?.label(for: id), amber: awaiting)
+        }
+    }
+
+    /// The tiles a little out of the button's top right corner, or of the anchor, up and right. The
+    /// guides go around the tiles' `if`, never inside one: SwiftUI drops a guide set in a branch.
+    private func placed(_ tiles: some View) -> some View {
+        let anchor = anchor
+        return tiles
+            .alignmentGuide(.leading) { size in anchor.map { size[.trailing] - $0.x } ?? size[.leading] }
+            .alignmentGuide(.top) { size in anchor.map { size[.top] - $0.y } ?? size[.top] }
+            .offset(x: 5, y: -6)
     }
 }
 
@@ -75,31 +93,41 @@ private struct KeyTile: View {
             .padding(.horizontal, 3)
             .frame(minWidth: 14, minHeight: 14, maxHeight: 14)
             .foregroundStyle(text == nil ? palette.fg.opacity(0.5) : palette.bg)
-            .background(amber ? palette.accent : fill ?? (text == nil ? palette.bg : palette.fg))
+            .background(amber ? palette.accent : fill ?? (text == nil ? palette.bg : palette.fg),
+                        in: RoundedRectangle(cornerRadius: Metrics.smallRadius))
             .overlay {
                 if text == nil {
-                    Rectangle().strokeBorder(palette.fg.opacity(0.5), style: StrokeStyle(lineWidth: 1, dash: [2, 2]))
+                    RoundedRectangle(cornerRadius: Metrics.smallRadius)
+                        .strokeBorder(palette.fg.opacity(0.5), style: StrokeStyle(lineWidth: 1, dash: [2, 2]))
                 }
             }
             .background {
-                if ring, let fill { Rectangle().fill(fill.opacity(0.35)).padding(-2) }
+                if ring, let fill {
+                    RoundedRectangle(cornerRadius: Metrics.smallRadius + 2).fill(fill.opacity(0.35)).padding(-2)
+                }
             }
     }
 }
 
 #if os(macOS)
-/// An empty AppKit view under a keyed button, where it is in the window: the keyboard controller's
-/// monitor looks for the one under a right-click, as SwiftUI has no right-click gesture. It takes no
-/// click itself.
+/// An empty AppKit view under a keyed button, where it is in the window, with the button's shape:
+/// the keyboard controller's monitor looks for the one under a right-click, as SwiftUI has no
+/// right-click gesture. It takes no click itself.
 final class KeyArea: NSView {
     var id: ButtonID?
+    /// The button's shape in the view's bounds; `nil`, the whole of them. A ring part's area is its
+    /// square, shared with its neighbours: only its shape tells them apart.
+    var shape: AnyShape?
+
+    /// SwiftUI's coordinates, top down, which the shape's path is drawn in.
+    override var isFlipped: Bool { true }
 
     override func hitTest(_ point: NSPoint) -> NSView? { nil }
 
     /// The button whose area holds the point, in window coordinates, among the views under `root`.
     static func button(at point: NSPoint, in root: NSView) -> ButtonID? {
         if let area = root as? KeyArea, let id = area.id, !area.isHiddenOrHasHiddenAncestor,
-           area.convert(area.bounds, to: nil).contains(point) {
+           area.holds(area.convert(point, from: nil)) {
             return id
         }
         for view in root.subviews.reversed() {
@@ -107,14 +135,23 @@ final class KeyArea: NSView {
         }
         return nil
     }
+
+    private func holds(_ local: NSPoint) -> Bool {
+        guard let shape else { return bounds.contains(local) }
+        return shape.path(in: bounds).contains(local)
+    }
 }
 
 private struct KeyAreaView: NSViewRepresentable {
     let id: ButtonID
+    let shape: AnyShape
 
     func makeNSView(context: Context) -> KeyArea { KeyArea() }
 
-    func updateNSView(_ view: KeyArea, context: Context) { view.id = id }
+    func updateNSView(_ view: KeyArea, context: Context) {
+        view.id = id
+        view.shape = shape
+    }
 }
 #endif
 
@@ -140,10 +177,11 @@ struct Chip: View {
         .fixedSize()
         .padding(.horizontal, 5)
         .frame(minWidth: 26, minHeight: 20, maxHeight: 20)
-        .background(text == nil ? .clear : fill)
+        .background(text == nil ? .clear : fill, in: RoundedRectangle(cornerRadius: Metrics.smallRadius))
         .overlay {
             if text == nil {
-                Rectangle().strokeBorder(palette.label, style: StrokeStyle(lineWidth: 1, dash: [2, 2]))
+                RoundedRectangle(cornerRadius: Metrics.smallRadius)
+                    .strokeBorder(palette.label, style: StrokeStyle(lineWidth: 1, dash: [2, 2]))
             }
         }
     }

@@ -2,10 +2,19 @@
 
 All notable changes to Pane for Glasshouse. Versions follow [Semantic Versioning](https://semver.org).
 
-## Unreleased
+## 1.3.0
 
-- Pointer: when the TV's Glasshouse offers it (0.146 or later, Pointer input turned on in Server › Experimental features), the Remote's Pointer key swaps the cross for a trackpad. On the Mac, click and drag to move, click to select, scroll with the wheel or two fingers; on iPhone and iPad, slide to move, tap to click, two fingers to scroll. Contributed by Kirill Klenovich ([@clima365](https://github.com/clima365)).
+- Demo: "Try without a TV" has the pointer's touchpad and keyboard, and a full Apps grid.
+- Apps: a new tab, second after Remote, lists every app on the TV, system apps included: click one to launch it, or open the list with "Pin…" and pin any app in one click. iOS: Game moves to More.
+- Remote: the classic keys (Back, Home, Settings, D-pad and Pointer, the arrows, playback, volume, Mute, Power) show a fine-line icon instead of a word, drawn after Glasshouse's own remote; the word shows on hover and for VoiceOver. The key that swaps the d-pad and the pointer's pad has a stronger edge, to stand out from its row.
+- Pointer: when the TV's Glasshouse offers it (0.146 or later, Pointer input turned on in Server › Experimental features), the Remote's Pointer key swaps the d-pad for a trackpad. On the Mac, click and drag, or hold ⌥ and move the mouse, as picked above the pad (the Mac cursor stays on the pad meanwhile), click to select, right-click to go back, scroll with the wheel or two fingers; on iPhone and iPad, slide to move, tap to click, two fingers to scroll. Contributed by Kirill Klenovich ([@clima365](https://github.com/clima365)).
+- Pointer: type on the TV from the pointer's pad. On the Mac, type directly; on iPhone and iPad, tap the keyboard icon. Letters light up as they arrive and fade out ten seconds later; Return submits, Esc clears. While the pad shows on the Mac, keys type instead of pressing their buttons; Space with nothing typed still plays or pauses.
+- Mac: the Picture tab's mode menu takes its own width, so a long mode name (HDR Game) is no longer cut short.
 - Mac: the search for TVs no longer reports local network access as blocked only because the SSDP search was refused while the subnet probes went through.
+- iOS: turn the TV on from deep standby with Wake-on-LAN, and find it on the network right away instead of scanning the subnet (Apple granted the multicast entitlement).
+- Look: the d-pad is a ring, as on Glasshouse's own remote, and the key back to it shows the ring's chevrons; keys, menus and fields have rounded corners and softer edges; names and numbers are set in Outfit; settings get round-thumb sliders, switches, and group titles over a rule. The app's own on/off settings are switches too.
+- iOS: the ↗ of the links to the dashboard and the web, and the ↩ of the Return key in shortcuts, no longer show as blue emoji.
+- iPhone: on a tall screen, the Remote's spare room goes above and below the d-pad (or the pointer's pad) instead of piling up under the volume.
 
 ## 1.2.0
 

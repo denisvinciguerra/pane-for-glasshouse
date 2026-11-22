@@ -23,6 +23,7 @@
 	<key>UIAppFonts</key>
 	<array>
 		<string>Manrope.ttf</string>
+		<string>Outfit.ttf</string>
 	</array>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>Pane talks to your TV on your local network.</string>

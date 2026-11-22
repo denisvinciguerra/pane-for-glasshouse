@@ -35,10 +35,10 @@ struct HDMITab: View {
                         SectionLabel("Audio receiver")
                         Text(verbatim: receiver)
                             #if os(iOS)
-                            .font(.manrope(points: 15.5))
+                            .font(.outfit(points: 18.5))
                             .padding(.vertical, 12)
                             #else
-                            .font(.manrope(11.5))
+                            .font(.outfit(14))
                             .padding(.vertical, 3)
                             #endif
                     }
@@ -69,11 +69,11 @@ struct HDMITab: View {
     private func portRow(_ port: HDMIPort) -> some View {
         #if os(iOS)
         // Sizes for a finger, as in the other tabs.
-        let nameFont = Font.manrope(points: 15.5), noteFont = Font.manrope(points: 12)
+        let nameFont = Font.outfit(points: 18.5), noteFont = Font.manrope(points: 12)
         let signalFont = Font.manrope(points: 12)
         let pad: CGFloat = 12, indent: CGFloat = 15
         #else
-        let nameFont = Font.manrope(11.5), noteFont = Font.manrope(10), signalFont = Font.manrope(9.5)
+        let nameFont = Font.outfit(14), noteFont = Font.manrope(10), signalFont = Font.manrope(9.5)
         let pad: CGFloat = 6, indent: CGFloat = 13
         #endif
         return VStack(alignment: .leading, spacing: 2) {

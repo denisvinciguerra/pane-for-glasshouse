@@ -470,13 +470,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dashboard ↗"
+            "value" : "Dashboard ↗\uFE0E"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tableau de bord ↗"
+            "value" : "Tableau de bord ↗\uFE0E"
           }
         }
       }
@@ -870,13 +870,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "All settings ↗"
+            "value" : "All settings ↗\uFE0E"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tous les réglages ↗"
+            "value" : "Tous les réglages ↗\uFE0E"
           }
         }
       }
@@ -998,13 +998,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Audio formats ↗"
+            "value" : "Audio formats ↗\uFE0E"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Formats audio ↗"
+            "value" : "Formats audio ↗\uFE0E"
           }
         }
       }
@@ -1014,13 +1014,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Charts ↗"
+            "value" : "Charts ↗\uFE0E"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Graphiques ↗"
+            "value" : "Graphiques ↗\uFE0E"
           }
         }
       }
@@ -2390,13 +2390,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Install guide ↗"
+            "value" : "Install guide ↗\uFE0E"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Guide d’installation ↗"
+            "value" : "Guide d’installation ↗\uFE0E"
           }
         }
       }
@@ -2422,13 +2422,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Update ↗"
+            "value" : "Update ↗\uFE0E"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mettre à jour ↗"
+            "value" : "Mettre à jour ↗\uFE0E"
           }
         }
       }
@@ -2753,38 +2753,6 @@
         }
       }
     },
-    "login.on" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "On"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Activée"
-          }
-        }
-      }
-    },
-    "login.off" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Off"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Désactivée"
-          }
-        }
-      }
-    },
     "Open Local Network Settings" : {
       "localizations" : {
         "en" : {
@@ -3041,38 +3009,6 @@
         }
       }
     },
-    "updates.on" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "On"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Activée"
-          }
-        }
-      }
-    },
-    "updates.off" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Off"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Désactivée"
-          }
-        }
-      }
-    },
     "Check Now" : {
       "localizations" : {
         "en" : {
@@ -3142,13 +3078,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Website ↗"
+            "value" : "Website ↗\uFE0E"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Site web ↗"
+            "value" : "Site web ↗\uFE0E"
           }
         }
       }
@@ -3158,13 +3094,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Source ↗"
+            "value" : "Source ↗\uFE0E"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Code source ↗"
+            "value" : "Code source ↗\uFE0E"
           }
         }
       }
@@ -3174,13 +3110,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "License ↗"
+            "value" : "License ↗\uFE0E"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Licence ↗"
+            "value" : "Licence ↗\uFE0E"
           }
         }
       }
@@ -3249,6 +3185,22 @@
         }
       }
     },
+    "by Rodrigo Fuenzalida" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "by Rodrigo Fuenzalida"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "par Rodrigo Fuenzalida"
+          }
+        }
+      }
+    },
     "by the Sparkle Project" : {
       "localizations" : {
         "en" : {
@@ -3293,38 +3245,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Allumer la TV même pendant l'entretien de la dalle"
-          }
-        }
-      }
-    },
-    "maintenance.on" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "On"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Activée"
-          }
-        }
-      }
-    },
-    "maintenance.off" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Off"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Désactivée"
           }
         }
       }
@@ -4065,18 +3985,454 @@
         }
       }
     },
-    "Click and drag to move\nClick to select\nScroll with the wheel or two fingers" : {
+    "Click and drag to move\nClick to select\nRight-click to go back\nScroll with the wheel or two fingers" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Click and drag to move\nClick to select\nScroll with the wheel or two fingers"
+            "value" : "Click and drag to move\nClick to select\nRight-click to go back\nScroll with the wheel or two fingers"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cliquez-glissez pour déplacer\nCliquez pour sélectionner\nMolette ou deux doigts pour défiler"
+            "value" : "Cliquez-glissez pour déplacer\nCliquez pour sélectionner\nClic droit pour revenir\nMolette ou deux doigts pour défiler"
+          }
+        }
+      }
+    },
+    "Drag" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drag"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Glisser"
+          }
+        }
+      }
+    },
+    "⌥ held" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⌥ held"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⌥ tenue"
+          }
+        }
+      }
+    },
+    "Option held" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Option held"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Option tenue"
+          }
+        }
+      }
+    },
+    "Option" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Option"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Option"
+          }
+        }
+      }
+    },
+    "About the gestures" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "About the gestures"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "À propos des gestes"
+          }
+        }
+      }
+    },
+    "**Moving the TV pointer**" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**Moving the TV pointer**"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**Déplacer le pointeur de la TV**"
+          }
+        }
+      }
+    },
+    "**⌥ held**: hold ⌥ and move the mouse or a finger on the trackpad, without clicking. Click whenever you like: the click goes to the TV. The Mac cursor stays on the pad." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**⌥ held**: hold ⌥ and move the mouse or a finger on the trackpad, without clicking. Click whenever you like: the click goes to the TV. The Mac cursor stays on the pad."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**⌥ tenue** : tenez ⌥ et bougez la souris ou un doigt sur le trackpad, sans cliquer. Cliquez quand vous voulez : le clic part sur la TV. Le curseur du Mac reste sur le pavé."
+          }
+        }
+      }
+    },
+    "**Drag**: hold the click and move. Release, then click to select." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**Drag**: hold the click and move. Release, then click to select."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**Glisser** : tenez le clic et bougez. Relâchez, puis cliquez pour sélectionner."
+          }
+        }
+      }
+    },
+    "In both: right-click goes back, the wheel or two fingers scroll, and what you type goes to the TV." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In both: right-click goes back, the wheel or two fingers scroll, and what you type goes to the TV."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dans les deux cas, le clic droit fait Retour, la molette ou deux doigts font défiler, et ce que vous tapez part sur la TV."
+          }
+        }
+      }
+    },
+    "Hold %@ and move to point" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hold %@ and move to point"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tenez %@ et bougez pour pointer"
+          }
+        }
+      }
+    },
+    "Click to select\nRight-click to go back\nScroll with the wheel or two fingers" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Click to select\nRight-click to go back\nScroll with the wheel or two fingers"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cliquez pour sélectionner\nClic droit pour revenir\nMolette ou deux doigts pour défiler"
+          }
+        }
+      }
+    },
+    "Moving the pointer" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Moving the pointer"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pointeur en mouvement"
+          }
+        }
+      }
+    },
+    "Type to write on the TV" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Type to write on the TV"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tapez pour écrire sur la TV"
+          }
+        }
+      }
+    },
+    "No text field selected on the TV" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No text field selected on the TV"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun champ de texte sélectionné sur la TV"
+          }
+        }
+      }
+    },
+    "Lowercase only in this app" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lowercase only in this app"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Minuscules seulement dans cette app"
+          }
+        }
+      }
+    },
+    "Text not sent" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Text not sent"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Texte non envoyé"
+          }
+        }
+      }
+    },
+    "Sent" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sent"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Envoyé"
+          }
+        }
+      }
+    },
+    "Tap the keyboard to type on the TV" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap the keyboard to type on the TV"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Touchez le clavier pour écrire sur la TV"
+          }
+        }
+      }
+    },
+    "Type on the TV" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Type on the TV"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Écrire sur la TV"
+          }
+        }
+      }
+    },
+    "Apps" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apps"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apps"
+          }
+        }
+      }
+    },
+    "Pin…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pin…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Épingler…"
+          }
+        }
+      }
+    },
+    "%lld apps" : {
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld app"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld apps"
+                }
+              }
+            }
+          }
+        },
+        "fr" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld app"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld apps"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld pinned" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld pinned"
+          }
+        },
+        "fr" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld épinglée"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld épinglées"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Apps appear once the TV answers" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apps appear once the TV answers"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les apps apparaissent quand la TV répond"
+          }
+        }
+      }
+    },
+    "app.pinned" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pinned"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Épinglée"
           }
         }
       }

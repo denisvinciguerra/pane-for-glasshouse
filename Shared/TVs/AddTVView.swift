@@ -172,13 +172,13 @@ private struct ResultRow: View {
                     switch found.outcome {
                     case .found(let tv):
                         if let name = tv.shortModel, !name.isEmpty {
-                            Text(verbatim: name)
+                            Text(verbatim: name).font(.outfit(14.5))
                         } else {
-                            Text("Glasshouse TV")
+                            Text("Glasshouse TV").font(.outfit(14.5))
                         }
                         Text(verbatim: "\(tv.host):\(tv.port)").font(.manrope(10.5)).foregroundStyle(palette.label)
                     default:
-                        Text("Glasshouse TV")
+                        Text("Glasshouse TV").font(.outfit(14.5))
                         Text(verbatim: "\(found.host):8080").font(.manrope(10.5)).foregroundStyle(palette.label)
                     }
                 }
@@ -215,13 +215,14 @@ private struct ResultRow: View {
     }
 }
 
-/// A labelled text field: square, a 1 pt edge, full strength while focused.
+/// A labelled text field: a key's corners, a 1 pt edge, full strength while focused.
 struct Field: View {
     let title: LocalizedStringKey
     @Binding var text: String
     let prompt: String
     var secure = false
     @Environment(\.palette) private var palette
+    @Environment(\.keyShape) private var keyShape
     @FocusState private var focused: Bool
 
     var body: some View {
@@ -246,8 +247,8 @@ struct Field: View {
             .focusEffectDisabled()
             .padding(.horizontal, 8)
             .frame(height: Metrics.fieldHeight)
-            .background(palette.key)
-            .overlay(Rectangle().strokeBorder(focused ? palette.fg : palette.line, lineWidth: 1))
+            .background(palette.key, in: keyShape)
+            .overlay(keyShape.strokeInside(focused ? palette.fg : palette.line, style: StrokeStyle(lineWidth: 1)))
         }
     }
 }

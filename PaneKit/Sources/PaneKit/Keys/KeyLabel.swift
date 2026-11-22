@@ -43,10 +43,11 @@ public struct CurrentKeyboardLayout: KeyboardLayout {
 #endif
 
 public enum KeyLabel {
+    // U+FE0E keeps ↩, ↖ and ↘ in text style: iOS would otherwise draw them as blue emoji.
     private static let glyphs: [UInt16: String] = [
         KeyCode.up: "↑", KeyCode.down: "↓", KeyCode.left: "←", KeyCode.right: "→",
-        KeyCode.returnKey: "↩", KeyCode.keypadEnter: "⌤", KeyCode.escape: "⎋", 48: "⇥", 51: "⌫", 117: "⌦",
-        115: "↖", 119: "↘", 116: "⇞", 121: "⇟",
+        KeyCode.returnKey: "↩\u{FE0E}", KeyCode.keypadEnter: "⌤", KeyCode.escape: "⎋", 48: "⇥", 51: "⌫", 117: "⌦",
+        115: "↖\u{FE0E}", 119: "↘\u{FE0E}", 116: "⇞", 121: "⇟",
         122: "F1", 120: "F2", 99: "F3", 118: "F4", 96: "F5", 97: "F6", 98: "F7", 100: "F8", 101: "F9",
         109: "F10", 103: "F11", 111: "F12",
     ]

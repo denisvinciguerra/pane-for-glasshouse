@@ -19,6 +19,9 @@ actor FakeAPI: GlasshouseAPI {
     private var cancelOnStats = false
     private(set) var commands: [Command] = []
     private(set) var paths: [String] = []
+    private var textAnswers: [ControlResult] = []
+    private var holdingText = false
+    private var heldText: [CheckedContinuation<Void, Never>] = []
     /// Paths whose next read answers what was served when it was asked, but only once released.
     private var holding: Set<String> = []
     private var held: [String: [CheckedContinuation<Void, Never>]] = [:]
@@ -26,6 +29,11 @@ actor FakeAPI: GlasshouseAPI {
     func serve(_ path: String, _ body: Data) { bodies[path] = body; failures[path] = nil }
     func fail(_ path: String, _ error: APIError) { failures[path] = error }
     func failSend(_ error: APIError?) { sendFailure = error }
+    func answerText(_ results: [ControlResult]) { textAnswers = results }
+    /// The next text answer is fixed when asked but delivered only once released.
+    func holdText() { holdingText = true }
+    func heldTextCount() -> Int { heldText.count }
+    func releaseText() { if !heldText.isEmpty { heldText.removeFirst().resume() } }
     func cancelCallerOnStats() { cancelOnStats = true }
     func hold(_ path: String) { holding.insert(path) }
     func heldCount(_ path: String) -> Int { held[path]?.count ?? 0 }
@@ -66,6 +74,17 @@ actor FakeAPI: GlasshouseAPI {
     func send(_ command: Command) async throws(APIError) {
         commands.append(command)
         if let sendFailure { throw sendFailure }
+    }
+
+    func sendForResult(_ command: Command) async throws(APIError) -> ControlResult {
+        commands.append(command)
+        if let sendFailure { throw sendFailure }
+        let result = textAnswers.isEmpty ? ControlResult(ok: true, method: "ime") : textAnswers.removeFirst()
+        if holdingText {
+            holdingText = false
+            await withCheckedContinuation { heldText.append($0) }
+        }
+        return result
     }
 }
 

@@ -164,7 +164,7 @@ import SwiftUI
     }
 }
 
-/// The card's face, in the popover's style: the tile, the name in capitals, the state under it.
+/// The card's face, in the popover's style: the tile, the name as given in Outfit, the state under it.
 private struct ShortcutCardView: View {
     let id: ButtonID
     let phase: ShortcutPhase
@@ -180,9 +180,7 @@ private struct ShortcutCardView: View {
             ShortcutTile(id: id, action: action, model: model)
             VStack(alignment: .leading, spacing: 0) {
                 Text(verbatim: title(action))
-                    .font(.manrope(11))
-                    .tracking(0.9)
-                    .textCase(.uppercase)
+                    .font(.outfit(13.5))
                     .lineLimit(1)
                     .truncationMode(.tail)
                 state(action, palette: palette)
@@ -194,8 +192,8 @@ private struct ShortcutCardView: View {
         .frame(width: ShortcutCard.width)
         .fixedSize(horizontal: false, vertical: true)
         .foregroundStyle(palette.fg)
-        .background(palette.bg, in: RoundedRectangle(cornerRadius: 8))
-        .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(failed ? Color.red.opacity(0.6) : palette.line))
+        .background(palette.bg, in: RoundedRectangle(cornerRadius: Metrics.keyRadius))
+        .overlay(RoundedRectangle(cornerRadius: Metrics.keyRadius).strokeBorder(failed ? Color.red.opacity(0.6) : palette.line))
         .environment(\.palette, palette)
         .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { onHeight($0) }
     }
@@ -237,13 +235,14 @@ private struct ShortcutCardView: View {
     }
 }
 
-/// The tile on the card's left: the app's icon for an action shown as one (on the colour of the
-/// icon's edge, as the pins show it), else the button's symbol, else the title as text.
+/// The tile on the card's left, a key's shape: the app's icon for an action shown as one (on the
+/// colour of the icon's edge, as the pins show it), else the button's symbol, else the title as text.
 private struct ShortcutTile: View {
     let id: ButtonID
     let action: CustomAction?
     let model: AppModel
     @Environment(\.palette) private var palette
+    @Environment(\.keyShape) private var keyShape
 
     private static let size = CGSize(width: 40, height: 28)
 
@@ -256,23 +255,24 @@ private struct ShortcutTile: View {
                     .frame(width: Self.size.height, height: Self.size.height)
                     .frame(width: Self.size.width, height: Self.size.height)
                     .background(icon.edge.map { Color(.sRGB, red: $0.red, green: $0.green, blue: $0.blue) } ?? .clear)
-                    .overlay(Rectangle().strokeBorder(icon.edge.map { $0.blends(into: background) } ?? true ? palette.line : .clear))
+                    .clipShape(keyShape)
+                    .overlay(keyShape.strokeInside(icon.edge.map { $0.blends(into: background) } ?? true ? palette.line : .clear,
+                                                   style: StrokeStyle(lineWidth: 1)))
             } else {
                 Group {
                     if let symbol = Self.symbol(for: id) {
                         Image(systemName: symbol).font(.system(size: 13))
                     } else {
                         Text(verbatim: action?.title ?? id.rawValue)
-                            .font(.manrope(7.5, .semibold))
-                            .textCase(.uppercase)
+                            .font(.outfit(9))
                             .lineLimit(2)
                             .multilineTextAlignment(.center)
-                            .minimumScaleFactor(0.7)
+                            .minimumScaleFactor(0.6)
                             .padding(.horizontal, 2)
                     }
                 }
                 .frame(width: Self.size.width, height: Self.size.height)
-                .overlay(Rectangle().strokeBorder(palette.line))
+                .overlay(keyShape.strokeInside(palette.line, style: StrokeStyle(lineWidth: 1)))
             }
         }
         .accessibilityHidden(true)

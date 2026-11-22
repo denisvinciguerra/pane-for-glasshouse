@@ -82,6 +82,7 @@ private struct DashboardMenu: View {
 private struct NotFoundPanel: View {
     let find: () -> Void
     @Environment(\.palette) private var palette
+    @Environment(\.keyShape) private var keyShape
 
     var body: some View {
         HStack(spacing: 12) {
@@ -95,7 +96,7 @@ private struct NotFoundPanel: View {
         .padding(.leading, 12)
         .padding(.trailing, 6)
         .padding(.vertical, 6)
-        .background(palette.key)
-        .overlay(Rectangle().strokeBorder(palette.line, lineWidth: 1))
+        .background(palette.key, in: keyShape)
+        .overlay(keyShape.strokeInside(palette.line, style: StrokeStyle(lineWidth: 1)))
     }
 }

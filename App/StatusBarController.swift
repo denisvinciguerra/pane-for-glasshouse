@@ -152,6 +152,12 @@ import SwiftUI
         guard let view = popover.contentViewController?.view, let root = view.layer else { return }
         // SwiftUI's drawn layers (the text) are drawn again at 2x; its image layers keep their image.
         func sharpen(_ layer: CALayer) {
+            // render(in:) flattens the ends of a continuous-curve capsule (a switch's edge, radius
+            // half its height); a circular one has the same shape and is drawn whole.
+            if layer.cornerCurve == .continuous, layer.cornerRadius > 0,
+               layer.cornerRadius * 2 >= min(layer.bounds.width, layer.bounds.height) - 0.5 {
+                layer.cornerCurve = .circular
+            }
             if !String(describing: type(of: layer)).contains("ImageLayer") {
                 layer.contentsScale = 2
                 layer.setNeedsDisplay()

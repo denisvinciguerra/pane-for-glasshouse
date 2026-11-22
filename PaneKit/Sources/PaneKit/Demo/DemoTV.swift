@@ -62,7 +62,7 @@ public actor DemoTV: GlasshouseAPI {
         case .screenOn: setPower(raw: "Active", label: "On", system: true, screen: true)
         case .pictureMode(let mode): set(pictureMode: mode)
         case .lgSetting(let id, let value): set(setting: id, to: value)
-        case .rcu, .media, .sleepTimer: break // accepted, no visible effect
+        case .rcu, .media, .sleepTimer, .sendText, .submitText, .keyboardKey: break // accepted, no visible effect
         }
     }
 
@@ -84,6 +84,9 @@ public actor DemoTV: GlasshouseAPI {
     /// App id (as in `stats.apps`) to the bundled placeholder icon.
     private static let icons = [
         "com.apple.appletv": "app-icon-appletv", "netflix": "app-icon-netflix", "spotify-beehive": "app-icon-spotify",
+        "reelo": "app-icon-reelo", "kinoa": "app-icon-kinoa", "arcadia": "app-icon-arcadia", "wavely": "app-icon-wavely",
+        "pitchly": "app-icon-pitchly", "lumen": "app-icon-lumen", "orbit": "app-icon-orbit", "nimbus": "app-icon-nimbus",
+        "spoolr": "app-icon-spoolr",
     ]
 
     private static func load(_ name: String) -> JSON {

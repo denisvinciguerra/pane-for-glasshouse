@@ -1,7 +1,7 @@
 import Foundation
 import Observation
 
-public enum PaneTab: String, CaseIterable, Sendable { case remote, picture, audio, game, hdmi, stats }
+public enum PaneTab: String, CaseIterable, Sendable { case remote, apps, picture, audio, game, hdmi, stats }
 
 /// The texts the session shows in `transientMessage`.
 enum SessionText {
@@ -106,6 +106,10 @@ struct ReadGate {
     public private(set) var caps: Caps?
     public private(set) var power: PowerState = .unreachable
     public private(set) var lastError: APIError?
+    /// Goes up with every command that may have moved the TV's focus (a new app, source or screen),
+    /// so a text field Pane was following can no longer be trusted. Volume, media and text commands
+    /// leave it alone. A command that failed still counts: the doubt is enough.
+    public private(set) var focusEpoch = 0
     /// True until the first stats read and the first caps attempt have both completed.
     public private(set) var connecting = true
     /// The state shown is old (the app was away, iOS): true from `markStale()` until the next stats
@@ -187,7 +191,7 @@ struct ReadGate {
         return nil
     }
 
-    @ObservationIgnored private let api: any GlasshouseAPI
+    @ObservationIgnored let api: any GlasshouseAPI
     /// The stored MAC, replaced by each different one the TV reports.
     @ObservationIgnored private var mac: String?
     /// Told each MAC the TV reports that differs from `mac`, so the app can store it for Wake-on-LAN.
@@ -244,6 +248,7 @@ struct ReadGate {
         switch result {
         case .success(let s):
             stats = s
+            setAvailable(.apps, s.apps != nil)
             power = PowerState.from(s)
             lastError = nil
             unreachableReads = 0
@@ -276,7 +281,7 @@ struct ReadGate {
 
     public func refresh(_ tab: PaneTab) async {
         switch tab {
-        case .remote, .stats:
+        case .remote, .apps, .stats:
             await refreshStats()
         case .picture:
             let seq = pictureGate.issue()
@@ -433,6 +438,10 @@ struct ReadGate {
     @discardableResult private func perform(_ command: Command) async -> Bool {
         let before = (stats, picture, game, audio, hdmi)
         let readsBefore = readCount
+        switch command {
+        case .volume, .volumeStep, .mute, .media, .sendText, .submitText, .keyboardKey: break
+        default: focusEpoch += 1
+        }
         applyOptimistically(command)
         do {
             try await api.send(command)

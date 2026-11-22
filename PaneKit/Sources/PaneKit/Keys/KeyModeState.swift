@@ -35,6 +35,19 @@ public struct KeyModeState: Equatable, Sendable {
     public private(set) var replacing: Effect?
     /// Set while a global capture waits, after a combination it could not take.
     public private(set) var globalNotice: GlobalNotice?
+    /// The pad takes typing (Pointer mode): the assigned keys and ⌥ go to the text, and the keys shown
+    /// cannot begin. Turning it on ends the modes under it, ⌥ held included.
+    public var typing = false {
+        didSet {
+            guard typing, !oldValue else { return }
+            mode = .normal
+            optionHeld = false
+            conflict = nil
+            replacing = nil
+            globalNotice = nil
+            lastPress = nil
+        }
+    }
     /// The last key pressed (not a repeat) and what came of it: its repeats follow it.
     private var lastPress: Press?
 
@@ -69,6 +82,7 @@ public struct KeyModeState: Equatable, Sendable {
     public init() {}
 
     public mutating func iconClicked() {
+        guard !typing else { return }
         conflict = nil
         replacing = nil
         globalNotice = nil
@@ -78,6 +92,7 @@ public struct KeyModeState: Equatable, Sendable {
     /// Right click, or a click while the keys are shown: this button is the one to set. A capture in progress
     /// is abandoned.
     public mutating func select(_ id: ButtonID) {
+        guard !typing else { return }
         conflict = nil
         replacing = nil
         globalNotice = nil
@@ -93,7 +108,7 @@ public struct KeyModeState: Equatable, Sendable {
         mode = .showing(selected: nil)
     }
 
-    public mutating func optionChanged(down: Bool) { optionHeld = down }
+    public mutating func optionChanged(down: Bool) { optionHeld = down && !typing }
 
     public mutating func buttonClicked(_ id: ButtonID) -> Effect {
         if mode == .normal {
@@ -117,6 +132,7 @@ public struct KeyModeState: Equatable, Sendable {
     }
 
     public mutating func setKey(for id: ButtonID) {
+        guard !typing else { return }
         conflict = nil
         replacing = nil
         globalNotice = nil
@@ -125,6 +141,7 @@ public struct KeyModeState: Equatable, Sendable {
 
     /// "Change" on the shortcut's row: the next combination typed is a system-wide shortcut for this button.
     public mutating func setGlobal(for id: ButtonID) {
+        guard !typing else { return }
         conflict = nil
         replacing = nil
         globalNotice = nil
@@ -148,6 +165,7 @@ public struct KeyModeState: Equatable, Sendable {
     /// passed key, and is swallowed otherwise (a held key after "Change" sends nothing).
     public mutating func key(_ event: KeyEvent, assignments: KeyAssignments, globalAssignments: KeyAssignments,
                              layout: some KeyboardLayout, textInputActive: Bool) -> Effect {
+        let textInputActive = textInputActive || typing
         if event.isRepeat { return repeated(event, assignments: assignments, textInputActive: textInputActive) }
         let effect = pressed(event, assignments: assignments, globalAssignments: globalAssignments,
                              layout: layout, textInputActive: textInputActive)
@@ -269,5 +287,9 @@ public struct KeyModeState: Equatable, Sendable {
         return replace ? pending : .none
     }
 
-    public mutating func closed() { self = KeyModeState() }
+    public mutating func closed() {
+        let typing = typing
+        self = KeyModeState()
+        self.typing = typing   // the pad's state, not the popover's
+    }
 }

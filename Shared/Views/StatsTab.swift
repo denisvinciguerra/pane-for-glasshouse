@@ -1,9 +1,10 @@
 import PaneKit
 import SwiftUI
 
-/// Stats: the System readouts of the web dashboard. A gauge per readout (label and detail, a 2 pt
-/// bar, the value in large light type), then the facts as key/value pairs. A missing field is
-/// not drawn. The session already reads the stats every 2 s while the popover is open.
+/// Stats: the System readouts of the web dashboard. A gauge per readout (label and detail, a 3 pt
+/// rail with round ends, the value in large thin Outfit), then the facts as key/value pairs, their
+/// values in Outfit. A missing field is not drawn. The session already reads the stats every 2 s
+/// while the popover is open.
 struct StatsTab: View {
     let model: AppModel
     let session: TVSession
@@ -31,7 +32,7 @@ struct StatsTab: View {
                     HStack(alignment: .firstTextBaseline, spacing: 10) {
                         Text(verbatim: fact.label).foregroundStyle(palette.label)
                         Spacer(minLength: 8)
-                        Text(verbatim: fact.value).multilineTextAlignment(.trailing)
+                        Text(verbatim: fact.value.forOutfit).font(Self.factValueFont).multilineTextAlignment(.trailing)
                     }
                     #if os(iOS)
                     .font(.manrope(points: 14))
@@ -61,15 +62,9 @@ struct StatsTab: View {
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            Rectangle().fill(palette.fg.opacity(0.15))
-                .frame(width: 90, height: 2)
-                .overlay(alignment: .leading) {
-                    if let fraction = gauge.fraction {
-                        Rectangle().fill(palette.on).frame(width: 90 * fraction)
-                    }
-                }
+            rail(gauge.fraction, width: 90)
             HStack(alignment: .firstTextBaseline, spacing: 2) {
-                Text(verbatim: gauge.value).font(.manrope(20, .light))
+                Text(verbatim: gauge.value.forOutfit).font(.outfit(24, .thin)).monospacedDigit()
                 Text(verbatim: gauge.unit).font(.manrope(10)).foregroundStyle(palette.label)
             }
             .lineLimit(1)
@@ -96,24 +91,35 @@ struct StatsTab: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 HStack(alignment: .firstTextBaseline, spacing: 3) {
-                    Text(verbatim: gauge.value).font(.manrope(points: 26, .light))
+                    Text(verbatim: gauge.value.forOutfit).font(.outfit(points: 32, .thin)).monospacedDigit()
                     Text(verbatim: gauge.unit).font(.manrope(points: 12)).foregroundStyle(palette.label)
                 }
                 .lineLimit(1)
                 .minimumScaleFactor(0.6)
             }
-            GeometryReader { proxy in
-                Rectangle().fill(palette.fg.opacity(0.15))
-                    .frame(height: 2)
-                    .overlay(alignment: .leading) {
-                        if let fraction = gauge.fraction {
-                            Rectangle().fill(palette.on).frame(width: proxy.size.width * fraction)
-                        }
-                    }
-            }
-            .frame(height: 2)
+            GeometryReader { proxy in rail(gauge.fraction, width: proxy.size.width) }
+                .frame(height: Self.railHeight)
         }
         .padding(.vertical, 14)
     }
+    #endif
+
+    /// A gauge's rail: 3 pt with round ends (Glasshouse's `oc-track`), filled in `on` up to `fraction`.
+    private func rail(_ fraction: Double?, width: CGFloat) -> some View {
+        Capsule().fill(palette.fg.opacity(0.15))
+            .frame(width: width, height: Self.railHeight)
+            .overlay(alignment: .leading) {
+                if let fraction {
+                    Capsule().fill(palette.on).frame(width: width * fraction)
+                }
+            }
+    }
+
+    private static let railHeight: CGFloat = 3
+
+    #if os(iOS)
+    private static let factValueFont = Font.outfit(points: 17)
+    #else
+    private static let factValueFont = Font.outfit(13)
     #endif
 }

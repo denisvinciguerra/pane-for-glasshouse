@@ -6,6 +6,12 @@ final class DemoTVTests: XCTestCase {
         try await tv.get("/api/stats", as: Stats.self)
     }
 
+    func testCapsOfferThePointer() async throws {
+        let caps = try await DemoTV().get("/api/caps", as: Caps.self)
+        XCTAssertTrue(caps.pointer)
+        XCTAssertEqual(caps.pointerRate, 120)
+    }
+
     func testServesStatsWithoutNetwork() async throws {
         let s = try await stats(DemoTV())
         XCTAssertEqual(s.device?.model, "OLED65G45LW")
@@ -60,6 +66,22 @@ final class DemoTVTests: XCTestCase {
         XCTAssertEqual(s.appId, "netflix")
     }
 
+    func testDemoHasTwelveApps() async throws {
+        let s = try await stats(DemoTV())
+        XCTAssertEqual(s.apps?.count, 12)
+        XCTAssertEqual(s.apps?.map(\.title), [
+            "PearTV", "NetMovies", "Musicify", "Reelo", "Kinoa", "Arcadia",
+            "Wavely", "Pitchly", "Lumen", "Orbit", "Nimbus", "Spoolr",
+        ])
+    }
+
+    func testLaunchingAnInventedApp() async throws {
+        let tv = DemoTV()
+        try await tv.send(.launchApp("kinoa"))
+        let s = try await stats(tv)
+        XCTAssertEqual(s.displayTitle, "Kinoa")
+    }
+
     func testPictureModeCommandUpdatesThePictureRow() async throws {
         let tv = DemoTV()
         try await tv.send(.pictureMode("hdrCinema"))
@@ -85,7 +107,6 @@ final class DemoTVTests: XCTestCase {
 
     func testDemoAppsAreInvented() async throws {
         let s = try await stats(DemoTV())
-        XCTAssertEqual(s.apps?.map(\.title), ["PearTV", "NetMovies", "Musicify"])
         XCTAssertEqual(s.inputs, ["hdmi1": "Pear", "hdmi2": "PS7", "hdmi3": "YBox", "hdmi4": "PC"])
     }
 

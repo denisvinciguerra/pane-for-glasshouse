@@ -88,7 +88,7 @@ private struct TVRow: View {
         HStack(spacing: 10) {
             ZStack { if isActive { OnDot(size: 6) } }.frame(width: 6)
             VStack(alignment: .leading, spacing: 2) {
-                Text(verbatim: tv.name).font(.manrope(12)).lineLimit(1)
+                Text(verbatim: tv.name).font(.outfit(14.5)).lineLimit(1)
                 Text(verbatim: addressText).font(.manrope(10.5)).foregroundStyle(palette.label).lineLimit(1)
             }
             Spacer(minLength: 8)
@@ -204,7 +204,7 @@ struct TVFinder: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                Text(verbatim: tv.name).font(.manrope(19, .light)).padding(.bottom, 4)
+                Text(verbatim: tv.name).font(.outfit(23, .thin)).padding(.bottom, 4)
                 SettingsNote("Saved at \(tv.host):\(String(tv.port)). Touch the server that is this TV to give it its new address.")
                     .padding(.bottom, 18)
                 HStack(alignment: .firstTextBaseline) {
@@ -285,9 +285,9 @@ private struct FinderRow: View {
             HStack(spacing: 10) {
                 VStack(alignment: .leading, spacing: 2) {
                     if let name = candidate.model {
-                        Text(verbatim: name).font(.manrope(12))
+                        Text(verbatim: name).font(.outfit(14.5))
                     } else {
-                        Text("Glasshouse TV").font(.manrope(12))
+                        Text("Glasshouse TV").font(.outfit(14.5))
                     }
                     Text(verbatim: "\(candidate.host):\(String(candidate.port))")
                         .font(.manrope(10.5))

@@ -31,6 +31,11 @@ public enum Command: Equatable, Sendable {
     case lgSetting(id: String, SettingValue)
     case screenOff, screenOn, powerOff, powerOn
     case sleepTimer(String)
+    /// Types `text` after deleting `replace` characters; `full` is the whole field text, when known.
+    case sendText(text: String, replace: Int, full: String?)
+    /// Sends the whole field text and presses Enter.
+    case submitText(full: String)
+    case keyboardKey(String)
 
     /// `{"action": …, "value": …}`; `value` is absent for actions that take none.
     public var body: JSONValue {
@@ -54,6 +59,14 @@ public enum Command: Equatable, Sendable {
         case .powerOff: return Self.make("powerOff")
         case .powerOn: return Self.make("powerOn")
         case .sleepTimer(let s): return Self.make("sleepTimer", .string(s))
+        case .sendText(let text, let replace, let full):
+            var value: [String: JSONValue] = ["text": .string(text), "replace": .number(Double(replace))]
+            if let full { value["full"] = .string(full) }
+            return Self.make("sendText", .object(value))
+        case .submitText(let full):
+            return Self.make("sendText", .object([
+                "text": .string(""), "replace": .number(0), "full": .string(full), "enter": .bool(true)]))
+        case .keyboardKey(let key): return Self.make("keyboardKey", .string(key))
         }
     }
 

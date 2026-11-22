@@ -10,6 +10,7 @@ struct AboutPane: View {
     private static let license = URL(string: "https://github.com/denisvinciguerra/pane-for-glasshouse/blob/main/LICENSE")!
     private static let glasshouse = URL(string: "https://github.com/rorygallagher2024/glasshouse")!
     private static let manrope = URL(string: "https://github.com/googlefonts/manrope")!
+    private static let outfit = URL(string: "https://github.com/Outfitio/Outfit-Fonts")!
     private static let sparkle = URL(string: "https://sparkle-project.org")!
 
     var body: some View {
@@ -50,6 +51,7 @@ struct AboutPane: View {
                 VStack(alignment: .leading, spacing: 8) {
                     credit("Glasshouse", by: "by Rory Gallagher", license: "MIT", url: Self.glasshouse)
                     credit("Manrope", by: "by Mikhail Sharanda", license: "OFL", url: Self.manrope)
+                    credit("Outfit", by: "by Rodrigo Fuenzalida", license: "OFL", url: Self.outfit)
                     credit("Sparkle", by: "by the Sparkle Project", license: "MIT", url: Self.sparkle)
                 }
                 .padding(.top, 10)

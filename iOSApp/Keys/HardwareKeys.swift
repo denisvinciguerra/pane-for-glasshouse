@@ -44,6 +44,13 @@ import UIKit
     }
 }
 
+extension EnvironmentValues {
+    /// Whether a hardware keyboard is attached: the pointer's pad then takes the keys as it shows.
+    @Entry var hardwareKeyboard: HardwareKeyboard?
+    /// A sheet is over the remote (Settings, the TV finder, the action editor): the keys are the sheet's.
+    @Entry var sheetOverRemote = false
+}
+
 /// The iPad's hardware keyboard working the remote, as the Mac's keyboard does while the popover is
 /// open: a hidden view takes the keys while `active` (Pane in front, no sheet over the remote) and
 /// no text field has them, and hands each press to the keyboard controller. A key Pane does not

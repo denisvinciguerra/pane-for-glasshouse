@@ -22,6 +22,7 @@ struct PinnedSection: View {
     let controlsOff: Bool
     @Environment(\.keyboard) private var keyboard
     @Environment(\.palette) private var palette
+    @Environment(\.keyShape) private var keyShape
     /// The pin being dragged, while the pins are edited.
     @State private var dragging: UUID?
     #if os(iOS)
@@ -118,20 +119,20 @@ struct PinnedSection: View {
                     .resizable()
                     .interpolation(.high)
                     .frame(width: Self.iconSize, height: Self.iconSize)
+                    // The tile's width, not the icon's: on iOS, where the tile is a little narrower
+                    // than the icon, the icon fills it, cut by the key's shape, instead of widening it.
+                    .frame(minWidth: 0, maxWidth: .infinity)
                     .accessibilityLabel(Text(verbatim: action.title))
             } else {
-                Text(verbatim: action.title)
-                    #if os(iOS)
-                    .font(.manrope(8))
-                    #endif
-                    .textCase(.uppercase)
-                    .tracking(1)
-                    .lineLimit(2)
-                    .multilineTextAlignment(.center)
-                    .minimumScaleFactor(0.8)
+                #if os(iOS)
+                Text(verbatim: action.title).nameOnKey(lines: 2)
+                #else
+                KeyName(name: action.title)
+                #endif
             }
         }
         .help(icon == nil ? "" : action.title)
+        .accessibilityHint(Text(verbatim: ""))
         .keyed(.action(action.id))
         .disabled(!editing && controlsOff && !session.canTrigger(action))
         #if os(iOS)
@@ -284,8 +285,8 @@ struct PinnedSection: View {
                 plus
                     .foregroundStyle(palette.fg.opacity(0.5))
                     .frame(maxWidth: .infinity, minHeight: Self.iconSize, maxHeight: Self.iconSize)
-                    .overlay(Rectangle().strokeBorder(palette.line, style: StrokeStyle(lineWidth: 1, dash: [3, 2])))
-                    .contentShape(Rectangle())
+                    .overlay(keyShape.strokeInside(palette.line, style: StrokeStyle(lineWidth: 1, dash: [3, 2])))
+                    .contentShape(keyShape)
             }
             .menuStyle(.button)
             .buttonStyle(.plain)
@@ -351,7 +352,8 @@ struct PinnedSection: View {
     private var background: IconColor { palette.bgComponents }
 }
 
-private extension IconColor {
+extension IconColor {
+    /// The colour as SwiftUI draws it.
     var color: Color { Color(.sRGB, red: red, green: green, blue: blue) }
 }
 
@@ -383,9 +385,9 @@ private struct EditPinsButton: View {
     }
 }
 
-/// Done, right of Pinned while the pins are edited: the label's size and tracking, in the foreground's colour, dimmed
-/// under the pointer or pressed.
-private struct PinsLink: View {
+/// Done, right of Pinned while the pins are edited (and the Apps tab's Pin… and Done): the label's size and
+/// tracking, in the foreground's colour, dimmed under the pointer or pressed.
+struct PinsLink: View {
     let title: LocalizedStringKey
     let action: () -> Void
     @State private var hovered = false
@@ -546,13 +548,14 @@ struct PinsListAnchor: PreferenceKey {
     }
 }
 
-/// The pins' "+" list, in a white frame like the keys' bar: the unpinned actions, each with its
+/// The pins' "+" list, in a white frame with a key's corners: the unpinned actions, each with its
 /// icon and its keys, which a click pins again, then "New Action…". Drawn over the popover, above
 /// the "+" (under it, only the footer is left); a click anywhere else or Esc closes it.
 struct PinsList: View {
     let model: AppModel
     let keyboard: KeyboardController
     @Environment(\.palette) private var palette
+    @Environment(\.keyShape) private var keyShape
 
     static let width: CGFloat = 236
 
@@ -571,6 +574,7 @@ struct PinsList: View {
                     HStack(spacing: 7) {
                         icon(action)
                         Text(verbatim: action.title)
+                            .font(.outfit(14))
                             .lineLimit(1)
                             .truncationMode(.tail)
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -603,7 +607,9 @@ struct PinsList: View {
         .font(.manrope(12))
         .frame(width: Self.width)
         .background(palette.bg)
-        .overlay(Rectangle().strokeBorder(palette.fg, lineWidth: 1))
+        // A menu's corners: a key's.
+        .clipShape(keyShape)
+        .overlay(keyShape.strokeInside(palette.fg, style: StrokeStyle(lineWidth: 1)))
         .shadow(color: .black.opacity(0.5), radius: 14, y: 8)
     }
 
@@ -617,8 +623,8 @@ struct PinsList: View {
     }
 }
 
-/// A row of the pins' list: lit under the pointer or pressed.
-private struct PinsListRowStyle: ButtonStyle {
+/// A row of the pins' list, and of the Apps tab's: lit under the pointer or pressed.
+struct PinsListRowStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         Lit(label: configuration.label, pressed: configuration.isPressed)
     }
@@ -637,7 +643,8 @@ private struct PinsListRowStyle: ButtonStyle {
     }
 }
 
-private struct IconRequest: Equatable {
+/// What the icons are asked for: again for other apps, another session, or a TV that answers again.
+struct IconRequest: Equatable {
     let apps: [String]
     let session: ObjectIdentifier
     let reachable: Bool

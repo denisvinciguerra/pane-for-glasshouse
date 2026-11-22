@@ -17,7 +17,9 @@ struct PinnedPane: View {
                     ForEach(Array(pinned.enumerated()), id: \.element.id) { index, action in
                         PreferencesRow {
                             HStack(spacing: 12) {
+                                // A pin's name, in Outfit as its key shows it.
                                 Text(verbatim: action.title)
+                                    .font(.outfit(13.5))
                                     .lineLimit(1)
                                     .truncationMode(.tail)
                                     .frame(maxWidth: .infinity, alignment: .leading)

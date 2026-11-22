@@ -20,6 +20,7 @@ struct ActionEditorView: View {
     /// it went back to its top every couple of seconds).
     @State private var menus: EditorMenus
     @Environment(\.palette) private var palette
+    @Environment(\.keyShape) private var keyShape
     @FocusState private var titleFocused: Bool
 
     init(model: AppModel, draft: CustomAction, onDone: @escaping () -> Void) {
@@ -132,7 +133,7 @@ struct ActionEditorView: View {
             Group {
                 if isNew { Text("New action") } else { Text("Edit action") }
             }
-            .font(.manrope(13))
+            .font(.outfit(16))
             .padding(.bottom, 10)
             #endif
             SectionLabel("Title")
@@ -141,7 +142,8 @@ struct ActionEditorView: View {
                 Text("Title")
             }
             .textFieldStyle(.plain)
-            .font(.manrope(12))
+            // A pin's name, as its key shows it.
+            .font(.outfit(14.5))
             .foregroundStyle(palette.fg)
             .autocorrectionDisabled()
             .focused($titleFocused)
@@ -153,7 +155,7 @@ struct ActionEditorView: View {
             #else
             .frame(height: 30)
             #endif
-            .overlay(Rectangle().strokeBorder(titleFocused ? palette.fg : palette.line, lineWidth: 1))
+            .overlay(keyShape.strokeInside(titleFocused ? palette.fg : palette.line, style: StrokeStyle(lineWidth: 1)))
         }
     }
 
@@ -497,7 +499,7 @@ private struct StepEditor: View {
     }
 }
 
-/// A number typed in a ruled box, and the range after it. Each keystroke that makes a number
+/// A number typed in a field with a key's corners, and the range after it. Each keystroke that makes a number
 /// hands it on, rounded and kept within the range, so Save always gets what is typed even
 /// without Return; the box shows that value again on Return or when it loses the focus.
 private struct NumberField: View {
@@ -507,13 +509,14 @@ private struct NumberField: View {
     let onChange: (Double) -> Void
     @State private var text = ""
     @Environment(\.palette) private var palette
+    @Environment(\.keyShape) private var keyShape
     @FocusState private var focused: Bool
 
     var body: some View {
         HStack(spacing: 8) {
             TextField(text: $text, prompt: nil) { Text("Value") }
                 .textFieldStyle(.plain)
-                .font(.manrope(11))
+                .font(.outfit(13))
                 .monospacedDigit()
                 .foregroundStyle(palette.fg)
                 .autocorrectionDisabled()
@@ -527,7 +530,7 @@ private struct NumberField: View {
                 #else
                 .frame(width: 64, height: StepEditor.controlHeight)
                 #endif
-                .overlay(Rectangle().strokeBorder(focused ? palette.fg : palette.line, lineWidth: 1))
+                .overlay(keyShape.strokeInside(focused ? palette.fg : palette.line, style: StrokeStyle(lineWidth: 1)))
                 .onAppear { text = Self.text(value) }
                 .onChange(of: text) { _, typed in
                     if let n = RowLayout.typedNumber(typed, row: row), n != value { onChange(n) }

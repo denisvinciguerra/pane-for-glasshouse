@@ -2,6 +2,9 @@ import Foundation
 import Observation
 import SwiftUI
 
+/// What `ActionStore.pin(onlyStep:title:for:)` did.
+public enum PinResult: Equatable, Sendable { case alreadyPinned, repinned(UUID), created(UUID) }
+
 /// Custom actions, their keys and their pins, kept per TV (`TVConfig.id`).
 /// Defaults "actions": JSON `[tvUUID: [CustomAction]]`; "pins": JSON `[tvUUID: [actionUUID]]`.
 @MainActor @Observable public final class ActionStore {
@@ -41,7 +44,40 @@ import SwiftUI
 
     /// Whether a pinned action of this TV does just this step, whatever its title.
     public func isPinned(onlyStep step: ActionStep, for tv: UUID) -> Bool {
-        pinned(for: tv).contains { $0.steps.count == 1 && $0.steps[0].hasSameEffect(as: step) }
+        pinned(for: tv).contains { Self.does(only: step, $0) }
+    }
+
+    /// Pins an action that does just this step, without ever making a duplicate: nothing if one is
+    /// pinned, else the first unpinned one is pinned again, else a new action is saved and pinned.
+    /// The pin goes at the end.
+    @discardableResult
+    public func pin(onlyStep step: ActionStep, title: String, for tv: UUID) -> PinResult {
+        guard !isPinned(onlyStep: step, for: tv) else { return .alreadyPinned }
+        let result: PinResult
+        if let old = actions(for: tv).first(where: { Self.does(only: step, $0) }) {
+            pinsByTV[tv.uuidString, default: []].append(old.id)
+            result = .repinned(old.id)
+        } else {
+            let action = CustomAction(title: title, steps: [step])
+            actionsByTV[tv.uuidString, default: []].append(action)
+            pinsByTV[tv.uuidString, default: []].append(action.id)
+            result = .created(action.id)
+        }
+        persist()
+        return result
+    }
+
+    /// Whether the action does just this step.
+    private static func does(only step: ActionStep, _ action: CustomAction) -> Bool {
+        action.steps.count == 1 && action.steps[0].hasSameEffect(as: step)
+    }
+
+    /// Unpins every pinned action that does just this step. The actions stay.
+    public func unpin(onlyStep step: ActionStep, for tv: UUID) {
+        let all = actions(for: tv)
+        let doomed = Set(all.filter { Self.does(only: step, $0) }.map(\.id))
+        pinsByTV[tv.uuidString]?.removeAll { doomed.contains($0) }
+        persist()
     }
 
     /// Replaces the action of the same id, or adds it. The global key stored stays: it only changes

@@ -27,6 +27,17 @@ final class CommandTests: XCTestCase {
     func testScreenOffHasNoValue() {
         XCTAssertEqual(Command.screenOff.body, ["action": "screenOff"])
     }
+    func testTextCommandBodies() throws {
+        XCTAssertEqual(Command.sendText(text: "e", replace: 1, full: "dune").body,
+                       .object(["action": .string("sendText"),
+                                "value": .object(["text": .string("e"), "replace": .number(1), "full": .string("dune")])]))
+        XCTAssertEqual(Command.submitText(full: "dune").body,
+                       .object(["action": .string("sendText"),
+                                "value": .object(["text": .string(""), "replace": .number(0),
+                                                  "full": .string("dune"), "enter": .bool(true)])]))
+        XCTAssertEqual(Command.keyboardKey("backspace").body,
+                       .object(["action": .string("keyboardKey"), "value": .string("backspace")]))
+    }
 }
 
 extension JSONValue: ExpressibleByStringLiteral, ExpressibleByIntegerLiteral, ExpressibleByBooleanLiteral,

@@ -1,7 +1,7 @@
 import PaneKit
 import SwiftUI
 
-/// More: HDMI and Stats, chosen at the top with the popover's tab bar, and whether the server is
+/// More: Game, HDMI and Stats, chosen at the top with the popover's tab bar, and whether the server is
 /// out of date. The page shown is `AppModel.selectedTab`.
 struct MoreTab: View {
     let model: AppModel
@@ -10,7 +10,7 @@ struct MoreTab: View {
     let pages: [PaneTab]
 
     /// What More holds, in this order.
-    static let pages: [PaneTab] = [.hdmi, .stats]
+    static let pages: [PaneTab] = [.game, .hdmi, .stats]
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -22,6 +22,7 @@ struct MoreTab: View {
                 .padding(.horizontal, -Metrics.gutter)
             Group {
                 switch model.selectedTab {
+                case .game: SettingsTab(kind: .game, model: model, session: session)
                 case .stats: StatsTab(model: model, session: session)
                 default: HDMITab(model: model, session: session)
                 }

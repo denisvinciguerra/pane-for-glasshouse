@@ -19,9 +19,9 @@ struct HeaderView: View {
             VStack(alignment: .leading, spacing: 3) {
                 TVMenu(model: model)
                 Text(verbatim: header.model.isEmpty ? "—" : header.model)
-                    .font(.manrope(19, .light))
-                    .tracking(0.38)
+                    .font(.outfit(23, .thin))
                     .lineLimit(1)
+                    .minimumScaleFactor(0.8)
                     .foregroundStyle(header.model.isEmpty ? palette.label : palette.fg)
             }
             .layoutPriority(1)
@@ -39,7 +39,7 @@ struct HeaderView: View {
                 .frame(height: 17)
                 Group {
                     if let nowShowing = header.nowShowing {
-                        Text(verbatim: nowShowing).frame(height: 17)
+                        Text(verbatim: nowShowing).font(.outfit(15)).frame(height: 19)
                     }
                     if header.signal != nil || header.rangeBadge != nil {
                         HStack(spacing: 3) {
@@ -68,7 +68,7 @@ struct HeaderView: View {
                     .sectionLabelStyle()
                     .frame(height: 16)
                 Text(verbatim: header.nowShowing ?? "—")
-                    .font(.manrope(points: 22, .light))
+                    .font(.outfit(points: 30, .thin))
                     .lineLimit(1)
                     .minimumScaleFactor(0.75)
                     .foregroundStyle(live ? palette.fg : palette.fg.opacity(0.40))
@@ -122,13 +122,13 @@ private struct PowerButton: View {
     @Environment(\.keyboard) private var keyboard
 
     var body: some View {
-        GHButton(nil, systemImage: "power", height: Metrics.minTouch) {
+        GHButton(height: Metrics.minTouch, action: {
             model.noteCommandSent()
             Task { await session.togglePower() }
-        }
+        }) { KeyIconView(.power) }
         .frame(width: Metrics.minTouch)
         .disabled(!session.canPower || keyboard?.state.sendsCommands == false)
-        .accessibilityLabel(Text("Power"))
+        .keyName("Power")
         .accessibilityIdentifier("remote.power")
     }
 }

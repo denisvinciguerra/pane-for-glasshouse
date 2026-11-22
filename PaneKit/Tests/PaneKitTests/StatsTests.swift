@@ -61,4 +61,14 @@ final class StatsTests: XCTestCase {
         let s = try JSONDecoder().decode(Stats.self, from: Data(json.utf8))
         XCTAssertEqual(s.apps, [Stats.App(id: "a", title: "A")])
     }
+
+    func testIsForeground() throws {
+        func stats(_ json: String) throws -> Stats { try JSONDecoder().decode(Stats.self, from: Data(json.utf8)) }
+        let jelly = try stats(#"{"app_id":"org.jellyfin.webos","app":"org.jellyfin.webos"}"#)
+        XCTAssertTrue(jelly.isForeground(appID: "org.jellyfin.webos"))
+        XCTAssertFalse(jelly.isForeground(appID: "netflix"))
+        XCTAssertTrue(try stats(#"{"app":"discovery"}"#).isForeground(appID: "com.webos.app.discovery"))
+        XCTAssertTrue(try stats(#"{"app":"netflix"}"#).isForeground(appID: "netflix"))
+        XCTAssertFalse(try stats(#"{"app":"home"}"#).isForeground(appID: "netflix"))
+    }
 }

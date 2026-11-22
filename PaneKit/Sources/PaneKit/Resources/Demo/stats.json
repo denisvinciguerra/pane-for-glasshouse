@@ -513,6 +513,51 @@
       "id": "spotify-beehive",
       "title": "Musicify",
       "iconColor": "#1db954"
+    },
+    {
+      "id": "reelo",
+      "title": "Reelo",
+      "iconColor": "#ec5a2b"
+    },
+    {
+      "id": "kinoa",
+      "title": "Kinoa",
+      "iconColor": "#7b4cf0"
+    },
+    {
+      "id": "arcadia",
+      "title": "Arcadia",
+      "iconColor": "#df2a7e"
+    },
+    {
+      "id": "wavely",
+      "title": "Wavely",
+      "iconColor": "#13a596"
+    },
+    {
+      "id": "pitchly",
+      "title": "Pitchly",
+      "iconColor": "#86c11e"
+    },
+    {
+      "id": "lumen",
+      "title": "Lumen",
+      "iconColor": "#f0a91c"
+    },
+    {
+      "id": "orbit",
+      "title": "Orbit",
+      "iconColor": "#3a6cec"
+    },
+    {
+      "id": "nimbus",
+      "title": "Nimbus",
+      "iconColor": "#4aa8e8"
+    },
+    {
+      "id": "spoolr",
+      "title": "Spoolr",
+      "iconColor": "#a845e6"
     }
   ],
   "privacy": {

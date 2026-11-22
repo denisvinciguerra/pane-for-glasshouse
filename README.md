@@ -9,9 +9,10 @@ A remote for an LG webOS TV running [Glasshouse](https://github.com/rorygallaghe
 <p align="center"><img src="docs/screenshots/hero.png" width="830" alt="Pane's popover under its menu-bar icon: remote, inputs, and pinned Apple TV, Netflix and Spotify tiles"></p>
 
 - Settings are drawn from what the server sends, so a setting added on the server appears without updating the app.
+- Apps: a tab with every app on the TV: click to launch, pin any of them in one click.
 - Pinned items: a setting or a sequence of actions on the Remote tab. A pin that launches an app can show the app's icon. Triggered while the TV is off, it turns the TV on first.
-- Power from any state: on, Active Standby and LG's Always Ready screen. On the Mac, also Wake-on-LAN for a TV in deep standby ([not yet on iPhone and iPad](#iphone-and-ipad)).
-- Pointer: control the TV's cursor like a mouse, from a pad in place of the cross on the Remote tab: click and drag on the Mac, slide a finger on iPhone and iPad; click and scroll too. It needs Glasshouse 0.146 or later with Pointer input turned on (Server › Experimental features).
+- Power from any state: on, Active Standby and LG's Always Ready screen. Wake-on-LAN too, for a TV in deep standby.
+- Pointer: control the TV's cursor like a mouse, from a pad in place of the d-pad on the Remote tab: on the Mac, click and drag, or hold ⌥ and move the mouse (a switch above the pad picks the gesture), and right-click to go back; slide a finger on iPhone and iPad; click and scroll too, and type text into the TV's search fields. It needs Glasshouse 0.146 or later with Pointer input turned on (Server › Experimental features).
 - Several TVs, dark and light themes, English and French.
 
 On the Mac:
@@ -21,12 +22,12 @@ On the Mac:
 
 ## Screenshots
 
-On iPhone and iPad, shown here with the app's demo TV:
+On iPhone, shown here with the app's demo TV:
 
 <table>
   <tr>
     <td align="center" valign="top"><img src="docs/screenshots/iphone-remote.png" width="253" alt="Pane on an iPhone: the whole remote on one screen, with sources and pinned apps"><br><sub>The whole remote on one screen</sub></td>
-    <td align="center" valign="top"><img src="docs/screenshots/ipad-picture.png" width="420" alt="Pane on an iPad: Picture settings"><br><sub>Picture settings on iPad</sub></td>
+    <td align="center" valign="top"><img src="docs/screenshots/iphone-apps.png" width="253" alt="Pane on an iPhone: the Apps tab, every app on the TV in a grid"><br><sub>Every app on the TV, one tap away</sub></td>
   </tr>
 </table>
 
@@ -35,7 +36,7 @@ On the Mac:
 <table>
   <tr>
     <td align="center" valign="top"><img src="docs/screenshots/keys-dark.png" width="328" alt="Remote tab with the keyboard keys and global shortcuts shown"><br><sub>Keys and global shortcuts, set from the bottom bar</sub></td>
-    <td align="center" valign="top"><img src="docs/screenshots/pointer-light.png" width="328" alt="Remote tab in light theme, with the pointer's trackpad in place of the cross"><br><sub>Pointer trackpad, light theme</sub></td>
+    <td align="center" valign="top"><img src="docs/screenshots/pointer-light.png" width="328" alt="Remote tab in light theme, with the pointer's trackpad in place of the d-pad"><br><sub>Pointer trackpad, light theme</sub></td>
   </tr>
   <tr>
     <td align="center" valign="top"><img src="docs/screenshots/picture-dark.png" width="328" alt="Picture tab"><br><sub>Picture settings, as the TV sends them</sub></td>
@@ -66,17 +67,17 @@ Or download the DMG from the [releases](https://github.com/denisvinciguerra/pane
 
 ## Adding a TV
 
-On first launch Pane shows a welcome screen and looks for TVs on the network. On the Mac, the popover opens by itself and searches by SSDP, then on the Mac's subnet on port 8080; on iPhone and iPad, see [below](#iphone-and-ipad). Otherwise, type the TV's address (for example `192.168.1.20`; port 8080 by default) or paste a dashboard link: its `k=` parameter carries the token.
+On first launch Pane shows a welcome screen and looks for TVs on the network. On the Mac, the popover opens by itself and searches by SSDP, then on the Mac's subnet on port 8080; on iPhone and iPad, the welcome screen searches the same way. Otherwise, type the TV's address (for example `192.168.1.20`; port 8080 by default) or paste a dashboard link: its `k=` parameter carries the token.
 
 <p align="center"><img src="docs/screenshots/welcome-dark.png" width="328" alt="Welcome screen: searching the network for a TV, or typing its address"></p>
 
-macOS asks for local network access the first time Pane searches. If it was denied, Pane says so and points to System Settings › Privacy & Security › Local Network.
+macOS asks for local network access the first time Pane searches (iOS too, on iPhone and iPad). On the Mac, if it was denied, Pane says so and points to System Settings › Privacy & Security › Local Network.
 
 With several TVs on the Mac, the ⌄ menu in the header switches TV, and Preferences › TV manages them.
 
 ## iPhone and iPad
 
-The same remote, for the couch: sources, pinned apps and actions, the pad and volume on one screen, Picture, Audio, Game, HDMI and Stats under tabs, and the other TVs as chips showing what they are doing (reading only). Pane for Glasshouse is [on the App Store](https://apps.apple.com/app/id6830095172), free; updates come from the App Store.
+The same remote, for the couch: sources, pinned apps and actions, the pad and volume on one screen, every app on the TV under Apps (tap to launch, long-press to pin), Picture, Audio, Game, HDMI and Stats under tabs, and the other TVs as chips showing what they are doing (reading only). Pane for Glasshouse is [on the App Store](https://apps.apple.com/app/id6830095172), free; updates come from the App Store.
 
 - iPhone: the remote fits one screen. iPad in landscape: two columns, the remote on the right by default (Settings › Remote column › Left swaps them). Portrait, Split View and Slide Over use the iPhone layout.
 - Settings are touch-friendly, with an ⓘ that explains each one. The pins editor reorders by dragging a tile.
@@ -89,7 +90,6 @@ The same remote, for the couch: sources, pinned apps and actions, the pad and vo
 What differs from the Mac:
 
 - **A TV with a token that changed address must be found again by hand.** iOS does not let an app read the ARP table, so nothing proves which host carries the TV's MAC address, and the token is never sent to an unproven host. Pane says the TV is not found and offers to search again or to type the new address. A TV saved without a token is still found again by its MAC address.
-- **Wake-on-LAN and SSDP search need an entitlement from Apple** (multicast networking). Without it Pane finds TVs by sweeping the subnet on the Glasshouse port, or by the address you type, and it can turn on a TV in Active Standby or Always Ready over the network. To wake a TV from deep standby, keep it in Active Standby (Quick Start+ or Always Ready in the TV's settings); Pane says so when the wake-up is refused.
 
 ## Updates
 
@@ -101,7 +101,7 @@ On the Mac, Pane uses [Sparkle](https://sparkle-project.org). It checks once a d
 
 - A TV's token is only ever sent to that TV's saved address. If the TV changed IP address, the Mac app looks for it without any token and sends the token only to the host whose MAC address matches: the one in the Mac's ARP table or, when the table has none for that host, the one in the server's stats. It only looks for a TV saved by an IP address on the Mac's current network, and waits longer between searches while it stays lost (5, 15, then 60 minutes). iOS cannot read the ARP table, so on iPhone and iPad a TV with a token is found again by hand.
 - Tokens are stored in the macOS keychain (the iOS keychain on iPhone and iPad). The iOS app collects no data: no telemetry, no account, no iCloud.
-- To find TVs (on the add screen, or when a saved TV stops answering on the same network), Pane probes the Glasshouse port (8080 by default) on the device's local subnet; the Mac app also sends an SSDP search. Apart from that and, on the Mac, Sparkle's update checks to GitHub (the appcast and, when you install an update, the DMG), it only talks to your TVs. No telemetry.
+- To find TVs (on the add screen, or when a saved TV stops answering on the same network), Pane probes the Glasshouse port (8080 by default) on the device's local subnet, and sends an SSDP search. Turning on a TV in deep standby sends a Wake-on-LAN packet on the local network. Apart from that and, on the Mac, Sparkle's update checks to GitHub (the appcast and, when you install an update, the DMG), it only talks to your TVs. No telemetry.
 
 ## Building
 
@@ -112,7 +112,7 @@ xcodebuild -project Pane.xcodeproj -scheme Pane -configuration Release -scmProvi
 swift test --package-path PaneKit
 ```
 
-The testable logic is in the `PaneKit` package. The Mac app is in `App/`, the iPhone and iPad app in `iOSApp/`, and what they share (the model, theme and views) in `Shared/`; all SwiftUI. The iOS app builds with `xcodebuild -project Pane.xcodeproj -scheme "Pane iOS" -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build` (a device build needs your own signing team). Local builds are ad hoc signed. `-scmProvider system` avoids a keychain prompt when Xcode resolves Sparkle. Releases are signed with a Developer ID and notarized by the maintainer. A source build and the released app are signed differently, so after switching from one to the other macOS asks once per saved token for access to the keychain.
+The testable logic is in the `PaneKit` package. The Mac app is in `App/`, the iPhone and iPad app in `iOSApp/`, and what they share (the model, theme and views) in `Shared/`; all SwiftUI. The iOS app builds with `xcodebuild -project Pane.xcodeproj -scheme "Pane iOS" -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build` (a device build needs your own signing team; a Release device build or an archive also needs Apple's multicast entitlement, so without it remove `CODE_SIGN_ENTITLEMENTS` from `project.yml`; a build without the entitlement, such as a Debug build, finds TVs by sweeping the subnet and cannot wake a TV from deep standby). Local builds are ad hoc signed. `-scmProvider system` avoids a keychain prompt when Xcode resolves Sparkle. Releases are signed with a Developer ID and notarized by the maintainer. A source build and the released app are signed differently, so after switching from one to the other macOS asks once per saved token for access to the keychain.
 
 ## Contributing
 
@@ -122,6 +122,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md). Security issues: [SECURITY.md](SECURITY.
 
 - [Glasshouse](https://github.com/rorygallagher2024/glasshouse) by Rory Gallagher (MIT). The test fixture `PaneKit/Tests/PaneKitTests/Fixtures/ui.html` is a recorded copy of its dashboard page, under the same licence.
 - [Manrope](https://github.com/googlefonts/manrope), SIL Open Font License (`Shared/Resources/Fonts/OFL.txt`).
+- [Outfit](https://github.com/Outfitio/Outfit-Fonts), SIL Open Font License (`Shared/Resources/Fonts/Outfit-OFL.txt`).
 - [Sparkle](https://sparkle-project.org) (MIT).
 
 ## Disclaimer

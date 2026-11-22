@@ -140,6 +140,7 @@ private struct TabContent: View {
     var body: some View {
         switch tab {
         case .remote: RemoteTab(model: model, session: session)
+        case .apps: AppsTab(model: model, session: session)
         case .picture: SettingsTab(kind: .picture, model: model, session: session)
         case .audio: SettingsTab(kind: .audio, model: model, session: session)
         case .game: SettingsTab(kind: .game, model: model, session: session)

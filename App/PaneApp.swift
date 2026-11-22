@@ -52,6 +52,7 @@ struct PaneApp: App {
         // -PaneEditAction demo (the editor on two steps), both on throwaway actions;
         // -PaneOpenPreferences general|tv|keys|pinned|about (the preferences window on that pane);
         // -PaneFirstLaunch YES (no TV, the welcome screen, all on throwaway defaults and tokens);
+        // -PaneNoDiscovery YES (the search for TVs finds nothing: no real TV on the welcome screen);
         // -PaneUpdates YES (Sparkle starts and contacts the feed; else it stays off);
         // -PaneDemoUpdate 1.0.1 (the update bar and the icon's dot for that version, Sparkle off);
         // -PaneDemoSecondTV YES (with -PaneFirstLaunch: a second TV "Bedroom" at 192.0.2.50, written without a probe; it may become the active TV, which then shows as unreachable).

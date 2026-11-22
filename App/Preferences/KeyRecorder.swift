@@ -2,9 +2,9 @@ import AppKit
 import PaneKit
 import SwiftUI
 
-/// A key in a ruled box, dashed without one. A click makes it amber and the next key pressed in
-/// its window is handed on (`KeyRecording`): ⎋ cancels, ⌫ alone clears (nil), any other key is
-/// recorded. A click elsewhere, or the window losing the keyboard, cancels. The keys it catches
+/// A key in a box with a key's corners, dashed without one. A click makes it amber and the next key
+/// pressed in its window is handed on (`KeyRecording`): ⎋ cancels, ⌫ alone clears (nil), any other
+/// key is recorded. A click elsewhere, or the window losing the keyboard, cancels. The keys it catches
 /// go nowhere else: nothing reaches the TV from this window.
 ///
 /// `global`: a global shortcut's recorder, blue while it waits. The key goes through `GlobalKey`:
@@ -18,6 +18,7 @@ struct KeyRecorder: View {
     /// A key without ⌘, ⌃ or ⌥ was pressed during this wait (global only).
     @State private var needsModifier = false
     @Environment(\.palette) private var palette
+    @Environment(\.keyShape) private var keyShape
     @Environment(\.appModel) private var model
 
     init(binding: KeyBinding?, layout: CurrentKeyboardLayout, global: Bool = false,
@@ -45,10 +46,10 @@ struct KeyRecorder: View {
                     .minimumScaleFactor(0.7)
                     .foregroundStyle(recording ? tint : label == nil ? palette.label : palette.fg)
                     .frame(maxWidth: .infinity, minHeight: 24, maxHeight: 24)
-                    .background(recording ? tint.opacity(0.08) : .clear)
-                    .overlay(Rectangle().strokeBorder(recording ? tint : palette.line,
-                                                      style: StrokeStyle(lineWidth: 1, dash: label == nil && !recording ? [2, 2] : [])))
-                    .contentShape(Rectangle())
+                    .background(recording ? tint.opacity(0.08) : .clear, in: keyShape)
+                    .overlay(keyShape.strokeInside(recording ? tint : palette.line,
+                                                   style: StrokeStyle(lineWidth: 1, dash: label == nil && !recording ? [2, 2] : [])))
+                    .contentShape(keyShape)
             }
             .buttonStyle(.plain)
             .background(WindowAnchor(listener: listener))

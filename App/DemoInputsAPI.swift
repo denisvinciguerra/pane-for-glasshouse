@@ -37,6 +37,7 @@ struct DemoInputsAPI: GlasshouseAPI {
     func getText(_ path: String) async throws(APIError) -> String { try await base.getText(path) }
     func getData(_ path: String) async throws(APIError) -> Data { try await base.getData(path) }
     func send(_ command: Command) async throws(APIError) { try await base.send(command) }
+    func sendForResult(_ command: Command) async throws(APIError) -> ControlResult { try await base.sendForResult(command) }
 
     /// A string equal to an input's name becomes the demo name; a longer one that contains a
     /// name of the TV's own ("PS5 Console de jeu (HDMI4)") has it replaced, but not "HDMI 1".

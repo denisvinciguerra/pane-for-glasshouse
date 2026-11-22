@@ -64,7 +64,7 @@ private struct TVRow: View {
     private var line: some View {
         HStack(spacing: 10) {
             ZStack { if isActive { OnDot(size: 6) } }.frame(width: 6)
-            Text(verbatim: tv.name).font(.manrope(12)).lineLimit(1)
+            Text(verbatim: tv.name).font(.outfit(14.5)).lineLimit(1)
             Text(verbatim: addressText).font(.manrope(10.5)).foregroundStyle(palette.label).lineLimit(1)
             Spacer(minLength: 8)
             Group {

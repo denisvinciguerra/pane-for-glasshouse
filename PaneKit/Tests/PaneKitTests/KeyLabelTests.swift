@@ -11,8 +11,8 @@ final class KeyLabelTests: XCTestCase {
     }
 
     func testSpecialKeysHaveGlyphs() {
-        let expected: [(UInt16, String)] = [(126, "↑"), (123, "←"), (36, "↩"), (76, "⌤"), (53, "⎋"), (48, "⇥"),
-                                            (51, "⌫"), (122, "F1"), (117, "⌦"), (115, "↖"), (119, "↘"),
+        let expected: [(UInt16, String)] = [(126, "↑"), (123, "←"), (36, "↩\u{FE0E}"), (76, "⌤"), (53, "⎋"), (48, "⇥"),
+                                            (51, "⌫"), (122, "F1"), (117, "⌦"), (115, "↖\u{FE0E}"), (119, "↘\u{FE0E}"),
                                             (116, "⇞"), (121, "⇟"), (120, "F2"), (111, "F12")]
         for (code, glyph) in expected {
             XCTAssertEqual(KeyLabel.text(KeyBinding(.keyCode(code)), layout: qwerty), glyph, "\(code)")

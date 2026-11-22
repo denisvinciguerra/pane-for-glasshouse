@@ -583,4 +583,46 @@ final class KeyModeStateTests: XCTestCase {
         s.closed()
         XCTAssertEqual(s, KeyModeState())
     }
+
+    private var withT: KeyAssignments {
+        KeyAssignments(slots: [.mute: KeySlot(primary: KeyBinding(.character("t")))])
+    }
+
+    func testTypingPassesAssignedLetter() {
+        var s = KeyModeState()
+        XCTAssertEqual(send(&s, key(17, "t"), withT), .fire(.mute))
+        s.typing = true
+        XCTAssertEqual(send(&s, key(17, "t"), withT), .pass)
+    }
+
+    func testTypingIgnoresOption() {
+        var s = KeyModeState()
+        s.typing = true
+        s.optionChanged(down: true)
+        XCTAssertEqual(s.mode, .normal)
+        XCTAssertFalse(s.optionHeld)
+    }
+
+    func testTypingOffRestoresKeys() {
+        var s = KeyModeState()
+        s.typing = true
+        s.typing = false
+        XCTAssertEqual(send(&s, key(17, "t"), withT), .fire(.mute))
+    }
+
+    func testTypingReleasesOptionAndEndsKeyModes() {
+        var s = KeyModeState()
+        s.optionChanged(down: true)
+        s.typing = true
+        XCTAssertFalse(s.optionHeld)
+        var t = KeyModeState()
+        t.iconClicked()
+        t.setKey(for: .mute)
+        t.typing = true
+        XCTAssertEqual(t.mode, .normal)
+        t.iconClicked()
+        t.select(.mute)
+        XCTAssertEqual(t.mode, .normal)
+        XCTAssertEqual(t.buttonClicked(.mute), .fire(.mute))
+    }
 }

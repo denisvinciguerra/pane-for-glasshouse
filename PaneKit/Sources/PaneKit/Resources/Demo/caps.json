@@ -3,7 +3,9 @@
   "allowControl": true,
   "allowPower": true,
   "origin": "192.0.2.10",
-  "version": "0.132.0",
+  "version": "0.158.0",
+  "pointer": true,
+  "pointerRate": 120,
   "fromHomebrewChannel": false,
   "setupNeeded": false,
   "clockHour12": true

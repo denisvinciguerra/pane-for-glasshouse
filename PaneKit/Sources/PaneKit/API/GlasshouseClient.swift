@@ -19,6 +19,17 @@ public enum APIError: Error, Equatable, Sendable {
 public struct ControlResult: Decodable, Sendable {
     public let ok: Bool
     public let error: String?
+    /// How the server delivered a typing command ("none" when it reached no field).
+    public let method: String?
+    /// Characters a partial `keys` delivery got through before it failed.
+    public let sent: Int?
+
+    public init(ok: Bool, error: String? = nil, method: String? = nil, sent: Int? = nil) {
+        self.ok = ok
+        self.error = error
+        self.method = method
+        self.sent = sent
+    }
 }
 
 public protocol GlasshouseAPI: Sendable {
@@ -27,6 +38,15 @@ public protocol GlasshouseAPI: Sendable {
     func getData(_ path: String) async throws(APIError) -> Data
     /// Throws `.rejected(error)` when the server answers `ok == false`.
     func send(_ command: Command) async throws(APIError)
+    /// Like `send`, but returns the server's reply instead of throwing when `ok` is false.
+    func sendForResult(_ command: Command) async throws(APIError) -> ControlResult
+}
+
+extension GlasshouseAPI {
+    public func sendForResult(_ command: Command) async throws(APIError) -> ControlResult {
+        try await send(command)
+        return ControlResult(ok: true)
+    }
 }
 
 public struct GlasshouseClient: GlasshouseAPI {
@@ -104,6 +124,11 @@ public struct GlasshouseClient: GlasshouseAPI {
     }
 
     public func send(_ command: Command) async throws(APIError) {
+        let result = try await sendForResult(command)
+        if !result.ok { throw .rejected(result.error ?? "") }
+    }
+
+    public func sendForResult(_ command: Command) async throws(APIError) -> ControlResult {
         var req = try request("/api/control")
         req.httpMethod = "POST"
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -119,7 +144,7 @@ public struct GlasshouseClient: GlasshouseAPI {
         } catch {
             throw .decoding(String(describing: error))
         }
-        if !result.ok { throw .rejected(result.error ?? "") }
+        return result
     }
 
     private func request(_ path: String) throws(APIError) -> URLRequest {

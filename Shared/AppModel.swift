@@ -92,7 +92,14 @@ import SwiftUI
         self.keymap = keymap ?? KeymapStore(defaults: defaults)
         self.actions = actions ?? ActionStore(defaults: defaults)
         self.relocator = relocator
+        #if DEBUG
+        // Screenshots (-PaneNoDiscovery YES): the search finds nothing, so no real TV shows on the welcome screen.
+        discovery = UserDefaults.standard.bool(forKey: "PaneNoDiscovery")
+            ? Discovery(ssdp: { SSDPResult(hosts: [], denied: false) }, localHosts: { [] })
+            : Discovery()
+        #else
         discovery = Discovery()
+        #endif
         icons = AppIconStore(directory: Self.iconsDirectory)
         theme = defaults.string(forKey: ThemeMode.defaultsKey).flatMap(ThemeMode.init) ?? .auto
         powersOnDuringMaintenance = defaults.bool(forKey: Self.maintenanceKey)
@@ -436,22 +443,48 @@ import SwiftUI
         pin(.pictureMode(value: value, label: label))
     }
 
-    /// A new pinned action of this one step, unless a pinned action does just that already.
+    /// Launches the app, as a one-step action that is not stored: the messages and the power-on of a
+    /// pin that does just that.
+    func launch(_ app: Stats.App) {
+        guard let session else { return }
+        #if os(iOS)
+        noteCommandSent()
+        #endif
+        Task { await session.trigger(app.launchAction) }
+    }
+
+    /// Pins an action that just launches the app (see `pin(_ step:)`).
+    func pin(app: Stats.App) {
+        pin(.launchApp(id: app.id, title: app.title))
+    }
+
+    /// Unpins every action that just launches the app, without a word. The actions stay.
+    func unpin(app: Stats.App) {
+        guard let tv = activeID else { return }
+        actions.unpin(onlyStep: .launchApp(id: app.id, title: app.title), for: tv)
+    }
+
+    /// Whether a pin of the active TV just launches this app.
+    func isPinned(app id: String) -> Bool {
+        guard let tv = activeID else { return false }
+        return actions.isPinned(onlyStep: .launchApp(id: id, title: ""), for: tv)
+    }
+
+    /// Pins an action of this one step without a duplicate: nothing if one is pinned already (it
+    /// says so), else the first unpinned one again, else a new one.
     private func pin(_ step: ActionStep) {
         guard let tv = activeID, let session else { return }
-        if actions.isPinned(onlyStep: step, for: tv) {
+        switch actions.pin(onlyStep: step, title: step.defaultTitle(sources: currentSources), for: tv) {
+        case .alreadyPinned:
             session.say(String(localized: "Already pinned"))
-            return
+        case .repinned, .created:
+            #if os(iOS)
+            // iOS calls the tab the remote.
+            session.say(String(localized: "Pinned to the remote"))
+            #else
+            session.say(String(localized: "Pinned to Remote"))
+            #endif
         }
-        let action = CustomAction(title: step.defaultTitle(sources: currentSources), steps: [step])
-        actions.save(action, for: tv)
-        actions.pin(action.id, for: tv)
-        #if os(iOS)
-        // iOS calls the tab the remote.
-        session.say(String(localized: "Pinned to the remote"))
-        #else
-        session.say(String(localized: "Pinned to Remote"))
-        #endif
     }
 
     func stop() {
@@ -568,4 +601,9 @@ extension AppModel {
 extension EnvironmentValues {
     /// The app's model, for the key recorders of Settings.
     @Entry var appModel: AppModel?
+}
+
+extension Stats.App {
+    /// The action of a pin that just launches the app: what a tile of Apps runs, not stored.
+    var launchAction: CustomAction { CustomAction(title: title, steps: [.launchApp(id: id, title: title)]) }
 }

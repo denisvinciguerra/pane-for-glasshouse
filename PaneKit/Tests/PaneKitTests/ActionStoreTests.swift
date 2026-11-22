@@ -194,4 +194,51 @@ final class ActionStoreTests: XCTestCase {
         s.save(act, for: tv)
         XCTAssertEqual(s.actions(for: tv), [act])
     }
+
+    private let netflix = ActionStep.launchApp(id: "netflix", title: "Netflix")
+
+    func testPinOnlyStepCreatesAPinnedActionAtTheEnd() {
+        let s = ActionStore(defaults: scratchDefaults()); let tv = UUID()
+        let other = action("Other"); s.save(other, for: tv); s.pin(other.id, for: tv)
+        guard case .created(let id) = s.pin(onlyStep: netflix, title: "Netflix", for: tv) else { return XCTFail() }
+        XCTAssertEqual(s.pinned(for: tv).map(\.id), [other.id, id])
+        XCTAssertEqual(s.actions(for: tv).last?.title, "Netflix")
+        XCTAssertEqual(s.actions(for: tv).last?.steps, [netflix])
+    }
+
+    func testPinOnlyStepTwiceIsAlreadyPinned() {
+        let s = ActionStore(defaults: scratchDefaults()); let tv = UUID()
+        s.pin(onlyStep: netflix, title: "Netflix", for: tv)
+        XCTAssertEqual(s.pin(onlyStep: netflix, title: "Netflix", for: tv), .alreadyPinned)
+        XCTAssertEqual(s.actions(for: tv).count, 1)
+    }
+
+    func testPinOnlyStepRepinsTheFirstUnpinned() {
+        let s = ActionStore(defaults: scratchDefaults()); let tv = UUID()
+        let a = CustomAction(title: "A", steps: [.launchApp(id: "netflix", title: "Old")])
+        let b = CustomAction(title: "B", steps: [.launchApp(id: "netflix", title: "Old")])
+        s.save(a, for: tv); s.save(b, for: tv)
+        XCTAssertEqual(s.pin(onlyStep: netflix, title: "Netflix", for: tv), .repinned(a.id))
+        XCTAssertEqual(s.pinned(for: tv).map(\.id), [a.id])
+        XCTAssertEqual(s.actions(for: tv).count, 2)
+    }
+
+    func testPinOnlyStepIgnoresMultiStepActions() {
+        let s = ActionStore(defaults: scratchDefaults()); let tv = UUID()
+        let multi = CustomAction(title: "M", steps: [netflix, .screenOff])
+        s.save(multi, for: tv); s.pin(multi.id, for: tv)
+        guard case .created = s.pin(onlyStep: netflix, title: "Netflix", for: tv) else { return XCTFail() }
+    }
+
+    func testUnpinOnlyStepUnpinsEveryMatchAndKeepsActions() {
+        let s = ActionStore(defaults: scratchDefaults()); let tv = UUID()
+        let n1 = CustomAction(title: "N1", steps: [netflix])
+        let y = CustomAction(title: "Y", steps: [.launchApp(id: "youtube", title: "YouTube")])
+        let n2 = CustomAction(title: "N2", steps: [netflix])
+        let m = CustomAction(title: "M", steps: [netflix, .screenOff])
+        for a in [n1, y, n2, m] { s.save(a, for: tv); s.pin(a.id, for: tv) }
+        s.unpin(onlyStep: netflix, for: tv)
+        XCTAssertEqual(s.pinned(for: tv).map(\.id), [y.id, m.id])
+        XCTAssertEqual(s.actions(for: tv).count, 4)
+    }
 }
