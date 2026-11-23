@@ -16,6 +16,14 @@ final class DashboardTabsTests: XCTestCase {
         XCTAssertEqual(Set(ids), Set(DashboardTabs.fallback.map(\.id)))
     }
 
+    func testAmpersandInDashboardLabels() {
+        let html = #"<button role="tab" data-tab="mqtt"><span translate="no">HA &amp; MQTT</span></button><button role="tab" data-tab="tools"><span data-t="tab.tools">Tools &amp; diagnostics</span></button>"#
+        XCTAssertEqual(DashboardTabs.parse(html: html), [
+            DashboardTab(id: "mqtt", label: "HA & MQTT"),
+            DashboardTab(id: "tools", label: "Tools & diagnostics")
+        ])
+    }
+
     func testGarbageGivesEmpty() {
         XCTAssertEqual(DashboardTabs.parse(html: "<html></html>"), [])
     }
