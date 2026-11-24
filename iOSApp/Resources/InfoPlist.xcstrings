@@ -18,6 +18,22 @@
           }
         }
       }
+    },
+    "NSMotionUsageDescription" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pane uses the gyroscope to move the TV pointer while the Motion pad is held."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pane utilise le gyroscope pour déplacer le pointeur du téléviseur lorsque le pavé Mouvement est maintenu."
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

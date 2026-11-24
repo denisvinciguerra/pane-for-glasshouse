@@ -11,7 +11,18 @@ import UIKit
 struct PointerPad: View {
     let controller: PointerController
     let typing: TextTyping
+    @State private var settingsShown = false
+    @State private var clickCount = 0
+    @State private var clickFlash = false
+    @State private var touchDriving = false
+    @AppStorage("phonePointerHaptics") private var hapticsEnabled = true
+    @AppStorage("phoneTouchpadSensitivity") private var touchSensitivity = 1.0
+    @AppStorage("phoneTouchpadHaptics") private var touchHaptics = true
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var field = PadField()
+    @State private var motion = PhonePointerMotion()
+    @AppStorage("phonePointerMotion") private var motionSelected = false
+    @AppStorage("phonePointerSensitivity") private var sensitivity = 1.0
     @Environment(\.keyboard) private var keyboard
     @Environment(\.hardwareKeyboard) private var hardware
     @Environment(\.isEnabled) private var isEnabled
@@ -20,21 +31,108 @@ struct PointerPad: View {
     @Environment(\.palette) private var palette
 
     /// The icon's face, and its room in the pad's corner.
-    private static let icon = CGSize(width: 34, height: 28)
+    private static let icon = CGSize(width: 38, height: 28)
     private static let iconMargin: CGFloat = 8
 
+    private var motionMode: Bool { motion.available && motionSelected }
+    private var canDrive: Bool { isEnabled && scenePhase == .active && !sheetOverRemote && !field.up && !settingsShown }
+
+    private var pointerActive: Bool { motionMode ? motion.isDriving : touchDriving }
+    private var borderVisible: Bool { clickFlash || pointerActive }
+
     var body: some View {
-        ZStack(alignment: .bottomTrailing) {
-            PointerSurface(controller: controller, typing: typing, field: field, keyboard: keyboard,
-                           takesKeys: isEnabled && scenePhase != .background && !sheetOverRemote,
-                           hardware: hardware?.connected == true, background: UIColor(palette.bg))
-            TypingEchoView(typing: typing, cornerRoom: Self.icon.width + Self.iconMargin + 4)
-            keyboardIcon
+        VStack(spacing: 6) {
+            if motion.available {
+                Picker("Pointer mode", selection: $motionSelected) {
+                    Text("Touchpad").tag(false)
+                    Text("Motion").tag(true)
+                }
+                .pickerStyle(.segmented)
+                .padding(.horizontal, 8)
+            }
+            ZStack(alignment: .bottomTrailing) {
+                VStack(spacing: 4) {
+                    if motionMode {
+                        if motion.isDriving { Text("Pointer active") }
+                        else { Text("Hold and point · Tap to click") }
+                        Text("Use two fingers to scroll")
+                    } else {
+                        Text("Slide to move · Tap to click\nUse two fingers to scroll")
+                    }
+                    Text("Tap the keyboard to type on the TV")
+                }
+                .font(.manrope(points: 13))
+                .foregroundStyle(palette.label)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .allowsHitTesting(false)
+                PointerSurface(controller: controller, typing: typing, field: field, keyboard: keyboard,
+                               takesKeys: isEnabled && scenePhase != .background && !sheetOverRemote && !settingsShown,
+                               hardware: hardware?.connected == true, background: UIColor(palette.bg),
+                               motion: motion, motionMode: motionMode, canDrive: canDrive,
+                               touchEnabled: isEnabled && scenePhase == .active && !sheetOverRemote && !settingsShown,
+                               touchSensitivity: touchSensitivity, touchHaptics: touchHaptics,
+                               clicked: { clickCount &+= 1 }, drivingChanged: { touchDriving = $0 })
+                TypingEchoView(typing: typing, cornerRoom: 2 * Metrics.minTouch + 16)
+                padControls
+            }
+        }
+        .accessibilityIdentifier("remote.pointerPad")
+        .padding(.top, motion.available ? 8 : 0)
+        .overlay {
+            if borderVisible {
+                RoundedRectangle(cornerRadius: Metrics.keyRadius)
+                    .strokeBorder(clickFlash ? Color.white : palette.fg.opacity(0.65), lineWidth: 1)
+                    .allowsHitTesting(false)
+            }
+        }
+        .animation(reduceMotion ? nil : .easeOut(duration: 0.12), value: borderVisible)
+        .task(id: clickCount) {
+            guard clickCount > 0 else { return }
+            clickFlash = true
+            do { try await Task.sleep(for: .milliseconds(120)) }
+            catch { return }
+            clickFlash = false
+        }
+        .sheet(isPresented: $settingsShown, onDismiss: { keyboard?.typing = false }) {
+            PointerSettingsView(includesMotion: motion.available)
+        }
+        .onChange(of: hapticsEnabled, initial: true) { _, value in motion.hapticsEnabled = value }
+        .onChange(of: sensitivity, initial: true) { _, value in motion.sensitivity = value }
+        .onChange(of: canDrive) { _, enabled in if !enabled { motion.stop() } }
+        .onChange(of: motionMode) { settingsShown = false; motion.stop() }
+        .onDisappear {
+            motion.stop()
+            clickFlash = false
+            touchDriving = false
+            clickCount = 0
         }
     }
 
-    /// Marked while the keyboard is up; a finger's target around its face.
-    private var keyboardIcon: some View {
+    private var padControls: some View {
+        HStack(spacing: 0) {
+            Button {
+                motion.stop()
+                controller.discardPendingMoves()
+                field.dismiss()
+                keyboard?.typing = true
+                settingsShown = true
+            } label: {
+                Image(systemName: "gearshape")
+                    .font(.system(size: 14, weight: .light))
+                    .frame(width: Metrics.minTouch, height: Metrics.minTouch)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(KeyboardIconStyle(on: false, size: Self.icon))
+            .accessibilityLabel(Text("Pointer settings"))
+            .accessibilityIdentifier("remote.pointerSettings")
+            keyboardButton
+        }
+        .padding(.trailing, Self.iconMargin - (Metrics.minTouch - Self.icon.width) / 2)
+        .padding(.bottom, Self.iconMargin - (Metrics.minTouch - Self.icon.height) / 2)
+    }
+
+    private var keyboardButton: some View {
         Button { field.toggle() } label: {
             Image(systemName: "keyboard")
                 .font(.system(size: 13, weight: .light))
@@ -43,8 +141,6 @@ struct PointerPad: View {
                 .contentShape(Rectangle())
         }
         .buttonStyle(KeyboardIconStyle(on: field.up, size: Self.icon))
-        .padding(.trailing, Self.iconMargin - (Metrics.minTouch - Self.icon.width) / 2)
-        .padding(.bottom, Self.iconMargin - (Metrics.minTouch - Self.icon.height) / 2)
         .accessibilityLabel(Text("Type on the TV"))
         .accessibilityIdentifier("remote.pointerKeyboard")
         .accessibilityAddTraits(field.up ? .isSelected : [])
@@ -86,6 +182,8 @@ private struct KeyboardIconStyle: ButtonStyle {
     fileprivate(set) var up = false
     @ObservationIgnored fileprivate weak var field: TypingTextField?
 
+    func dismiss() { _ = field?.resignFirstResponder() }
+
     func toggle() {
         guard let field else { return }
         if field.isFirstResponder {
@@ -105,6 +203,8 @@ final class PointerUIView: UIView {
 
     let field: TypingTextField
     private var scrollViews: [UIScrollView] = []
+    var touchBegan: (() -> Void)?
+    var touchEnded: (() -> Void)?
     /// The pad can send (enabled, in front): otherwise the keyboard goes.
     private(set) var takesKeys = false
     /// A hardware keyboard is attached: the field takes the keys as the pad shows.
@@ -200,12 +300,19 @@ final class PointerUIView: UIView {
         scrollViews.removeAll()
     }
 
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        if event?.allTouches?.count == 1 { touchBegan?() }
+        super.touchesBegan(touches, with: event)
+    }
+
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+        touchEnded?()
         restoreScrolling()
         super.touchesEnded(touches, with: event)
     }
 
     override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
+        touchEnded?()
         restoreScrolling()
         super.touchesCancelled(touches, with: event)
     }
@@ -228,18 +335,37 @@ private struct PointerSurface: UIViewRepresentable {
     let hardware: Bool
     /// The screen's, under the iPhone's bar above the keyboard.
     let background: UIColor
+    let motion: PhonePointerMotion
+    let motionMode: Bool
+    let canDrive: Bool
+    let touchEnabled: Bool
+    let touchSensitivity: Double
+    let touchHaptics: Bool
+    let clicked: () -> Void
+    let drivingChanged: (Bool) -> Void
 
     func makeUIView(context: Context) -> PointerUIView {
         let text = TypingTextField(typing: typing)
         text.keyboard = keyboard
         text.accessoryBackground = background
         let view = PointerUIView(field: text)
+        view.touchBegan = { [weak coordinator = context.coordinator] in coordinator?.touchBegan() }
+        view.touchEnded = { [weak motion] in motion?.stop() }
         view.isMultipleTouchEnabled = true
         let move = UIPanGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.moved(_:)))
         move.minimumNumberOfTouches = 1
         move.maximumNumberOfTouches = 1
         move.delegate = context.coordinator
         view.addGestureRecognizer(move)
+        let hold = UILongPressGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.held(_:)))
+        hold.minimumPressDuration = 0.15
+        hold.cancelsTouchesInView = false
+        hold.allowableMovement = 1000
+        hold.numberOfTouchesRequired = 1
+        hold.delegate = context.coordinator
+        view.addGestureRecognizer(hold)
+        context.coordinator.moveGesture = move
+        context.coordinator.holdGesture = hold
         let scroll = UIPanGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.scrolled(_:)))
         scroll.minimumNumberOfTouches = 2
         scroll.maximumNumberOfTouches = 2
@@ -247,6 +373,7 @@ private struct PointerSurface: UIViewRepresentable {
         view.addGestureRecognizer(scroll)
         let tap = UITapGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.tapped))
         tap.require(toFail: scroll)
+        tap.require(toFail: hold)
         view.addGestureRecognizer(tap)
         field.field = text
         text.addAction(UIAction { [weak field, weak text, weak view] _ in
@@ -261,26 +388,66 @@ private struct PointerSurface: UIViewRepresentable {
         }, for: [.editingDidBegin, .editingDidEnd])
         typing.clearField = { [weak text] in text?.setText("") }
         view.update(takesKeys: takesKeys, hardware: hardware)
+        context.coordinator.update(motionMode: motionMode, canDrive: canDrive, touchEnabled: touchEnabled, sensitivity: touchSensitivity, haptics: touchHaptics, clicked: clicked, drivingChanged: drivingChanged)
         return view
     }
 
     func updateUIView(_ view: PointerUIView, context: Context) {
+        context.coordinator.update(motionMode: motionMode, canDrive: canDrive, touchEnabled: touchEnabled, sensitivity: touchSensitivity, haptics: touchHaptics, clicked: clicked, drivingChanged: drivingChanged)
         view.field.keyboard = keyboard
         view.field.accessoryBackground = background
         view.update(takesKeys: takesKeys, hardware: hardware)
     }
 
-    func makeCoordinator() -> Coordinator { Coordinator(controller: controller, typing: typing) }
+    func makeCoordinator() -> Coordinator { Coordinator(controller: controller, typing: typing, motion: motion) }
 
     final class Coordinator: NSObject, UIGestureRecognizerDelegate {
         private let controller: PointerController
         private let typing: TextTyping
+        private let motion: PhonePointerMotion
+        weak var moveGesture: UIPanGestureRecognizer?
+        weak var holdGesture: UILongPressGestureRecognizer?
+        private let touchFeedback = PointerPadHaptics()
+        private var clicked: () -> Void = {}
+        private var drivingChanged: (Bool) -> Void = { _ in }
+        private var touchDriving = false
+        private var sensitivity = 1.0
+        private var haptics = true
+        private var usesMotion = false
         private var moveCarry = CGPoint.zero
         private var scrollCarry = CGPoint.zero
 
-        init(controller: PointerController, typing: TextTyping) {
+        init(controller: PointerController, typing: TextTyping, motion: PhonePointerMotion) {
             self.controller = controller
             self.typing = typing
+            self.motion = motion
+        }
+
+        func update(motionMode: Bool, canDrive: Bool, touchEnabled: Bool, sensitivity: Double, haptics: Bool, clicked: @escaping () -> Void, drivingChanged: @escaping (Bool) -> Void) {
+            self.clicked = clicked
+            self.drivingChanged = drivingChanged
+            usesMotion = motionMode
+            self.sensitivity = sensitivity.isFinite ? min(max(sensitivity, 0.5), 2.5) : 1
+            self.haptics = haptics
+            moveGesture?.isEnabled = !motionMode && touchEnabled
+            holdGesture?.isEnabled = motionMode && canDrive
+            if !motionMode || !canDrive { motion.stop() }
+        }
+
+        func touchBegan() {
+            guard usesMotion, holdGesture?.isEnabled == true else { return }
+            motion.impact()
+        }
+
+        @objc func held(_ gesture: UILongPressGestureRecognizer) {
+            if gesture.state == .began {
+                typing.forget()
+                (gesture.view as? PointerUIView)?.holdScrolling()
+                motion.start(controller: controller)
+            } else if gesture.state != .changed {
+                motion.stop()
+                (gesture.view as? PointerUIView)?.restoreScrolling()
+            }
         }
 
         func gestureRecognizer(_ first: UIGestureRecognizer,
@@ -289,19 +456,27 @@ private struct PointerSurface: UIViewRepresentable {
         private func finish(_ gesture: UIGestureRecognizer) {
             if gesture.state == .ended || gesture.state == .cancelled || gesture.state == .failed {
                 (gesture.view as? PointerUIView)?.restoreScrolling()
+                if touchDriving {
+                    touchDriving = false
+                    drivingChanged(false)
+                    touchFeedback.impact(enabled: haptics)
+                }
             }
         }
 
         @objc func moved(_ gesture: UIPanGestureRecognizer) {
             if gesture.state == .began {
+                touchDriving = true
+                drivingChanged(true)
+                touchFeedback.impact(enabled: haptics)
                 moveCarry = .zero
                 typing.forget()
                 (gesture.view as? PointerUIView)?.holdScrolling()
             }
             let translation = gesture.translation(in: gesture.view)
             gesture.setTranslation(.zero, in: gesture.view)
-            moveCarry.x += translation.x * 1.5
-            moveCarry.y += translation.y * 1.5
+            moveCarry.x += translation.x * 1.5 * sensitivity
+            moveCarry.y += translation.y * 1.5 * sensitivity
             let dx = Int(moveCarry.x)
             let dy = Int(moveCarry.y)
             moveCarry.x -= CGFloat(dx)
@@ -312,6 +487,7 @@ private struct PointerSurface: UIViewRepresentable {
 
         @objc func scrolled(_ gesture: UIPanGestureRecognizer) {
             if gesture.state == .began {
+                motion.stop()
                 scrollCarry = .zero
                 typing.forget()
                 (gesture.view as? PointerUIView)?.holdScrolling()
@@ -329,6 +505,9 @@ private struct PointerSurface: UIViewRepresentable {
         }
 
         @objc func tapped() {
+            clicked()
+            if usesMotion { motion.impact() }
+            else { touchFeedback.impact(enabled: haptics) }
             typing.forget()
             controller.click()
         }

@@ -25,6 +25,8 @@
 		<string>Manrope.ttf</string>
 		<string>Outfit.ttf</string>
 	</array>
+	<key>NSMotionUsageDescription</key>
+	<string>Pane uses the gyroscope to move the TV pointer while the Motion pad is held.</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>Pane talks to your TV on your local network.</string>
 	<key>UILaunchScreen</key>

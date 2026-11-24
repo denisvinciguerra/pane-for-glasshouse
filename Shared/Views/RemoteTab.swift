@@ -434,23 +434,6 @@ extension RemoteTab {
 
     private func pointerPad(buttonsOff: Bool) -> some View {
         ZStack {
-            // Under the pad, whose letters cover it while they show.
-            VStack(spacing: 0) {
-                Text("Slide to move · Tap to click\nUse two fingers to scroll")
-                    .foregroundStyle(palette.label)
-                Text("Tap the keyboard to type on the TV")
-                    .foregroundStyle(palette.fg.opacity(0.85))
-            }
-            .font(.manrope(points: 13))
-            .multilineTextAlignment(.center)
-            .allowsHitTesting(false)
-            // Fills the pad and carries its id: the app previews read the pad's frame from it.
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .contentShape(.accessibility, Rectangle())
-            .accessibilityElement(children: .ignore)
-            .accessibilityLabel(Text("Slide to move · Tap to click\nUse two fingers to scroll") + Text(verbatim: " ")
-                                + Text("Tap the keyboard to type on the TV"))
-            .accessibilityIdentifier("remote.pointerPad")
             // A new controller or typing (another TV) needs a new view: the old one keeps its own.
             if let pointerController, let typing {
                 PointerPad(controller: pointerController, typing: typing)

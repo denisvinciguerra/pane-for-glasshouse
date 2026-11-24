@@ -2,6 +2,10 @@
 
 All notable changes to Pane for Glasshouse. Versions follow [Semantic Versioning](https://semver.org).
 
+## Unreleased
+
+- iPhone: a Motion pointer mode with hold-to-move, tap-to-click and two-finger scrolling. Pointer settings offer separate sensitivity and vibration switches for Touchpad and Motion; the pad highlights movement and clicks.
+
 ## 1.3.0
 
 - Demo: "Try without a TV" has the pointer's touchpad and keyboard, and a full Apps grid.
