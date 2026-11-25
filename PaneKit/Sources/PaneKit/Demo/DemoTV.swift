@@ -26,7 +26,45 @@ public actor DemoTV: GlasshouseAPI {
 
     // MARK: GlasshouseAPI
 
+    private var runningApps: [[String: Any]] = [
+        ["id": "youtube.leanback.v4", "title": "YouTube", "mb": 182, "foreground": true],
+        ["id": "netflix", "title": "Netflix", "mb": 94, "foreground": false],
+        ["id": "com.webos.app.browser", "title": "Web Browser", "mb": 63, "foreground": false]
+    ]
+
+    private var recentApps: [[String: Any]] = [
+        ["id": "netflix", "title": "Netflix"],
+        ["id": "com.apple.appletv", "title": "Apple TV"],
+        ["id": "youtube.leanback.v4", "title": "YouTube"]
+    ]
+
+    public func closeRecentApp(id: String) async throws(APIError) {
+        try await closeApp(id: id)
+        recentApps.removeAll { $0["id"] as? String == id }
+    }
+
+    public func closeApp(id: String) async throws(APIError) {
+        runningApps.removeAll { $0["id"] as? String == id }
+        if stats["app_id"] as? String == id {
+            var current = stats
+            for key in ["app", "app_id", "app_name", "display_title"] { current.removeValue(forKey: key) }
+            stats = current
+        }
+    }
+
     public func get<T: Decodable & Sendable>(_ path: String, as: T.Type) async throws(APIError) -> T {
+        if path == "/api/home/recents" {
+            do {
+                let data = try JSONSerialization.data(withJSONObject: ["ok": true, "apps": recentApps])
+                return try JSONDecoder().decode(T.self, from: data)
+            } catch { throw .decoding(String(describing: error)) }
+        }
+        if path == "/api/apps" {
+            do {
+                let data = try JSONSerialization.data(withJSONObject: ["writable": true, "running": runningApps])
+                return try JSONDecoder().decode(T.self, from: data)
+            } catch { throw .decoding(String(describing: error)) }
+        }
         guard let name = Self.document(for: path), let json = documents[name] else { throw .http(404) }
         do {
             let data = try JSONSerialization.data(withJSONObject: json)
@@ -122,6 +160,16 @@ public actor DemoTV: GlasshouseAPI {
         guard let apps = stats["apps"] as? [JSON], let app = apps.first(where: { $0["id"] as? String == id }) else { return }
         var s = stats
         let title = app["title"] as? String ?? id
+        if !runningApps.contains(where: { $0["id"] as? String == id }) {
+            runningApps.append(["id": id, "title": title])
+        }
+        runningApps = runningApps.map { app in
+            var app = app
+            app["foreground"] = app["id"] as? String == id
+            return app
+        }
+        recentApps.removeAll { $0["id"] as? String == id }
+        recentApps.insert(["id": id, "title": title], at: 0)
         s["app"] = id
         s["app_id"] = id
         s["app_name"] = title

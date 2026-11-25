@@ -9,6 +9,7 @@ A remote for an LG webOS TV running [Glasshouse](https://github.com/rorygallaghe
 <p align="center"><img src="docs/screenshots/hero.png" width="830" alt="Pane's popover under its menu-bar icon: remote, inputs, and pinned Apple TV, Netflix and Spotify tiles"></p>
 
 - Settings are drawn from what the server sends, so a setting added on the server appears without updating the app.
+- Apps: Recent apps keeps the TV’s recent order (with the app on screen added at the top when omitted by the TV), marks apps on screen or in memory and shows RAM use for running apps. Other running apps appear below under In background. Select an app to open it; closing a recent card stops its app and removes the card, while background apps are stopped without changing the recent list. Closing the on-screen app asks for confirmation. Close all stops the apps in both lists and removes recent cards after confirmation; any failures remain visible. The list refreshes on screen-app changes, after closing apps and every ten seconds while visible.
 - Apps: a tab with every app on the TV: click to launch, pin any of them in one click.
 - Pinned items: a setting or a sequence of actions on the Remote tab. A pin that launches an app can show the app's icon. Triggered while the TV is off, it turns the TV on first.
 - Power from any state: on, Active Standby and LG's Always Ready screen. Wake-on-LAN too, for a TV in deep standby.

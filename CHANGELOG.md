@@ -2,6 +2,10 @@
 
 All notable changes to Pane for Glasshouse. Versions follow [Semantic Versioning](https://semver.org).
 
+## Unreleased
+
+- Apps: show the TV’s recent apps with on-screen and memory status, RAM use and a separate background list. Open or close apps, or close both lists at once, with confirmation before interrupting playback.
+
 ## 1.3.0
 
 - Demo: "Try without a TV" has the pointer's touchpad and keyboard, and a full Apps grid.

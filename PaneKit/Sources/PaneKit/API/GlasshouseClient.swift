@@ -37,12 +37,17 @@ public protocol GlasshouseAPI: Sendable {
     func getText(_ path: String) async throws(APIError) -> String
     func getData(_ path: String) async throws(APIError) -> Data
     /// Throws `.rejected(error)` when the server answers `ok == false`.
+    func closeApp(id: String) async throws(APIError)
+    func closeRecentApp(id: String) async throws(APIError)
     func send(_ command: Command) async throws(APIError)
     /// Like `send`, but returns the server's reply instead of throwing when `ok` is false.
     func sendForResult(_ command: Command) async throws(APIError) -> ControlResult
 }
 
 extension GlasshouseAPI {
+    public func closeRecentApp(id: String) async throws(APIError) { throw .http(404) }
+    public func closeApp(id: String) async throws(APIError) { throw .http(404) }
+
     public func sendForResult(_ command: Command) async throws(APIError) -> ControlResult {
         try await send(command)
         return ControlResult(ok: true)
@@ -147,6 +152,27 @@ public struct GlasshouseClient: GlasshouseAPI {
         return result
     }
 
+    public func closeApp(id: String) async throws(APIError) {
+        try await postAppAction("/api/apps/close", body: ["id": id])
+    }
+
+    public func closeRecentApp(id: String) async throws(APIError) {
+        try await postAppAction("/api/home/recents", body: ["action": "close", "id": id])
+    }
+
+    private func postAppAction(_ path: String, body: [String: String]) async throws(APIError) {
+        var req = try request(path)
+        req.httpMethod = "POST"
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        do { req.httpBody = try JSONEncoder().encode(body) }
+        catch { throw .decoding(String(describing: error)) }
+        let data = try await perform(req, reportsRejection: true)
+        let result: ControlResult
+        do { result = try JSONDecoder().decode(ControlResult.self, from: data) }
+        catch { throw .decoding(String(describing: error)) }
+        if !result.ok { throw .rejected(result.error ?? "") }
+    }
+
     private func request(_ path: String) throws(APIError) -> URLRequest {
         let slash = path.hasPrefix("/") ? "" : "/"
         // A path may carry a query string; split it so URLComponents does not escape the "?".
@@ -160,7 +186,7 @@ public struct GlasshouseClient: GlasshouseAPI {
         return req
     }
 
-    private func perform(_ req: URLRequest) async throws(APIError) -> Data {
+    private func perform(_ req: URLRequest, reportsRejection: Bool = false) async throws(APIError) -> Data {
         let data: Data
         let response: URLResponse
         do {
@@ -175,7 +201,11 @@ public struct GlasshouseClient: GlasshouseAPI {
             // Only Glasshouse's own 401 speaks of the token; another server's login page is a plain HTTP error.
             let body = String(decoding: data, as: UTF8.self)
             throw body.isEmpty || body.localizedCaseInsensitiveContains("token") ? .badToken : .http(401)
-        default: throw .http(http.statusCode)
+        default:
+            if reportsRejection, let result = try? JSONDecoder().decode(ControlResult.self, from: data), !result.ok {
+                throw .rejected(result.error ?? "")
+            }
+            throw .http(http.statusCode)
         }
     }
 

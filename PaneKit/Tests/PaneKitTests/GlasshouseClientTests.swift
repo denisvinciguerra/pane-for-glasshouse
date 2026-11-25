@@ -60,6 +60,37 @@ final class GlasshouseClientTests: XCTestCase {
             language: language, timeout: timeout, localNetworkDenied: denied)
     }
 
+    func testCloseAppUsesAppsRouteAndBearerToken() async throws {
+        ok()
+        try await makeClient().closeApp(id: "app.example")
+        let captured = try XCTUnwrap(StubURLProtocol.lastRequest)
+        XCTAssertEqual(captured.request.url?.path, "/api/apps/close")
+        XCTAssertEqual(captured.request.httpMethod, "POST")
+        XCTAssertEqual(captured.request.value(forHTTPHeaderField: "Authorization"), "Bearer t0k")
+        XCTAssertEqual(captured.request.value(forHTTPHeaderField: "X-Glasshouse-Lang"), "fr")
+        let body = try JSONDecoder().decode([String: String].self, from: captured.body)
+        XCTAssertEqual(body, ["id": "app.example"])
+    }
+
+    func testClosingRecentCardUsesRecentRoute() async throws {
+        ok()
+        try await makeClient().closeRecentApp(id: "app.example")
+        let captured = try XCTUnwrap(StubURLProtocol.lastRequest)
+        XCTAssertEqual(captured.request.url?.path, "/api/home/recents")
+        XCTAssertEqual(captured.request.httpMethod, "POST")
+        XCTAssertEqual(captured.request.value(forHTTPHeaderField: "Authorization"), "Bearer t0k")
+        let body = try JSONDecoder().decode([String: String].self, from: captured.body)
+        XCTAssertEqual(body, ["action": "close", "id": "app.example"])
+    }
+
+    func testCloseAppReportsServerRejection() async {
+        StubURLProtocol.program(.response(status: 400, body: Data(#"{"ok":false,"error":"Protected app"}"#.utf8)))
+        do {
+            try await makeClient().closeApp(id: "app.example")
+            XCTFail("expected rejection")
+        } catch { XCTAssertEqual(error, .rejected("Protected app")) }
+    }
+
     private func ok() { StubURLProtocol.program(.response(status: 200, body: Data(#"{"ok":true}"#.utf8))) }
 
     func testSendsBearerAndLanguageAndNoOrigin() async throws {
