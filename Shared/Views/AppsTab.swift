@@ -55,12 +55,11 @@ struct AppsTab: View {
         // The editor's list, in its order.
         let apps = session.actionContext.apps
         VStack(alignment: .leading, spacing: 0) {
-            Picker("App list", selection: $showsRecents) {
-                Text("All apps").tag(false)
-                Text("Recent apps").tag(true)
-            }
-            .pickerStyle(.segmented)
-            .padding(.bottom, 14)
+            TabBar(tabs: [false, true], selection: $showsRecents,
+                   title: { $0 ? "Recent apps" : "All apps" },
+                   identifier: { $0 ? "apps.list.recents" : "apps.list.all" })
+                .padding(.horizontal, -Metrics.gutter)
+                .padding(.bottom, 14)
             if showsRecents {
                 recentAppsView
             } else if apps.isEmpty {
@@ -173,7 +172,8 @@ struct AppsTab: View {
 
     private func activityRow(_ app: AppActivity) -> some View {
         let launch = Stats.App(id: app.id, title: app.title)
-        let isOnScreen = app.onScreen
+        // Lazy rows must observe current stats themselves, not retain the merged list's snapshot.
+        let isOnScreen = session.stats?.isForeground(appID: app.id) == true
         let unavailable = app.recent ? session.recentsError != nil : session.appsError != nil || session.appsOverview?.writable != true
         return HStack(spacing: 10) {
             Button { model.launch(launch) } label: {
@@ -209,14 +209,20 @@ struct AppsTab: View {
                 else { close(app) }
             } label: {
                 Group {
-                    if session.closingApp == app.id { Text("Closing…") }
-                    else if app.running != nil || isOnScreen { Text("Close app") }
-                    else { Text("Remove") }
-                }.font(.manrope(11))
+                    if session.closingApp == app.id {
+                        ProgressView().controlSize(.small)
+                    } else {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 14, weight: .light))
+                    }
+                }
+                .frame(width: max(28, Metrics.minTouch), height: max(28, Metrics.minTouch))
+                .contentShape(Rectangle())
             }
-            .buttonStyle(.bordered)
+            .buttonStyle(TextButtonStyle())
             .disabled(!session.canControl || session.stale || session.closingApp != nil || session.isClosingAllApps || unavailable)
             .accessibilityLabel(app.running != nil || isOnScreen ? Text("Close \(app.title)") : Text("Remove \(app.title) from recents"))
+            .accessibilityValue(session.closingApp == app.id ? Text("Closing…") : Text(verbatim: ""))
         }
         .padding(.vertical, 10)
         .overlay(alignment: .bottom) { Hairline().opacity(0.6) }
