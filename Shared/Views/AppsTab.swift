@@ -15,16 +15,22 @@ struct AppsTab: View {
     @Environment(\.keyShape) private var keyShape
     #if os(iOS)
     @Environment(\.horizontalSizeClass) private var sizeClass
+    @Environment(\.scenePhase) private var scenePhase
     #endif
     /// The list that pins is shown in place of the grid.
     @State private var pinning = false
     @State private var showsRecents = false
     @State private var confirmsCloseAll = false
     @State private var appToClose: AppActivity?
-    @Environment(\.scenePhase) private var scenePhase
 
     private var refreshesRecents: Bool {
-        showsRecents && model.isOpen && scenePhase == .active && session.power != .unreachable && !session.isClosingAllApps
+        guard showsRecents, model.isOpen, session.power != .unreachable, !session.isClosingAllApps else { return false }
+        #if os(iOS)
+        return scenePhase == .active
+        #else
+        // NSPopover visibility comes from its delegate, not a SwiftUI scene's phase.
+        return true
+        #endif
     }
 
     /// The height the grid and the list scroll in, close to Remote's with a row of pins and the pad.
