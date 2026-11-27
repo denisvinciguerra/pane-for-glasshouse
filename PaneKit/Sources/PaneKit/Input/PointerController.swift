@@ -180,6 +180,11 @@ struct PointerBatch: Codable, Equatable, Sendable {
         return channel
     }
 
+    /// Stops unsent motion when the finger lifts, preserving queued clicks and scrolling.
+    public func discardPendingMoves() {
+        queued.removeAll { $0.move != nil }
+    }
+
     public func close() {
         active = false
         sendTask?.cancel()

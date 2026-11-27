@@ -47,6 +47,32 @@ final class PointerControllerTests: XCTestCase {
         controller.close()
     }
 
+    func testReleaseDropsUnsentMovesButPreservesClickAndScroll() async {
+        let channel = FakePointerChannel(expecting: 2)
+        let controller = PointerController(updatesPerSecond: 120, sleep: { _ in }, connect: { channel })
+        controller.open()
+        controller.move(dx: 9, dy: -4)
+        controller.click()
+        controller.move(dx: 2, dy: 1)
+        controller.scroll(dx: 0, dy: 1)
+        controller.discardPendingMoves()
+        await fulfillment(of: [channel.done], timeout: 1)
+        XCTAssertEqual(channel.batches, [PointerBatch(click: true), PointerBatch(scroll: PointerDelta(dx: 0, dy: 1))])
+        controller.close()
+    }
+
+    func testNewHoldCanMoveAfterPendingMovesWereDiscarded() async {
+        let channel = FakePointerChannel(expecting: 1)
+        let controller = PointerController(updatesPerSecond: 120, sleep: { _ in }, connect: { channel })
+        controller.open()
+        controller.move(dx: 50, dy: 50)
+        controller.discardPendingMoves()
+        controller.move(dx: 1, dy: 2)
+        await fulfillment(of: [channel.done], timeout: 1)
+        XCTAssertEqual(channel.batches, [PointerBatch(move: [PointerDelta(dx: 1, dy: 2)])])
+        controller.close()
+    }
+
     func testReopensAfterBackgroundClose() async {
         let first = FakePointerChannel(expecting: 1)
         let second = FakePointerChannel(expecting: 1)
