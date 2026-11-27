@@ -4437,146 +4437,306 @@
         }
       }
     },
-    "Pointer mode" : {
+    "App list" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pointer mode"
+            "value" : "App list"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mode du pointeur"
+            "value" : "Liste des applications"
           }
         }
       }
     },
-    "Touchpad" : {
+    "All apps" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Touchpad"
+            "value" : "All apps"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pavé tactile"
+            "value" : "Toutes"
           }
         }
       }
     },
-    "Motion" : {
+    "In memory" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Motion"
+            "value" : "In memory"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mouvement"
+            "value" : "En mémoire"
           }
         }
       }
     },
-    "Sensitivity" : {
+    "Close this app?" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sensitivity"
+            "value" : "Close this app?"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sensibilité"
+            "value" : "Fermer cette application ?"
           }
         }
       }
     },
-    "Pointer active" : {
+    "Close app" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pointer active"
+            "value" : "Close app"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pointeur actif"
+            "value" : "Fermer l’application"
           }
         }
       }
     },
-    "Hold and point · Tap to click" : {
+    "Closing…" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hold and point · Tap to click"
+            "value" : "Closing…"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Maintenir et pointer · Toucher pour cliquer"
+            "value" : "Fermeture…"
           }
         }
       }
     },
-    "Use two fingers to scroll" : {
+    "Closing %@ will interrupt what is playing on the TV." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Use two fingers to scroll"
+            "value" : "Closing %@ will interrupt what is playing on the TV."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Faire défiler avec deux doigts"
+            "value" : "Fermer %@ interrompra la lecture sur le téléviseur."
           }
         }
       }
     },
-    "Pointer settings" : {
+    "Close %@" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pointer settings"
+            "value" : "Close %@"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Réglages du pointeur"
+            "value" : "Fermer %@"
           }
         }
       }
     },
-    "Vibration" : {
+    "On screen" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Vibration"
+            "value" : "On screen"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Vibrations"
+            "value" : "À l’écran"
+          }
+        }
+      }
+    },
+    "%@ MB" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ MB"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ Mo"
+          }
+        }
+      }
+    },
+    "Recent apps" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recent apps"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Applications récentes"
+          }
+        }
+      }
+    },
+    "In background" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In background"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En arrière-plan"
+          }
+        }
+      }
+    },
+    "No recent apps" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No recent apps"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucune application récente"
+          }
+        }
+      }
+    },
+    "Memory information is unavailable" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Memory information is unavailable"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les informations de mémoire sont indisponibles"
+          }
+        }
+      }
+    },
+    "Remove %@ from recents" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove %@ from recents"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retirer %@ des applications récentes"
+          }
+        }
+      }
+    },
+    "Close all apps?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Close all apps?"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fermer toutes les applications ?"
+          }
+        }
+      }
+    },
+    "Close all" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Close all"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tout fermer"
+          }
+        }
+      }
+    },
+    "This will close all apps and clear recent apps. Playback on the TV will be interrupted." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This will close all apps and clear recent apps. Playback on the TV will be interrupted."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cela fermera toutes les applications et effacera les applications récentes. La lecture sur le téléviseur sera interrompue."
+          }
+        }
+      }
+    },
+    "Could not load recent apps." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not load recent apps."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossible de charger les applications récentes."
           }
         }
       }

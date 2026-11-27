@@ -15,9 +15,23 @@ struct AppsTab: View {
     @Environment(\.keyShape) private var keyShape
     #if os(iOS)
     @Environment(\.horizontalSizeClass) private var sizeClass
+    @Environment(\.scenePhase) private var scenePhase
     #endif
     /// The list that pins is shown in place of the grid.
     @State private var pinning = false
+    @State private var showsRecents = false
+    @State private var confirmsCloseAll = false
+    @State private var appToClose: AppActivity?
+
+    private var refreshesRecents: Bool {
+        guard showsRecents, model.isOpen, session.power != .unreachable, !session.isClosingAllApps else { return false }
+        #if os(iOS)
+        return scenePhase == .active
+        #else
+        // NSPopover visibility comes from its delegate, not a SwiftUI scene's phase.
+        return true
+        #endif
+    }
 
     /// The height the grid and the list scroll in, close to Remote's with a row of pins and the pad.
     static let macHeight: CGFloat = 430
@@ -41,7 +55,14 @@ struct AppsTab: View {
         // The editor's list, in its order.
         let apps = session.actionContext.apps
         VStack(alignment: .leading, spacing: 0) {
-            if apps.isEmpty {
+            TabBar(tabs: [false, true], selection: $showsRecents,
+                   title: { $0 ? "Recent apps" : "All apps" },
+                   identifier: { $0 ? "apps.list.recents" : "apps.list.all" })
+                .padding(.horizontal, -Metrics.gutter)
+                .padding(.bottom, 14)
+            if showsRecents {
+                recentAppsView
+            } else if apps.isEmpty {
                 // No stats yet in this session: nothing to list.
                 Text("Apps appear once the TV answers")
                     .font(.manrope(10))
@@ -60,14 +81,160 @@ struct AppsTab: View {
                 #endif
             }
         }
-        .onDisappear { pinning = false }
+        .onDisappear { pinning = false; appToClose = nil; confirmsCloseAll = false }
+        .task(id: ActivityRequest(session: ObjectIdentifier(session), active: refreshesRecents, foreground: foregroundID)) {
+            guard refreshesRecents else { return }
+            while !Task.isCancelled {
+                await session.refreshApps()
+                do { try await Task.sleep(for: .seconds(10)) } catch { return }
+            }
+        }
+        .alert("Close this app?", isPresented: Binding(get: { appToClose != nil }, set: { if !$0 { appToClose = nil } }), presenting: appToClose) { app in
+            Button("Close app", role: .destructive) { close(app) }
+            Button("Cancel", role: .cancel) {}
+        } message: { app in
+            Text("Closing \(app.title) will interrupt what is playing on the TV.")
+        }
+        .alert("Close all apps?", isPresented: $confirmsCloseAll) {
+            Button("Close all", role: .destructive) {
+                Task { @MainActor in
+                    if await session.closeAllApps() {
+                        #if os(iOS)
+                        model.noteCommandSent()
+                        #endif
+                    }
+                }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("This will close all apps and clear recent apps. Playback on the TV will be interrupted.")
+        }
         // The popover's hosting controller stays alive when it closes, and may not send onDisappear.
-        .onChange(of: model.isOpen) { if !model.isOpen { pinning = false } }
-        .onChange(of: ObjectIdentifier(session)) { pinning = false }
+        .onChange(of: model.isOpen) { if !model.isOpen { pinning = false; confirmsCloseAll = false } }
+        .onChange(of: ObjectIdentifier(session)) { pinning = false; appToClose = nil; confirmsCloseAll = false }
         // Again for other apps, another TV, or a TV that answers again.
         .task(id: IconRequest(apps: apps.map(\.id), session: ObjectIdentifier(session), reachable: session.power != .unreachable)) {
             guard session.power != .unreachable else { return }
             await model.icons.refresh(apps.map(\.id)) { await session.appIcon($0) }
+        }
+    }
+
+    private struct ActivityRequest: Equatable {
+        let session: ObjectIdentifier
+        let active: Bool
+        let foreground: String?
+    }
+
+    private var foregroundID: String? {
+        guard let stats = session.stats else { return nil }
+        return session.appsOverview?.running?.first(where: { stats.isForeground(appID: $0.id) })?.id
+    }
+
+    private var recentAppsView: some View {
+        let list = AppActivityList(recents: session.recentApps?.apps ?? [], running: session.appsOverview?.running ?? [], foregroundID: foregroundID, transition: session.recentTransition)
+        return VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Text("Recent apps").sectionLabelStyle()
+                Spacer()
+                PinsLink(session.isClosingAllApps ? "Closing…" : "Close all") { confirmsCloseAll = true }
+                    .disabled(!session.canCloseAllApps)
+            }
+            if session.recentsError != nil {
+                Text("Could not load recent apps.").font(.manrope(11)).foregroundStyle(palette.label)
+            }
+            if session.appsError != nil {
+                Text("Memory information is unavailable").font(.manrope(11)).foregroundStyle(palette.label)
+            }
+            if session.recentApps != nil || session.appsOverview != nil {
+                #if os(macOS)
+                ScrollView { activitySections(list).background(HiddenScrollers()) }.frame(height: Self.macHeight)
+                #else
+                activitySections(list)
+                #endif
+            } else if session.recentsError == nil && session.appsError == nil {
+                ProgressView().frame(maxWidth: .infinity).padding()
+            }
+        }
+    }
+
+    private func activitySections(_ list: AppActivityList) -> some View {
+        LazyVStack(alignment: .leading, spacing: 0) {
+            if list.recents.isEmpty && session.recentsError == nil {
+                Text("No recent apps").font(.manrope(11)).foregroundStyle(palette.label).padding(.vertical, 10)
+            }
+            ForEach(list.recents) { activityRow($0) }
+            if !list.background.isEmpty {
+                Text("In background").sectionLabelStyle().padding(.top, 20).padding(.bottom, 6)
+                ForEach(list.background) { activityRow($0) }
+            }
+        }
+    }
+
+    private func activityRow(_ app: AppActivity) -> some View {
+        let launch = Stats.App(id: app.id, title: app.title)
+        // Lazy rows must observe current stats themselves, not retain the merged list's snapshot.
+        let isOnScreen = session.stats?.isForeground(appID: app.id) == true
+        let unavailable = app.recent ? session.recentsError != nil : session.appsError != nil || session.appsOverview?.writable != true
+        return HStack(spacing: 10) {
+            Button { model.launch(launch) } label: {
+                HStack(spacing: 10) {
+                    Group {
+                        if let icon = model.icons.icon(for: app.id).flatMap(Image.init(data:)) {
+                            icon.resizable().scaledToFit()
+                        } else {
+                            Text(verbatim: String(app.title.prefix(1))).font(.outfit(16))
+                        }
+                    }
+                    .frame(width: Self.rowIconSize, height: Self.rowIconSize)
+                    .background(palette.key).clipShape(Self.rowIconShape).accessibilityHidden(true)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(verbatim: app.title).font(.outfit(14)).lineLimit(2)
+                        HStack(spacing: 8) {
+                            if isOnScreen { Text("On screen") }
+                            else if app.running != nil { Text("In memory") }
+                            if let mb = app.running?.mb, mb.isFinite, mb >= 0, session.appsError == nil {
+                                Text("\(mb, format: .number.precision(.fractionLength(0))) MB")
+                            }
+                        }
+                        .font(.manrope(10)).foregroundStyle(palette.label)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .disabled(!session.canTrigger(launch.launchAction))
+            Button {
+                if isOnScreen { appToClose = app }
+                else { close(app) }
+            } label: {
+                Group {
+                    if session.closingApp == app.id {
+                        ProgressView().controlSize(.small)
+                    } else {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 14, weight: .light))
+                    }
+                }
+                .frame(width: max(28, Metrics.minTouch), height: max(28, Metrics.minTouch))
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(TextButtonStyle())
+            .disabled(!session.canControl || session.stale || session.closingApp != nil || session.isClosingAllApps || unavailable)
+            .accessibilityLabel(app.running != nil || isOnScreen ? Text("Close \(app.title)") : Text("Remove \(app.title) from recents"))
+            .accessibilityValue(session.closingApp == app.id ? Text("Closing…") : Text(verbatim: ""))
+        }
+        .padding(.vertical, 10)
+        .overlay(alignment: .bottom) { Hairline().opacity(0.6) }
+    }
+
+    private func close(_ app: AppActivity) {
+        Task { @MainActor in
+            if await session.closeApp(app.id) {
+                #if os(iOS)
+                model.noteCommandSent()
+                #endif
+            }
         }
     }
 

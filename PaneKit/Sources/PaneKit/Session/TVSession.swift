@@ -127,6 +127,14 @@ struct ReadGate {
     public private(set) var game: GamePayload?
     public private(set) var audio: AudioPayload?
     public private(set) var hdmi: HDMIOverview?
+    public private(set) var appsOverview: AppsOverview?
+    public private(set) var appsError: APIError?
+    public private(set) var recentApps: RecentAppsPayload?
+    public private(set) var recentsError: APIError?
+    public private(set) var recentTransition: RecentApp?
+    public private(set) var closingApp: String?
+    public private(set) var isClosingAllApps = false
+    @ObservationIgnored private var appsGate = ReadGate()
     /// The tabs to show, in `PaneTab.allCases` order. A tab goes when its payload says it is not
     /// available or its request answers 404, and comes back when a later read says otherwise.
     public private(set) var availableTabs: [PaneTab] = PaneTab.allCases
@@ -247,6 +255,12 @@ struct ReadGate {
         guard !Task.isCancelled, statsGate.land(seq) else { return }
         switch result {
         case .success(let s):
+            if let previous = appsOverview?.running?.first(where: { stats?.isForeground(appID: $0.id) == true }),
+               !s.isForeground(appID: previous.id) {
+                recentTransition = RecentApp(id: previous.id, title: previous.title)
+                // A list requested before Home cannot settle the transition away from the app.
+                appsGate.invalidate()
+            }
             stats = s
             setAvailable(.apps, s.apps != nil)
             power = PowerState.from(s)
@@ -366,6 +380,96 @@ struct ReadGate {
         query.queryItems = [URLQueryItem(name: "id", value: appID)]
         guard let encoded = query.percentEncodedQuery else { return nil }
         return try? await api.getData("/api/apps/icon?" + encoded)
+    }
+
+    public func refreshApps() async {
+        guard !ended else { return }
+        let seq = appsGate.issue()
+        async let overviewRead = load("/api/apps", as: AppsOverview.self)
+        async let recentRead = load("/api/home/recents", as: RecentAppsPayload.self)
+        let (result, recents) = await (overviewRead, recentRead)
+        guard !Task.isCancelled, !ended, appsGate.land(seq) else { return }
+        switch result {
+        case .success(let overview): appsOverview = overview; appsError = nil
+        case .failure(let error): appsError = error
+        }
+        switch recents {
+        case .success(let payload) where payload.ok:
+            recentApps = payload; recentsError = nil
+            recentTransition = nil
+        case .success(let payload): recentsError = .rejected(payload.error ?? "")
+        case .failure(let error): recentsError = error
+        }
+    }
+
+    @discardableResult public func closeApp(_ id: String) async -> Bool {
+        await closeApp(id, batch: false)
+    }
+
+    private func closeApp(_ id: String, batch: Bool) async -> Bool {
+        guard !ended, !stale, closingApp == nil, canControl, batch || !isClosingAllApps else { return false }
+        let recent = recentApps?.apps?.contains(where: { $0.id == id }) == true
+        if recent {
+            guard recentsError == nil else { return false }
+        } else {
+            guard appsError == nil, appsOverview?.writable == true,
+                  appsOverview?.running?.contains(where: { $0.id == id }) == true else { return false }
+        }
+        closingApp = id
+        defer { closingApp = nil }
+        appsGate.invalidate()
+        focusEpoch &+= 1
+        var closed = false
+        do {
+            if recent { try await api.closeRecentApp(id: id) }
+            else {
+                try await api.closeApp(id: id)
+                // Leaving a foreground app can create its recent card only after the close.
+                if let latest = try? await api.get("/api/home/recents", as: RecentAppsPayload.self), latest.ok,
+                   latest.apps?.contains(where: { $0.id == id }) == true {
+                    try await api.closeRecentApp(id: id)
+                }
+            }
+            closed = true
+        } catch {
+            guard !Task.isCancelled, !ended else { return false }
+            if case .rejected(let message) = error, !message.isEmpty { post(message) }
+            else { post(SessionText.sendFailed()) }
+        }
+        guard !Task.isCancelled, !ended else { return false }
+        if !batch {
+            await refreshApps()
+            await refreshStats()
+        }
+        return closed
+    }
+
+    public var canCloseAllApps: Bool {
+        !ended && !stale && canControl && closingApp == nil && !isClosingAllApps &&
+        appsError == nil && recentsError == nil && appsOverview?.writable == true &&
+        (!(recentApps?.apps ?? []).isEmpty || !(appsOverview?.running ?? []).isEmpty)
+    }
+
+    @discardableResult public func closeAllApps() async -> Bool {
+        guard canCloseAllApps else { return false }
+        var seen = Set<String>()
+        let ids = ((recentApps?.apps ?? []).map(\.id) + (appsOverview?.running ?? []).map(\.id))
+            .filter { seen.insert($0).inserted }
+        isClosingAllApps = true
+        defer { isClosingAllApps = false }
+        var succeeded = true
+        for id in ids {
+            guard !Task.isCancelled, !ended else { return false }
+            if await !closeApp(id, batch: true) { succeeded = false }
+        }
+        guard !Task.isCancelled, !ended else { return false }
+        await refreshApps()
+        await refreshStats()
+        if appsError != nil || recentsError != nil { succeeded = false }
+        let remaining = Set((recentApps?.apps ?? []).map(\.id) + (appsOverview?.running ?? []).map(\.id))
+        if ids.contains(where: { remaining.contains($0) }) { succeeded = false }
+        if !succeeded { post(String(localized: "Some apps could not be closed. Please try again.", bundle: .module)) }
+        return succeeded
     }
 
     /// Polls the stats every 2 s while `open()`, every 30 s otherwise, until the task is cancelled.

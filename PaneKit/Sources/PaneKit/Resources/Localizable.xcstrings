@@ -1425,6 +1425,22 @@
           }
         }
       }
+    },
+    "Some apps could not be closed. Please try again." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Some apps could not be closed. Please try again."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certaines applications n’ont pas pu être fermées. Réessayer."
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

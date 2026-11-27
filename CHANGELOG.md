@@ -4,7 +4,7 @@ All notable changes to Pane for Glasshouse. Versions follow [Semantic Versioning
 
 ## Unreleased
 
-- iPhone: a Motion pointer mode with hold-to-move, tap-to-click and two-finger scrolling. Pointer settings offer separate sensitivity and vibration switches for Touchpad and Motion; the pad highlights movement and clicks.
+- Apps: show the TV’s recent apps with on-screen and memory status, RAM use and a separate background list. Open or close apps, or close both lists at once, with confirmation before interrupting playback.
 
 ## 1.3.0
 

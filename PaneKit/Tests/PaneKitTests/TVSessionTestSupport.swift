@@ -15,9 +15,15 @@ actor FakeAPI: GlasshouseAPI {
     ]
     private var failures: [String: APIError] = [:]
     private var sendFailure: APIError?
+    private var closeFailures: [String: APIError] = [:]
+    func failClosing(_ id: String, _ error: APIError) { closeFailures[id] = error }
+    private var recentOnClose = false
+    func createRecentOnClose() { recentOnClose = true }
     /// Cancels the calling task, then fails as URLSession does once cancelled.
     private var cancelOnStats = false
     private(set) var commands: [Command] = []
+    private(set) var closedApps: [String] = []
+    private(set) var closedRecentApps: [String] = []
     private(set) var paths: [String] = []
     private var textAnswers: [ControlResult] = []
     private var holdingText = false
@@ -70,6 +76,31 @@ actor FakeAPI: GlasshouseAPI {
     }
 
     func getData(_ path: String) async throws(APIError) -> Data { try await answer(path) }
+
+    func closeRecentApp(id: String) async throws(APIError) {
+        closedRecentApps.append(id)
+        try await closeApp(id: id)
+        guard let data = bodies["/api/home/recents"],
+              var payload = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let apps = payload["apps"] as? [[String: Any]] else { return }
+        payload["apps"] = apps.filter { $0["id"] as? String != id }
+        bodies["/api/home/recents"] = try? JSONSerialization.data(withJSONObject: payload)
+    }
+
+    func closeApp(id: String) async throws(APIError) {
+        closedApps.append(id)
+        if let failure = closeFailures[id] { throw failure }
+        if let sendFailure { throw sendFailure }
+        guard let data = bodies["/api/apps"],
+              var overview = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let running = overview["running"] as? [[String: Any]] else { return }
+        overview["running"] = running.filter { $0["id"] as? String != id }
+        bodies["/api/apps"] = try? JSONSerialization.data(withJSONObject: overview)
+        if recentOnClose {
+            recentOnClose = false
+            bodies["/api/home/recents"] = try? JSONSerialization.data(withJSONObject: ["ok": true, "apps": [["id": id, "title": id]]])
+        }
+    }
 
     func send(_ command: Command) async throws(APIError) {
         commands.append(command)
