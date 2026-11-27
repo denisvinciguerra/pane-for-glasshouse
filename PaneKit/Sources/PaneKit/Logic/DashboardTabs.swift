@@ -45,7 +45,9 @@ public enum DashboardTabs {
             let whole = NSRange(location: 0, length: inner.length)
             guard let hit = translated.firstMatch(in: inner as String, range: whole) ?? plain.firstMatch(in: inner as String, range: whole)
             else { continue }
-            let label = inner.substring(with: hit.range(at: 1)).trimmingCharacters(in: .whitespacesAndNewlines)
+            let label = inner.substring(with: hit.range(at: 1))
+                .replacingOccurrences(of: "&amp;", with: "&")
+                .trimmingCharacters(in: .whitespacesAndNewlines)
             if !label.isEmpty, seen.insert(id).inserted { tabs.append(DashboardTab(id: id, label: label)) }
         }
         return tabs

@@ -2,6 +2,10 @@
 
 All notable changes to Pane for Glasshouse. Versions follow [Semantic Versioning](https://semver.org).
 
+## Unreleased
+
+- Dashboard menu: shows `HA & MQTT` instead of `HA &amp; MQTT`.
+
 ## 1.3.0
 
 - Demo: "Try without a TV" has the pointer's touchpad and keyboard, and a full Apps grid.
