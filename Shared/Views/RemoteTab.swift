@@ -227,12 +227,16 @@ struct RemoteTab: View {
 
     private var navigation: some View {
         HStack(spacing: Self.gap) {
-            GHButton(action: { click(.rcu(.back)) }) { KeyIconView(.back) }
-                .keyName("Back").keyed(.rcu(.back))
-            GHButton(action: { click(.rcu(.home)) }) { KeyIconView(.home) }
-                .keyName("Home").keyed(.rcu(.home))
-            GHButton(action: { click(.rcu(.settings)) }) { KeyIconView(.settings) }
-                .keyName("Settings").keyed(.rcu(.settings))
+            #if os(iOS)
+            // Back on the right, under a right-handed thumb; Settings, seldom pressed, out of its way.
+            settingsKey
+            homeKey
+            backKey
+            #else
+            backKey
+            homeKey
+            settingsKey
+            #endif
             if session.caps?.pointer == true {
                 // The key shows the mode it leads to.
                 Group {
@@ -248,6 +252,21 @@ struct RemoteTab: View {
                 .environment(\.palette, palette.swapKey)
             }
         }
+    }
+
+    private var backKey: some View {
+        GHButton(action: { click(.rcu(.back)) }) { KeyIconView(.back) }
+            .keyName("Back").keyed(.rcu(.back))
+    }
+
+    private var homeKey: some View {
+        GHButton(action: { click(.rcu(.home)) }) { KeyIconView(.home) }
+            .keyName("Home").keyed(.rcu(.home))
+    }
+
+    private var settingsKey: some View {
+        GHButton(action: { click(.rcu(.settings)) }) { KeyIconView(.settings) }
+            .keyName("Settings").keyed(.rcu(.settings))
     }
 
     // MARK: Playback

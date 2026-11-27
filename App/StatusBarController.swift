@@ -223,6 +223,10 @@ import SwiftUI
     func popoverDidShow(_ notification: Notification) {
         model.isOpen = true
         model.restartPolling()
+        // The Apps tab's strip ready before the tab shows: its list of apps in memory takes a second.
+        if let session = model.session, session.availableTabs.contains(.apps) {
+            Task { await session.refreshApps() }
+        }
         if let window = popover.contentViewController?.view.window { keyboard.attach(to: window) }
     }
 

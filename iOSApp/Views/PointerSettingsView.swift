@@ -9,6 +9,8 @@ struct PointerSettingsView: View {
     @AppStorage("phonePointerSensitivity") private var motionSensitivity = 1.0
     @AppStorage("phonePointerHaptics") private var motionHaptics = true
 
+    static let defaultSensitivity = 1.0
+
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -41,7 +43,13 @@ struct PointerSettingsView: View {
     private func section(_ title: LocalizedStringKey, sensitivity: Binding<Double>,
                          vibration: Binding<Bool>) -> some View {
         VStack(alignment: .leading, spacing: 16) {
-            SectionLabel(title)
+            HStack {
+                SectionLabel(title)
+                Spacer()
+                // Back to the default speed; greyed while already there.
+                PinsLink("Reset to 1×") { sensitivity.wrappedValue = Self.defaultSensitivity }
+                    .disabled(abs(sensitivity.wrappedValue - Self.defaultSensitivity) < 0.05)
+            }
             VStack(spacing: 8) {
                 HStack {
                     Text("Sensitivity")

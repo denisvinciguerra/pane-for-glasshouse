@@ -2,9 +2,12 @@
 
 All notable changes to Pane for Glasshouse. Versions follow [Semantic Versioning](https://semver.org).
 
-## Unreleased
+## 1.4.0
 
-- Apps: show the TV’s recent apps with on-screen and memory status, RAM use and a separate background list. Open or close apps, or close both lists at once, with confirmation before interrupting playback.
+- Dashboard menu: shows `HA & MQTT` instead of `HA &amp; MQTT`. Contributed by Kirill Klenovich ([@clima365](https://github.com/clima365)).
+- Apps: above the grid, a strip of the TV's recent apps, the one on screen first, then those still in memory. Click one to open it (on the Mac, drag the strip or turn the wheel over it to see more); close one (a cross on hover on the Mac, a long press on iOS) or all of them, and closing what is playing asks first. Its state and memory use show in its help and menu (Glasshouse 0.159 or later). Contributed by Kirill Klenovich ([@clima365](https://github.com/clima365)).
+- iOS: on the Remote, Back moves to the right of its row, under a right-handed thumb, and Settings goes to the left.
+- Pointer: on iPhone, Motion moves the cursor as you turn the phone while holding the pad; release to reposition, tap to click, two fingers to scroll. Pointer settings, beside the keyboard icon, set the sensitivity and vibration of Touchpad and Motion. Contributed by Kirill Klenovich ([@clima365](https://github.com/clima365)).
 
 ## 1.3.0
 

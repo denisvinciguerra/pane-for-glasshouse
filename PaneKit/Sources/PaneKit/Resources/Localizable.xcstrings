@@ -1437,7 +1437,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Certaines applications n’ont pas pu être fermées. Réessayer."
+            "value" : "Certaines apps n’ont pas pu être fermées. Réessayez."
           }
         }
       }

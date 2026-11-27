@@ -8,6 +8,11 @@ import SwiftUI
 /// turns the grid into a list where a click anywhere on a row pins or unpins its app and launches
 /// nothing; Done, another tab, the popover closing or another TV bring the grid back. On the Mac,
 /// both scroll in a fixed height; on iOS, the page scrolls.
+///
+/// Above the grid, a strip of the TV's recent apps (mockups/2026-11-27-recentes-mac/bande.html, B):
+/// the app on screen first, then the TV's recent cards in its order, then after a rule the apps in
+/// memory without a card. A click opens one; on the Mac a cross shows on hover, and a right-click
+/// (a long press on iOS) says the app's state and memory, opens it or closes it.
 struct AppsTab: View {
     let model: AppModel
     let session: TVSession
@@ -19,12 +24,13 @@ struct AppsTab: View {
     #endif
     /// The list that pins is shown in place of the grid.
     @State private var pinning = false
-    @State private var showsRecents = false
     @State private var confirmsCloseAll = false
     @State private var appToClose: AppActivity?
 
+    /// The strip reads the TV's lists while it can show: the tab in front, the grid (not the list
+    /// that pins), the TV in reach.
     private var refreshesRecents: Bool {
-        guard showsRecents, model.isOpen, session.power != .unreachable, !session.isClosingAllApps else { return false }
+        guard !pinning, model.isOpen, session.power != .unreachable, !session.isClosingAllApps else { return false }
         #if os(iOS)
         return scenePhase == .active
         #else
@@ -41,33 +47,45 @@ struct AppsTab: View {
     private static let rowIconSize: CGFloat = 30
     private static let rowHeight: CGFloat = 38
     private static let markSize: CGFloat = 11
+    private static let stripTile: CGFloat = 40
+    private static let stripName: CGFloat = 9.5
     #else
     private static let tileSize: CGFloat = 58
     private static let rowIconSize: CGFloat = 38
     private static let rowHeight: CGFloat = 50
     private static let markSize: CGFloat = 13
+    private static let stripTile: CGFloat = 48
+    private static let stripName: CGFloat = 10.5
     #endif
     private static let gap: CGFloat = 6
     /// A row's icon: the tile's corners, in proportion.
     private static let rowIconShape = AnyShape(RoundedRectangle(cornerRadius: Metrics.keyRadius * rowIconSize / tileSize))
+    /// A tile of the strip: the grid's corners, in proportion.
+    private static let stripShape = AnyShape(RoundedRectangle(cornerRadius: Metrics.keyRadius * stripTile / tileSize))
+    /// Room above the strip's icons for the cross that sticks out of their corner.
+    private static let stripTop: CGFloat = 6
+    /// The strip's tiles: the icon, the gap, a line of name.
+    private static let stripTiles: CGFloat = stripTop + stripTile + 5 + (stripName * Metrics.fontScale * 1.6).rounded(.up)
+    private static let stripBottom: CGFloat = 14
+    /// The header's height, as `header(_:)` sets it.
+    private static let headerHeight: CGFloat = 12 * Metrics.fontScale + 7
 
     var body: some View {
         // The editor's list, in its order.
         let apps = session.actionContext.apps
+        let activity = activityList
+        // Its room is kept while the first list comes, so that the grid does not jump down.
+        let loading = session.recentApps == nil && session.recentsError == nil
+        let stripShown = !pinning && !apps.isEmpty && session.power != .unreachable
+            && (loading || !(activity.recents.isEmpty && activity.background.isEmpty))
         VStack(alignment: .leading, spacing: 0) {
-            TabBar(tabs: [false, true], selection: $showsRecents,
-                   title: { $0 ? "Recent apps" : "All apps" },
-                   identifier: { $0 ? "apps.list.recents" : "apps.list.all" })
-                .padding(.horizontal, -Metrics.gutter)
-                .padding(.bottom, 14)
-            if showsRecents {
-                recentAppsView
-            } else if apps.isEmpty {
+            if apps.isEmpty {
                 // No stats yet in this session: nothing to list.
                 Text("Apps appear once the TV answers")
                     .font(.manrope(10))
                     .foregroundStyle(palette.label)
             } else {
+                if stripShown { recentStrip(activity) }
                 header(apps)
                 #if os(macOS)
                 ScrollView {
@@ -75,7 +93,8 @@ struct AppsTab: View {
                         // No scroller, like Settings and the pins.
                         .background(HiddenScrollers())
                 }
-                .frame(height: Self.macHeight)
+                // The strip takes its room from the grid: the popover keeps its height.
+                .frame(height: Self.macHeight - (stripShown ? Self.headerHeight + Self.stripTiles + Self.stripBottom : 0))
                 #else
                 content(apps)
                 #endif
@@ -112,11 +131,17 @@ struct AppsTab: View {
         // The popover's hosting controller stays alive when it closes, and may not send onDisappear.
         .onChange(of: model.isOpen) { if !model.isOpen { pinning = false; confirmsCloseAll = false } }
         .onChange(of: ObjectIdentifier(session)) { pinning = false; appToClose = nil; confirmsCloseAll = false }
-        // Again for other apps, another TV, or a TV that answers again.
-        .task(id: IconRequest(apps: apps.map(\.id), session: ObjectIdentifier(session), reachable: session.power != .unreachable)) {
+        // Again for other apps, another TV, or a TV that answers again. The strip's apps too: an
+        // input (HDMI4) or a settings app has a card but is not in the TV's app list.
+        .task(id: IconRequest(apps: iconIDs(apps, activity), session: ObjectIdentifier(session), reachable: session.power != .unreachable)) {
             guard session.power != .unreachable else { return }
-            await model.icons.refresh(apps.map(\.id)) { await session.appIcon($0) }
+            await model.icons.refresh(iconIDs(apps, activity)) { await session.appIcon($0) }
         }
+    }
+
+    private func iconIDs(_ apps: [Stats.App], _ activity: AppActivityList) -> [String] {
+        var seen = Set<String>()
+        return (apps.map(\.id) + activity.recents.map(\.id) + activity.background.map(\.id)).filter { seen.insert($0).inserted }
     }
 
     private struct ActivityRequest: Equatable {
@@ -130,102 +155,73 @@ struct AppsTab: View {
         return session.appsOverview?.running?.first(where: { stats.isForeground(appID: $0.id) })?.id
     }
 
-    private var recentAppsView: some View {
-        let list = AppActivityList(recents: session.recentApps?.apps ?? [], running: session.appsOverview?.running ?? [], foregroundID: foregroundID, transition: session.recentTransition)
-        return VStack(alignment: .leading, spacing: 10) {
-            HStack {
-                Text("Recent apps").sectionLabelStyle()
-                Spacer()
+    /// The recent cards with the app on screen first, then the apps in memory without a card.
+    private var activityList: AppActivityList {
+        AppActivityList(recents: session.recentApps?.apps ?? [], running: session.appsOverview?.running ?? [],
+                        foregroundID: foregroundID, transition: session.recentTransition)
+    }
+
+    private func recentStrip(_ list: AppActivityList) -> some View {
+        // The app on screen leads, wherever the TV put its card.
+        let recents = list.recents.filter(isOnScreen) + list.recents.filter { !isOnScreen($0) }
+        return VStack(alignment: .leading, spacing: 0) {
+            HStack(alignment: .center) {
+                Text("Recent").sectionLabelStyle()
+                Spacer(minLength: 8)
                 PinsLink(session.isClosingAllApps ? "Closing…" : "Close all") { confirmsCloseAll = true }
                     .disabled(!session.canCloseAllApps)
             }
-            if session.recentsError != nil {
-                Text("Could not load recent apps.").font(.manrope(11)).foregroundStyle(palette.label)
-            }
-            if session.appsError != nil {
-                Text("Memory information is unavailable").font(.manrope(11)).foregroundStyle(palette.label)
-            }
-            if session.recentApps != nil || session.appsOverview != nil {
+            .frame(height: 12 * Metrics.fontScale)
+            .padding(.bottom, 7)
+            ScrollView(.horizontal) {
+                HStack(alignment: .top, spacing: Self.gap + 2) {
+                    ForEach(recents) { stripTile($0) }
+                    if !list.background.isEmpty {
+                        Rectangle().fill(palette.line)
+                            .frame(width: 1, height: Self.stripTile * 0.8)
+                            .padding(.top, Self.stripTop + Self.stripTile * 0.1)
+                            .padding(.horizontal, 2)
+                        ForEach(list.background) { stripTile($0) }
+                    }
+                }
+                .padding(.horizontal, Metrics.gutter)
                 #if os(macOS)
-                ScrollView { activitySections(list).background(HiddenScrollers()) }.frame(height: Self.macHeight)
-                #else
-                activitySections(list)
+                .background(HiddenScrollers())
+                .background(DragScroller())
                 #endif
-            } else if session.recentsError == nil && session.appsError == nil {
-                ProgressView().frame(maxWidth: .infinity).padding()
             }
+            .scrollIndicators(.hidden)
+            .padding(.horizontal, -Metrics.gutter)
+            .frame(height: Self.stripTiles)
+            .padding(.bottom, Self.stripBottom)
         }
     }
 
-    private func activitySections(_ list: AppActivityList) -> some View {
-        LazyVStack(alignment: .leading, spacing: 0) {
-            if list.recents.isEmpty && session.recentsError == nil {
-                Text("No recent apps").font(.manrope(11)).foregroundStyle(palette.label).padding(.vertical, 10)
-            }
-            ForEach(list.recents) { activityRow($0) }
-            if !list.background.isEmpty {
-                Text("In background").sectionLabelStyle().padding(.top, 20).padding(.bottom, 6)
-                ForEach(list.background) { activityRow($0) }
-            }
-        }
-    }
+    private func isOnScreen(_ app: AppActivity) -> Bool { session.stats?.isForeground(appID: app.id) == true }
 
-    private func activityRow(_ app: AppActivity) -> some View {
-        let launch = Stats.App(id: app.id, title: app.title)
-        // Lazy rows must observe current stats themselves, not retain the merged list's snapshot.
-        let isOnScreen = session.stats?.isForeground(appID: app.id) == true
+    private func stripTile(_ app: AppActivity) -> some View {
+        let onScreen = isOnScreen(app)
         let unavailable = app.recent ? session.recentsError != nil : session.appsError != nil || session.appsOverview?.writable != true
-        return HStack(spacing: 10) {
-            Button { model.launch(launch) } label: {
-                HStack(spacing: 10) {
-                    Group {
-                        if let icon = model.icons.icon(for: app.id).flatMap(Image.init(data:)) {
-                            icon.resizable().scaledToFit()
-                        } else {
-                            Text(verbatim: String(app.title.prefix(1))).font(.outfit(16))
-                        }
-                    }
-                    .frame(width: Self.rowIconSize, height: Self.rowIconSize)
-                    .background(palette.key).clipShape(Self.rowIconShape).accessibilityHidden(true)
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(verbatim: app.title).font(.outfit(14)).lineLimit(2)
-                        HStack(spacing: 8) {
-                            if isOnScreen { Text("On screen") }
-                            else if app.running != nil { Text("In memory") }
-                            if let mb = app.running?.mb, mb.isFinite, mb >= 0, session.appsError == nil {
-                                Text("\(mb, format: .number.precision(.fractionLength(0))) MB")
-                            }
-                        }
-                        .font(.manrope(10)).foregroundStyle(palette.label)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                }
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .disabled(!session.canTrigger(launch.launchAction))
-            Button {
-                if isOnScreen { appToClose = app }
-                else { close(app) }
-            } label: {
-                Group {
-                    if session.closingApp == app.id {
-                        ProgressView().controlSize(.small)
-                    } else {
-                        Image(systemName: "xmark")
-                            .font(.system(size: 14, weight: .light))
-                    }
-                }
-                .frame(width: max(28, Metrics.minTouch), height: max(28, Metrics.minTouch))
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(TextButtonStyle())
-            .disabled(!session.canControl || session.stale || session.closingApp != nil || session.isClosingAllApps || unavailable)
-            .accessibilityLabel(app.running != nil || isOnScreen ? Text("Close \(app.title)") : Text("Remove \(app.title) from recents"))
-            .accessibilityValue(session.closingApp == app.id ? Text("Closing…") : Text(verbatim: ""))
+        let canClose = session.canControl && !session.stale && session.closingApp == nil && !session.isClosingAllApps && !unavailable
+        let launch = Stats.App(id: app.id, title: app.title)
+        return RecentTile(app: launch, icons: model.icons, size: Self.stripTile, nameSize: Self.stripName,
+                          shape: Self.stripShape, top: Self.stripTop, onScreen: onScreen,
+                          inBackground: !app.recent, closing: session.closingApp == app.id,
+                          status: status(app, onScreen: onScreen), canOpen: session.canTrigger(launch.launchAction),
+                          canClose: canClose, open: { model.launch(launch) },
+                          close: { if onScreen { appToClose = app } else { close(app) } })
+    }
+
+    /// "On screen · 113 MB", "In memory · 96 MB", or nil for a card whose app is not running.
+    private func status(_ app: AppActivity, onScreen: Bool) -> String? {
+        var parts: [String] = []
+        if onScreen { parts.append(String(localized: "On screen")) }
+        else if app.running != nil { parts.append(String(localized: "In memory")) }
+        if let mb = app.running?.mb, mb.isFinite, mb >= 0, session.appsError == nil {
+            let amount = mb.formatted(.number.precision(.fractionLength(0)))
+            parts.append(String(localized: "\(amount) MB"))
         }
-        .padding(.vertical, 10)
-        .overlay(alignment: .bottom) { Hairline().opacity(0.6) }
+        return parts.isEmpty ? nil : parts.joined(separator: " · ")
     }
 
     private func close(_ app: AppActivity) {
@@ -405,6 +401,92 @@ private struct AppIcon: View {
                     .padding(2)
             }
         }
+        .accessibilityHidden(true)
+    }
+}
+
+/// A tile of the recent apps' strip: the icon (the green dot of the app on screen), its name on a
+/// line under it, greyed for an app in memory without a card. A click opens the app. On the Mac, a cross on
+/// the icon's corner while the mouse is over it closes it, and the help says its state and memory;
+/// the context menu (a long press on iOS) says them too, and opens or closes it.
+private struct RecentTile: View {
+    let app: Stats.App
+    let icons: AppIconStore
+    let size: CGFloat
+    let nameSize: CGFloat
+    let shape: AnyShape
+    let top: CGFloat
+    let onScreen: Bool
+    let inBackground: Bool
+    let closing: Bool
+    let status: String?
+    let canOpen: Bool
+    let canClose: Bool
+    let open: () -> Void
+    let close: () -> Void
+    @State private var hovered = false
+    @Environment(\.palette) private var palette
+
+    var body: some View {
+        let iconShown = icons.icon(for: app.id).flatMap(Image.init(data:)) != nil
+        Button(action: open) {
+            VStack(spacing: 5) {
+                AppIcon(app: app, icons: icons, size: size, shape: shape, titled: true, onScreen: onScreen, pinMark: nil)
+                    .opacity(closing ? 0.4 : 1)
+                Text(verbatim: app.title)
+                    .font(.outfit(nameSize))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+                    .truncationMode(.tail)
+                    .multilineTextAlignment(.center)
+                    .foregroundStyle(inBackground ? palette.label : palette.fg.opacity(0.8))
+                    .frame(width: size + 10)
+                    .opacity(iconShown ? 1 : 0)
+            }
+            .padding(.top, top)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(AppCellStyle(dimmed: false))
+        .disabled(!canOpen)
+        #if os(macOS)
+        .overlay(alignment: .topTrailing) {
+            if (hovered && canClose) || closing { crossButton }
+        }
+        .onHover { hovered = $0 }
+        .help(summary)
+        #endif
+        .contextMenu {
+            Section {
+                Button("Open", systemImage: "arrow.up.forward") { open() }.disabled(!canOpen)
+                Button("Close", systemImage: "xmark", role: .destructive) { close() }.disabled(!canClose)
+            } header: {
+                Text(verbatim: summary)
+            }
+        }
+        .accessibilityLabel(Text(verbatim: app.title))
+        .accessibilityValue(Text(verbatim: status ?? ""))
+        .accessibilityAction(named: Text("Close")) { if canClose { close() } }
+        .accessibilityIdentifier("apps.recent.\(app.id)")
+    }
+
+    /// "Netflix · In memory · 96 MB".
+    private var summary: String { status.map { app.title + " · " + $0 } ?? app.title }
+
+    private var crossButton: some View {
+        Button(action: close) {
+            Group {
+                if closing { ProgressView().controlSize(.mini) }
+                else { Image(systemName: "xmark").font(.system(size: 7.5, weight: .bold)) }
+            }
+            .foregroundStyle(palette.fg)
+            .frame(width: 16, height: 16)
+            .background(Circle().fill(palette.key))
+            .overlay(Circle().strokeInside(palette.line, style: StrokeStyle(lineWidth: 1)))
+            .contentShape(Circle())
+        }
+        .buttonStyle(.plain)
+        .disabled(!canClose)
+        .offset(x: -1, y: top - 6)
         .accessibilityHidden(true)
     }
 }

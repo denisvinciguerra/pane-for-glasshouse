@@ -96,6 +96,9 @@ struct ReadGate {
         return true
     }
 
+    /// Whether read `seq` may still land, without landing it: for a first part of its result.
+    func isCurrent(_ seq: Int) -> Bool { seq >= floor }
+
     /// The reads already asked are older than a local change: their results will be dropped.
     mutating func invalidate() { floor = next }
 }
@@ -382,23 +385,27 @@ struct ReadGate {
         return try? await api.getData("/api/apps/icon?" + encoded)
     }
 
+    /// The recent cards land as soon as they come (a few dozen ms), the apps in memory after them:
+    /// `/api/apps` also gathers the services and preloads, about a second on a C3 or a G4.
     public func refreshApps() async {
         guard !ended else { return }
         let seq = appsGate.issue()
         async let overviewRead = load("/api/apps", as: AppsOverview.self)
-        async let recentRead = load("/api/home/recents", as: RecentAppsPayload.self)
-        let (result, recents) = await (overviewRead, recentRead)
+        let recents = await load("/api/home/recents", as: RecentAppsPayload.self)
+        if !Task.isCancelled, !ended, appsGate.isCurrent(seq) {
+            switch recents {
+            case .success(let payload) where payload.ok:
+                recentApps = payload; recentsError = nil
+                recentTransition = nil
+            case .success(let payload): recentsError = .rejected(payload.error ?? "")
+            case .failure(let error): recentsError = error
+            }
+        }
+        let result = await overviewRead
         guard !Task.isCancelled, !ended, appsGate.land(seq) else { return }
         switch result {
         case .success(let overview): appsOverview = overview; appsError = nil
         case .failure(let error): appsError = error
-        }
-        switch recents {
-        case .success(let payload) where payload.ok:
-            recentApps = payload; recentsError = nil
-            recentTransition = nil
-        case .success(let payload): recentsError = .rejected(payload.error ?? "")
-        case .failure(let error): recentsError = error
         }
     }
 

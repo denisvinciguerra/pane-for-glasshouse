@@ -41,17 +41,10 @@ struct PointerPad: View {
     private var borderVisible: Bool { clickFlash || pointerActive }
 
     var body: some View {
-        VStack(spacing: 6) {
-            if motion.available {
-                Picker("Pointer mode", selection: $motionSelected) {
-                    Text("Touchpad").tag(false)
-                    Text("Motion").tag(true)
-                }
-                .pickerStyle(.segmented)
-                .padding(.horizontal, 8)
-            }
-            ZStack(alignment: .bottomTrailing) {
-                VStack(spacing: 4) {
+        ZStack(alignment: .bottomTrailing) {
+            // Under the pad, whose letters cover it while they show.
+            VStack(spacing: 4) {
+                Group {
                     if motionMode {
                         if motion.isDriving { Text("Pointer active") }
                         else { Text("Hold and point · Tap to click") }
@@ -59,30 +52,36 @@ struct PointerPad: View {
                     } else {
                         Text("Slide to move · Tap to click\nUse two fingers to scroll")
                     }
-                    Text("Tap the keyboard to type on the TV")
                 }
-                .font(.manrope(points: 13))
                 .foregroundStyle(palette.label)
-                .multilineTextAlignment(.center)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .allowsHitTesting(false)
-                PointerSurface(controller: controller, typing: typing, field: field, keyboard: keyboard,
-                               takesKeys: isEnabled && scenePhase != .background && !sheetOverRemote && !settingsShown,
-                               hardware: hardware?.connected == true, background: UIColor(palette.bg),
-                               motion: motion, motionMode: motionMode, canDrive: canDrive,
-                               touchEnabled: isEnabled && scenePhase == .active && !sheetOverRemote && !settingsShown,
-                               touchSensitivity: touchSensitivity, touchHaptics: touchHaptics,
-                               clicked: { clickCount &+= 1 }, drivingChanged: { touchDriving = $0 })
-                TypingEchoView(typing: typing, cornerRoom: 2 * Metrics.minTouch + 16)
-                padControls
+                Text("Tap the keyboard to type on the TV")
+                    .foregroundStyle(palette.fg.opacity(0.85))
             }
+            .font(.manrope(points: 13))
+            .multilineTextAlignment(.center)
+            .padding(.top, motion.available ? 14 : 0)
+            .allowsHitTesting(false)
+            // Fills the touch surface and carries its id: the app previews read the pad's frame from it.
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .contentShape(.accessibility, Rectangle())
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(hint + Text(verbatim: " ") + Text("Tap the keyboard to type on the TV"))
+            .accessibilityIdentifier("remote.pointerPad")
+            PointerSurface(controller: controller, typing: typing, field: field, keyboard: keyboard,
+                           takesKeys: isEnabled && scenePhase != .background && !sheetOverRemote && !settingsShown,
+                           hardware: hardware?.connected == true, background: UIColor(palette.bg),
+                           motion: motion, motionMode: motionMode, canDrive: canDrive,
+                           touchEnabled: isEnabled && scenePhase == .active && !sheetOverRemote && !settingsShown,
+                           touchSensitivity: touchSensitivity, touchHaptics: touchHaptics,
+                           clicked: { clickCount &+= 1 }, drivingChanged: { touchDriving = $0 })
+            TypingEchoView(typing: typing, cornerRoom: 2 * Metrics.minTouch + 16)
+            padControls
+            if motion.available { modePicker }
         }
-        .accessibilityIdentifier("remote.pointerPad")
-        .padding(.top, motion.available ? 8 : 0)
         .overlay {
             if borderVisible {
                 RoundedRectangle(cornerRadius: Metrics.keyRadius)
-                    .strokeBorder(clickFlash ? Color.white : palette.fg.opacity(0.65), lineWidth: 1)
+                    .strokeBorder(palette.fg.opacity(clickFlash ? 1 : 0.65), lineWidth: 1)
                     .allowsHitTesting(false)
             }
         }
@@ -107,6 +106,47 @@ struct PointerPad: View {
             touchDriving = false
             clickCount = 0
         }
+    }
+
+    /// The help for the pad's mode, as VoiceOver reads it.
+    private var hint: Text {
+        guard motionMode else { return Text("Slide to move · Tap to click\nUse two fingers to scroll") }
+        return (motion.isDriving ? Text("Pointer active") : Text("Hold and point · Tap to click"))
+            + Text(verbatim: " ") + Text("Use two fingers to scroll")
+    }
+
+    /// "Touchpad  Motion" in the pad's top left corner, the chosen one underlined, as the Mac's
+    /// "Drag | ⌥ held" (mockups/2026-11-27-mode-pointeur/mode.html, A). Only on an iPhone with a gyroscope.
+    private var modePicker: some View {
+        HStack(spacing: 0) {
+            modeWord("Touchpad", motion: false)
+            modeWord("Motion", motion: true)
+        }
+        .padding(.leading, 12 - Self.wordRoom)
+        .padding(.top, 10 - Self.wordRoom)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(Text("Pointer mode"))
+    }
+
+    /// Room around a word for a finger, beyond its letters.
+    private static let wordRoom: CGFloat = 8
+
+    private func modeWord(_ title: LocalizedStringKey, motion chosenMotion: Bool) -> some View {
+        let chosen = motionSelected == chosenMotion
+        return Button { motionSelected = chosenMotion } label: {
+            Text(title)
+                .sectionLabelStyle()
+                .foregroundStyle(chosen ? palette.fg : palette.label)
+                .padding(.bottom, 2)
+                .overlay(alignment: .bottom) {
+                    Rectangle().fill(chosen ? palette.fg : .clear).frame(height: 1)
+                }
+                .padding(Self.wordRoom)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(chosen ? .isSelected : [])
     }
 
     private var padControls: some View {
@@ -506,8 +546,8 @@ private struct PointerSurface: UIViewRepresentable {
 
         @objc func tapped() {
             clicked()
-            if usesMotion { motion.impact() }
-            else { touchFeedback.impact(enabled: haptics) }
+            // In Motion, the finger's touch already buzzed.
+            if !usesMotion { touchFeedback.impact(enabled: haptics) }
             typing.forget()
             controller.click()
         }

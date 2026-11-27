@@ -78,7 +78,12 @@ struct RootView: View {
             if Self.isPad { HardwareKeys(keyboard: keyboard, hardware: hardware, active: keysActive, claims: keyClaims) }
         }
         .onChange(of: scenePhase) { _, phase in
-            if phase == .active { hardware.refresh() }
+            guard phase == .active else { return }
+            hardware.refresh()
+            // The Apps tab's strip ready before the tab shows: its list of apps in memory takes a second.
+            if let session = model.app.session, session.availableTabs.contains(.apps) {
+                Task { await session.refreshApps() }
+            }
         }
         .sheet(isPresented: $showsSettings, onDismiss: { keyClaims += 1 }) {
             AppSettingsView(model: model, keyboard: keyboard, hardware: hardware)

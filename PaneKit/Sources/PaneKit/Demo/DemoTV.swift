@@ -26,16 +26,17 @@ public actor DemoTV: GlasshouseAPI {
 
     // MARK: GlasshouseAPI
 
+    // The demo's own invented apps (stats.json), never a real one: the demo ships to App Review.
     private var runningApps: [[String: Any]] = [
-        ["id": "youtube.leanback.v4", "title": "YouTube", "mb": 182, "foreground": true],
-        ["id": "netflix", "title": "Netflix", "mb": 94, "foreground": false],
-        ["id": "com.webos.app.browser", "title": "Web Browser", "mb": 63, "foreground": false]
+        ["id": "netflix", "title": "NetMovies", "mb": 182, "foreground": false],
+        ["id": "com.apple.appletv", "title": "PearTV", "mb": 94, "foreground": false],
+        ["id": "spotify-beehive", "title": "Musicify", "mb": 63, "foreground": false]
     ]
 
     private var recentApps: [[String: Any]] = [
-        ["id": "netflix", "title": "Netflix"],
-        ["id": "com.apple.appletv", "title": "Apple TV"],
-        ["id": "youtube.leanback.v4", "title": "YouTube"]
+        ["id": "netflix", "title": "NetMovies"],
+        ["id": "com.apple.appletv", "title": "PearTV"],
+        ["id": "reelo", "title": "Reelo"]
     ]
 
     public func closeRecentApp(id: String) async throws(APIError) {

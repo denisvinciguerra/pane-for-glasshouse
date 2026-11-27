@@ -30,7 +30,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pane utilise le gyroscope pour déplacer le pointeur du téléviseur lorsque le pavé Mouvement est maintenu."
+            "value" : "Pane utilise le gyroscope pour déplacer le pointeur de la TV tant que le pavé Mouvement est maintenu."
           }
         }
       }

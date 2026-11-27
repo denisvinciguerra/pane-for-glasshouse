@@ -71,6 +71,20 @@ import XCTest
         XCTAssertFalse(closed)
     }
 
+    func testRecentCardsLandBeforeTheSlowAppsList() async {
+        let api = FakeAPI()
+        let session = await ready(api)
+        await api.serve("/api/home/recents", Data(#"{"ok":true,"apps":[{"id":"app.example","title":"Example"}]}"#.utf8))
+        await api.hold("/api/apps")
+        let read = Task { await session.refreshApps() }
+        while await api.heldCount("/api/apps") == 0 { await Task.yield() }
+        while session.recentApps?.apps?.first?.id != "app.example" { await Task.yield() }
+        XCTAssertEqual(session.recentApps?.apps?.map(\.id), ["app.example"])
+        await api.release("/api/apps")
+        await read.value
+        XCTAssertNotNil(session.appsOverview)
+    }
+
     func testReadStartedBeforeCloseCannotRestoreClosedApp() async {
         let api = FakeAPI()
         let session = await ready(api)
@@ -226,6 +240,19 @@ import XCTest
         XCTAssertFalse(stale)
         let calls = await api.closedApps
         XCTAssertTrue(calls.isEmpty)
+    }
+
+    func testDemoListsOnlyItsOwnInventedApps() async throws {
+        let demo = DemoTV()
+        let stats = try await demo.get("/api/stats", as: Stats.self)
+        let known = Dictionary(uniqueKeysWithValues: (stats.apps ?? []).map { ($0.id, $0.title) })
+        let running = try await demo.get("/api/apps", as: AppsOverview.self).running ?? []
+        let recents = try await demo.get("/api/home/recents", as: RecentAppsPayload.self).apps ?? []
+        XCTAssertFalse(running.isEmpty)
+        XCTAssertFalse(recents.isEmpty)
+        for app in running.map({ ($0.id, $0.title) }) + recents.map({ ($0.id, $0.title) }) {
+            XCTAssertEqual(known[app.0], app.1, "\(app.0) is not one of the demo's apps")
+        }
     }
 
     func testDemoLaunchAndCloseUpdateRecentAndMemoryLists() async throws {
